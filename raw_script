@@ -1,0 +1,35 @@
+#! /bin/sh
+
+uri=`cat ./repo`
+
+echo 'make tmp_rpms dir'
+rm -fr ./tmp_rpms
+mkdir ./tmp_rpms
+
+rm ARCHIVES*
+
+echo 'start to get ARCHIVES.gz from' $uri
+wget $uri'ARCHIVES.gz'
+gunzip ARCHIVES.gz
+echo 'get ARCHIVE'
+
+echo 'start to generate ./meta'
+grep "\.desktop" ARCHIVES  |  grep "/usr/share/app"  | awk '{print $1}' | sort | tr ':' ' ' | uniq > meta
+
+cd tmp_rpms
+
+cat ../meta  | awk -F/  '{print $0 " && rpm2cpio " $NF "| cpio -id && rm " $NF}'  | sed -e "s|^|wget -nv ${uri}|" > cmd
+
+echo 'start to download and cpio the rpm'
+sh ./cmd
+echo 'finished'
+a
+
+cd ..
+mkdir database
+cp -fr tmp_rpms/usr/share/applications database
+cp -fr tmp_rpms/usr/share/icons database
+
+rm -fr tmp_rpms
+rm ARCHIVE
+rm cmd
