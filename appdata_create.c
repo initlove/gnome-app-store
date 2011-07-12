@@ -7,19 +7,62 @@
 
 #define DEBUG 0
 
-/*NOT IMPLEMENTED */
-gchar *
+void
+load_rpm_to_desktop (GHashTable *app_hash)
+{
+	FILE *fp;
+	char buf [1024];
+	char *p;
+	char *desktop_name, *rpm_name;
+
+	fp = fopen ("./rpm-desktop", "r");
+	if (fp == NULL) {
+		printf ("cannot find rpm-desktop file!\n");
+		return;
+	}
+	while (!feof (fp)) {
+		fgets (buf, 1024, fp);
+		p = strchr (buf, ':');
+		if (!p)
+			continue;
+		else
+			*p = 0;
+		rpm_name = strrchr (buf, '/');
+		desktop_name = p + strlen (":/usr/share/applications/");
+		p = strchr (desktop_name, '\n');
+		if (p)
+			*p = 0;
+		g_hash_table_insert (app_hash, g_strdup (desktop_name), g_strdup (rpm_name + 1));
+	}
+}
+
+const gchar *
 get_package_from_desktop_file (const gchar *desktop_file)
 {
-	gchar *pkg_name = NULL;
+	const gchar *pkg_name = NULL;
+
+        
+	static GHashTable *app_hash = NULL;
+
+	if (app_hash == NULL) {
+		app_hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+		load_rpm_to_desktop (app_hash);
+	}
+	pkg_name = g_hash_table_lookup (app_hash, desktop_file + strlen ("database/applications/"));
 
 	return pkg_name;
+}
+
+void	
+get_the_icon_file (const gchar *content)
+{
+	;
 }
 
 void
 add_pkgname (xmlNodePtr app_node, const gchar *desktop_file)
 {
-	gchar *pkg_name;
+	const gchar *pkg_name;
 
 	pkg_name = get_package_from_desktop_file (desktop_file);
 	xmlNewTextChild (app_node, NULL, "pkgname", pkg_name);
@@ -93,6 +136,18 @@ add_summary (xmlNodePtr app_node, GnomeDesktopItem *desktop_item)
 void
 add_icon (xmlNodePtr app_node, GnomeDesktopItem *desktop_item)
 {
+	xmlNodePtr icon_node;
+	const gchar *content;
+
+	content = gnome_desktop_item_get_string (desktop_item, "Icon");
+
+	if (!content)
+		return;
+
+	icon_node = xmlNewTextChild (app_node, NULL, "icon", content);
+	xmlSetProp (icon_node, "type", "stock");
+
+	get_the_icon_file (content);
 }
 
 void

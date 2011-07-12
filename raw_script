@@ -14,22 +14,22 @@ gunzip ARCHIVES.gz
 echo 'get ARCHIVE'
 
 echo 'start to generate ./meta'
-grep "\.desktop" ARCHIVES  |  grep "/usr/share/app"  | awk '{print $1}' | sort | tr ':' ' ' | uniq > meta
+grep "\.desktop" ARCHIVES  |  grep "/usr/share/app"  | awk  '{print $1 $10}'  > rpm-desktop
+awk -F: '{print $1}' rpm-desktop |  uniq > meta
 
 cd tmp_rpms
 
-cat ../meta  | awk -F/  '{print $0 " && rpm2cpio " $NF "| cpio -id && rm " $NF}'  | sed -e "s|^|wget -nv ${uri}|" > cmd
+awk -F/  '{print $0 " && rpm2cpio " $NF "| cpio -id && rm " $NF}' ../meta | sed -e "s|^|wget -nv ${uri}|" > cmd
 
 echo 'start to download and cpio the rpm'
 sh ./cmd
 echo 'finished'
-a
 
 cd ..
 mkdir database
-cp -fr tmp_rpms/usr/share/applications database
-cp -fr tmp_rpms/usr/share/icons database
+mv tmp_rpms/usr/share/applications database
+mv tmp_rpms/usr/share/icons database
+mv tmp_rpms/usr/share/pixmaps database
 
 rm -fr tmp_rpms
 rm ARCHIVE
-rm cmd
