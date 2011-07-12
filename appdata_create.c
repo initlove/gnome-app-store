@@ -45,7 +45,7 @@ get_package_from_desktop_file (const gchar *desktop_file)
 	static GHashTable *app_hash = NULL;
 
 	if (app_hash == NULL) {
-		app_hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+		app_hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 		load_rpm_to_desktop (app_hash);
 	}
 	pkg_name = g_hash_table_lookup (app_hash, desktop_file + strlen ("database/applications/"));
@@ -53,10 +53,100 @@ get_package_from_desktop_file (const gchar *desktop_file)
 	return pkg_name;
 }
 
-void	
-get_the_icon_file (const gchar *content)
+gboolean
+cmp_uri_priority (gchar *last_uri, gchar *uri)
 {
-	;
+	gchar *key_words [] = {"16", "24", "32", "48", "64", "72", "96", "128", "scalable", "pixmaps", NULL};
+	gint last_uri_value, uri_value, i;
+
+	last_uri_value = uri_value = -1;
+	for (i = 0; key_words [i]; i++) {
+		if (last_uri_value <0) {
+			if (strstr (last_uri, key_words [i]))
+				last_uri_value = i;
+		}
+		if (uri_value <0) {
+			if (strstr (uri, key_words [i]))
+				uri_value = i;
+		}
+		if ((uri_value >= 0) && (last_uri_value >= 0))
+			break;
+	}
+	return last_uri_value >= uri_value;
+}
+
+void			
+add_icon_to_hash (GHashTable *icon_hash, const gchar *basename, gchar *uri)
+{
+	gchar *last_uri;
+	gchar *icon_name, *p;
+
+	icon_name = g_strdup (basename);
+	p = strchr (icon_name, '.');
+	if (p) {
+		*p = 0;
+	}
+
+	last_uri = g_hash_table_lookup (icon_hash, icon_name);
+	if (!last_uri) {
+		g_hash_table_insert (icon_hash, g_strdup (icon_name), g_strdup (uri));
+	} else {
+		/*last_uri >= uri, doing nothing */
+		if (cmp_uri_priority (last_uri, uri)) {
+		} else {
+			g_hash_table_replace (icon_hash, g_strdup (icon_name), g_strdup (uri));
+		}
+	}
+	g_free (icon_name);
+}
+
+void
+load_icons_from_dir (GHashTable *icon_hash, gchar *dirname)
+{
+	const gchar *basename = NULL;
+	gchar *filename;
+	GDir *dir;
+
+	dir = g_dir_open (dirname, 0, NULL);
+	if (!dir) {
+		printf ("cannot open path %s\n", dirname);
+		return ;
+	}
+	while ((basename = g_dir_read_name (dir)) != NULL) {
+		filename = g_build_filename (dirname, basename, NULL);
+
+		if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
+			load_icons_from_dir (icon_hash, filename);
+		} else if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+			add_icon_to_hash (icon_hash, basename, filename);
+		}
+		g_free (filename);
+	}
+	g_dir_close (dir);
+}
+
+void	
+save_the_icon_file (const gchar *content)
+{
+	static GHashTable *icon_hash = NULL;
+
+	if (icon_hash == NULL) {
+		/*The key name should be naked...without any .png  */
+		icon_hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+		load_icons_from_dir (icon_hash, "database/icons");
+		load_icons_from_dir (icon_hash, "database/pixmaps");
+	}
+/*FIXME: cannot get the icon in some cases */
+	gchar *uri;
+	gchar *str, *p;
+	
+	str = g_strdup (content);
+	p = strchr (str, '.');
+	if (p)
+		*p = 0;
+	uri = g_hash_table_lookup (icon_hash, str);
+	g_free (str);
+printf ("content %s uri is %s\n", content, uri);
 }
 
 void
@@ -140,14 +230,22 @@ add_icon (xmlNodePtr app_node, GnomeDesktopItem *desktop_item)
 	const gchar *content;
 
 	content = gnome_desktop_item_get_string (desktop_item, "Icon");
-
+	
 	if (!content)
 		return;
 
-	icon_node = xmlNewTextChild (app_node, NULL, "icon", content);
+	/* some desktop with icon put into the certain dir */
+	const gchar *p;
+	p = strrchr (content, '/');
+	if (p)
+		p++;
+	else
+		p = content;
+
+	icon_node = xmlNewTextChild (app_node, NULL, "icon", p);
 	xmlSetProp (icon_node, "type", "stock");
 
-	get_the_icon_file (content);
+	save_the_icon_file (p);
 }
 
 void
@@ -232,8 +330,6 @@ load_app_dir (xmlNodePtr node, const gchar *dirname)
 	const gchar *basename = NULL;
 	gchar *filename;
 	GDir *dir;
-	GFile *file;
-	GFileType type;
 
 	dir = g_dir_open (dirname, 0, NULL);
 	if (!dir) {
