@@ -56,7 +56,7 @@ get_package_from_desktop_file (const gchar *desktop_file)
 gboolean
 cmp_uri_priority (gchar *last_uri, gchar *uri)
 {
-	gchar *key_words [] = {"16", "24", "32", "48", "64", "72", "96", "128", "scalable", "pixmaps", NULL};
+	gchar *key_words [] = {"16", "22", "24", "32", "48", "64", "72", "96", "128", "scalable", "pixmaps", NULL};
 	gint last_uri_value, uri_value, i;
 
 	last_uri_value = uri_value = -1;
@@ -115,6 +115,7 @@ load_icons_from_dir (GHashTable *icon_hash, gchar *dirname)
 	while ((basename = g_dir_read_name (dir)) != NULL) {
 		filename = g_build_filename (dirname, basename, NULL);
 
+		/*FIXME: some files were just link? how to deal with those? not meet any problems yet */
 		if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
 			load_icons_from_dir (icon_hash, filename);
 		} else if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
@@ -136,7 +137,9 @@ save_the_icon_file (const gchar *content)
 		load_icons_from_dir (icon_hash, "database/icons");
 		load_icons_from_dir (icon_hash, "database/pixmaps");
 	}
-/*FIXME: cannot get the icon in some cases */
+/*FIXME: cannot get the icon in some cases 
+	some reasons are: the icon was installed by other package.. shit
+*/
 	gchar *uri;
 	gchar *str, *p;
 	
@@ -146,7 +149,24 @@ save_the_icon_file (const gchar *content)
 		*p = 0;
 	uri = g_hash_table_lookup (icon_hash, str);
 	g_free (str);
-printf ("content %s uri is %s\n", content, uri);
+
+	if (!uri)
+		return;
+
+        GFile *src_file;
+        GFile *dst_file;
+	gchar *basename;
+
+	src_file = g_file_new_for_path (uri);
+	basename = g_file_get_basename (src_file);
+	uri = g_strdup_printf ("icons/%s", basename);
+	dst_file = g_file_new_for_path (uri);
+	g_file_copy (src_file, dst_file, 0, NULL, NULL, NULL, NULL);
+
+	g_free (uri);
+	g_free (basename);
+	g_object_unref (src_file);
+	g_object_unref (dst_file);
 }
 
 void

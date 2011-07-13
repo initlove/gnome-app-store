@@ -15,7 +15,10 @@ echo 'get ARCHIVE'
 
 echo 'start to generate ./meta'
 grep "\.desktop" ARCHIVES  |  grep "/usr/share/app"  | awk  '{print $1 $10}'  > rpm-desktop
-awk -F: '{print $1}' rpm-desktop |  uniq > meta
+awk '{print $1}' ARCHIVES | grep -i hicolor-icon-theme | uniq | tr -d ':' >> meta
+awk '{print $1}' ARCHIVES | grep -i gnome-icon-theme | uniq | tr -d ':' >> meta
+awk -F: '{print $1}' rpm-desktop |  uniq >> meta
+
 
 cd tmp_rpms
 
@@ -27,9 +30,14 @@ echo 'finished'
 
 cd ..
 mkdir database
-mv tmp_rpms/usr/share/applications database
-mv tmp_rpms/usr/share/icons database
-mv tmp_rpms/usr/share/pixmaps database
+mv tmp_rpms/usr/share/applications/ database
+mv tmp_rpms/usr/share/icons/ database
+mv tmp_rpms/usr/share/pixmaps/ database
 
 rm -fr tmp_rpms
 rm ARCHIVE
+
+mkdir icons
+make
+./appdata_create
+rm -fr database
