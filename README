@@ -1,2 +1,3 @@
-display the icons info of the applications
-add to SUSE distribution
+libtoolize -if
+autoreconf -if
+./configure --prefix="/usr"
