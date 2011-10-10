@@ -40,6 +40,8 @@ dnl pkg-config dependency checks
 
 PKG_CHECK_MODULES(GNOME_APP_STORE, libxml-2.0 >= $LIBXML_REQUIRED gnome-desktop-3.0 >= $GNOME_DESKTOP_REQUIRED gdk-pixbuf-2.0 >= $GDK_PIXBUF_REQUIRED gtk+-3.0 >= $GTK_REQUIRED glib-2.0 >= $GLIB_REQUIRED gio-2.0 >= $GLIB_REQUIRED gsettings-desktop-schemas >= $GSETTINGS_DESKTOP_SCHEMAS_REQUIRED clutter-1.0 >= $CLUTTER_REQUIRED libgnome-menu)
 
+PKG_CHECK_MODULES(LIBSOUP, libsoup-2.4)
+
 dnl gnome-doc-utils stuff
 
 GNOME_DOC_INIT
