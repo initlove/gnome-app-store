@@ -23,6 +23,7 @@ struct _GnomeAppItemPrivate
 	/* The way to install the pkg. */
 	gchar *		pkgname;
 	gchar *		icon;
+	gchar *		screenshot;
 	gchar *		summary;
 	/* type1;type2 */
 	gchar *		categories;
@@ -45,6 +46,7 @@ enum {
         PROP_NAME,
         PROP_PKGNAME,
         PROP_ICON,
+        PROP_SCREENSHOT,	/*FIXME: need this?*/
         PROP_SUMMARY,
         PROP_CATEGORIES,
 	PROP_MIMETYPES,
@@ -101,6 +103,8 @@ gnome_app_item_finalize (GObject *object)
 		g_free (priv->pkgname);
 	if (priv->icon)
 		g_free (priv->icon);
+	if (priv->screenshot)
+		g_free (priv->screenshot);
 	if (priv->_local_icon_url)
 		g_free (priv->_local_icon_url);
 	if (priv->_local_screenshot_url)
@@ -146,6 +150,11 @@ gnome_app_item_set_property (GObject      *object,
 			if (priv->icon)
 				g_free (priv->icon);
 			priv->icon = g_strdup (g_value_get_string (value));
+			break;
+		case PROP_SCREENSHOT:
+			if (priv->screenshot)
+				g_free (priv->screenshot);
+			priv->screenshot = g_strdup (g_value_get_string (value));
 			break;
 		case PROP_SUMMARY:
 			if (priv->summary)
@@ -203,6 +212,9 @@ gnome_app_item_get_property (GObject        *object,
 			break;
 		case PROP_ICON:
 			g_value_set_string (value, priv->icon);
+			break;
+		case PROP_SCREENSHOT:
+			g_value_set_string (value, priv->screenshot);
 			break;
 		case PROP_SUMMARY:
 			g_value_set_string (value, priv->summary);
@@ -262,6 +274,12 @@ gnome_app_item_class_init (GnomeAppItemClass *klass)
 	g_object_class_install_property (object_class, PROP_ICON,
 		g_param_spec_string ("icon",
                                      "icon", "The icon name of the app",
+                                     NULL,
+                                     G_PARAM_READWRITE));
+
+	g_object_class_install_property (object_class, PROP_SCREENSHOT,
+		g_param_spec_string ("screenshot",
+                                     "screenshot", "The screenshot of the app",
                                      NULL,
                                      G_PARAM_READWRITE));
 
