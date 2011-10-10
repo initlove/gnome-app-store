@@ -371,8 +371,8 @@ set_config (AppServer *server, GnomeAppConfig *conf)
 	gchar *appdata_uri;
 	gchar *icon_dir;
 
-	app_stream_server->priv->server_url = g_strdup (gnome_app_config_get_server_uri (conf));
-	app_stream_server->priv->cache_dir = g_strdup (gnome_app_config_get_cache_dir (conf));
+	app_stream_server->priv->server_url = gnome_app_config_get_server_uri (conf);
+	app_stream_server->priv->cache_dir = gnome_app_config_get_cache_dir (conf);
 	download_meta_data (conf);
 
 	appdata_uri = g_build_filename (app_stream_server->priv->cache_dir, "appdata.xml", NULL);

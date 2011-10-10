@@ -401,7 +401,7 @@ set_config (AppServer *server, GnomeAppConfig *config)
 	OcsServer *ocs_server = OCS_SERVER (server);
 	OcsServerPrivate *priv = ocs_server->priv;
 
-	priv->server_uri = g_strdup (gnome_app_config_get_server_uri (config));
+	priv->server_uri = gnome_app_config_get_server_uri (config);
 	/*FIXME: the following should be retrieved from config too*/
 	priv->username = g_strdup ("initlove");
 	priv->password = g_strdup ("novell123456");
