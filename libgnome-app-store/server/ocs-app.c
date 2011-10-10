@@ -21,8 +21,8 @@
  */
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "gnome-app-item.h"
 #include "ocs-app.h"
@@ -104,19 +104,23 @@ parse_app (OcsServer *ocs_server, xmlNodePtr data_node)
         xmlNodePtr app_node, node;
 	GnomeAppItem *item = NULL;
 	OCS_KEY_WORDS type;
+	gchar *content;
 	gchar *str;
+	glong counts;
+	gint score;
 
 	for (app_node = data_node->xmlChildrenNode; app_node; app_node = app_node->next) {
 		if (strcmp (app_node->name, "content") == 0) {
 			for (node = node->xmlChildrenNode; node; node = node->next) {
-//				type = get_type_from_name ((gchar *)node->name);
+				type = get_type_from_name ((gchar *)node->name);
+				content = xmlNodeGetContent (node);
 				switch (type) {
         				case OCS_ID:
 						item = gnome_app_item_new ();
-						g_object_set (G_OBJECT (item), (gchar *)node->name, xmlNodeGetContent (node), NULL);
+						g_object_set (G_OBJECT (item), (gchar *)node->name, content, NULL);
 						break;
 					case OCS_NAME:
-						g_object_set (G_OBJECT (item), (gchar *)node->name, xmlNodeGetContent (node), NULL);
+						g_object_set (G_OBJECT (item), (gchar *)node->name, content, NULL);
 						break;
 					case OCS_VERSION:
 						/*not implement*/
@@ -126,7 +130,7 @@ parse_app (OcsServer *ocs_server, xmlNodePtr data_node)
 						break;
 					case OCS_TYPENAME:
 						/*FIXME: not sure if there were more than two OCS_TYPENAME, if so, we should add it */
-						str = g_strdup_printf ("%s;", xmlNodeGetContent (node));
+						str = g_strdup_printf ("%s;", content);
 						g_object_set (G_OBJECT (item), "categories", str, NULL);
 						g_free (str);
 						break;
@@ -138,20 +142,36 @@ parse_app (OcsServer *ocs_server, xmlNodePtr data_node)
 						/*not implement*/
 						break;
 					case OCS_DOWNLOADS:
+						counts = atol (content);
+						g_object_set (G_OBJECT (item), "download-counts", counts, NULL);
+						break;
 					case OCS_SCORE:
+						score = atoi (content);
+						g_object_set (G_OBJECT (item), "score", score, NULL);
+						break;
 					case OCS_DESCRIPTION:
+						g_object_set (G_OBJECT (item), (gchar *)node->name, content, NULL);
+						break;
 					case OCS_SUMMARY:
+						g_object_set (G_OBJECT (item), (gchar *)node->name, content, NULL);
 						break;
 					case OCS_FEEDBACKURL:
 					case OCS_CHANGELOG:
 					case OCS_HOMEPAGE:
 					case OCS_HOMEPAGETYPE:
 					case OCS_LICENSETYPE:
+						/*not implement*/
+						break;
 					case OCS_LICENSE:
+						g_object_set (G_OBJECT (item), (gchar *)node->name, content, NULL);
+						break;
 					case OCS_DONATIONPAGE:
 						/*not implement*/
 						break;
 					case OCS_COMMENTS:
+						counts = atol (content);
+						g_object_set (G_OBJECT (item), "comment-counts", counts, NULL);
+						break;
 					case OCS_COMMENTSPAGE:
 						break;
 					case OCS_FANS:
