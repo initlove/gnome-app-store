@@ -72,6 +72,7 @@ gnome_app_item_init (GnomeAppItem *item)
 	priv->name = NULL;
 	priv->pkgname = NULL;
 	priv->icon = NULL;
+	priv->screenshot = NULL;
 	priv->summary = NULL;
 	priv->categories = NULL;
 	priv->mimetypes = NULL;
@@ -375,6 +376,14 @@ gnome_app_item_get_icon_name (GnomeAppItem *item)
         GnomeAppItemPrivate *priv = item->priv;
 
 	return priv->icon;
+}
+
+const gchar *
+gnome_app_item_get_screenshot (GnomeAppItem *item)
+{
+        GnomeAppItemPrivate *priv = item->priv;
+
+	return priv->screenshot;
 }
 
 const gchar *

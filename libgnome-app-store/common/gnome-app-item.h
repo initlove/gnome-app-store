@@ -63,7 +63,8 @@ GnomeAppItem *		gnome_app_item_new			(void);
 const gchar *		gnome_app_item_get_id			(GnomeAppItem *item);
 const gchar *		gnome_app_item_get_name			(GnomeAppItem *item);
 const gchar *		gnome_app_item_get_pkgname		(GnomeAppItem *item);
-const gchar *		gnome_app_item_get_icon_name		(GnomeAppItem *item);	/* no need to use it */
+const gchar *		gnome_app_item_get_icon_name		(GnomeAppItem *item);
+const gchar *		gnome_app_item_get_screenshot		(GnomeAppItem *item);
 const gchar *		gnome_app_item_get_categories		(GnomeAppItem *item);
 const gchar *		gnome_app_item_get_license		(GnomeAppItem *item);
 glong			gnome_app_item_get_comment_counts	(GnomeAppItem *item);
