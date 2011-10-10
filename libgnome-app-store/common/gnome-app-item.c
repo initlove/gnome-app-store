@@ -35,7 +35,7 @@ struct _GnomeAppItemPrivate
 	gchar *		_local_screenshot_url;
 	glong		_comment_counts;
 	glong		_download_counts;
-	gfloat		_score;
+	gint		_score;
 
 };
 
@@ -292,19 +292,25 @@ gnome_app_item_class_init (GnomeAppItemClass *klass)
 	g_object_class_install_property (object_class, PROP_COMMENT_COUNTS,
 		g_param_spec_long ("comment-counts",
                                      "comment-counts", "The comment counts of the app",
-                                     NULL,
+                                     -1,
+				     G_MAXINT32,
+				     -1,
                                      G_PARAM_READWRITE));
 
 	g_object_class_install_property (object_class, PROP_DOWNLOAD_COUNTS,
 		g_param_spec_long ("download-counts",
                                      "download-counts", "The download counts of the app",
-                                     NULL,
+                                     -1,
+				     G_MAXINT32,
+				     -1,
                                      G_PARAM_READWRITE));
 
 	g_object_class_install_property (object_class, PROP_SCORE,
 		g_param_spec_int ("score",
                                      "score", "The score of the app",
-                                     NULL,
+                                     -1,
+				     100,
+				     -1,
                                      G_PARAM_READWRITE));
 
 	klass->get_local_icon_url = NULL;
@@ -387,7 +393,7 @@ gnome_app_item_get_score (GnomeAppItem *item)
 	GnomeAppItemClass *class = GNOME_APP_ITEM_GET_CLASS (item);
 
 	if (class->get_score)
-		return 	class->get_score (item);
+		return class->get_score (item);
 	else
 		return item->priv->_score;
 }
