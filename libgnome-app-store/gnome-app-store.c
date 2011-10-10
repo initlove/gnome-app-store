@@ -21,61 +21,46 @@ Author: David Liang <dliang@novell.com>
 
 #include <clutter/clutter.h>
 
-
-#include "local-app.h"
-#include "gnome-app-item.h"
-#include "gnome-app-config.h"
 #include "gnome-app-store.h"
+#include "server/app-server.h"
+#include "common/gnome-app-item.h"
+#include "common/gnome-app-config.h"
 
 struct _GnomeAppStorePrivate
 {
-	GSList *		apps;
+	AppServer *server;
+	
+	GHashTable *cidlist_group;
+	GHashTable *cname_id;	/*FIXME: better name ? */
+
+	GList *appid_list;	/* should be reload every timestamp time */
+	GHashTable *app_id;
+	gint app_timestamp;	/*FIXME: 1. should category have timestamp too?
+					 2. should appid_list and app_id have their own timestamp?
+					 3. should each app have its own timestamp?  add to the GnomeAppItem ?
+				*/
 };
 
 G_DEFINE_TYPE (GnomeAppStore, gnome_app_store, G_TYPE_OBJECT)
 
 static void
-load_apps (GnomeAppStore *store)
-{
-        xmlDocPtr doc_ptr;
-        xmlNodePtr root_node, apps_node, app_node;
-	gchar *file_uri;
-
-	GnomeAppConfig *conf;
-	conf = gnome_app_config_new ();
-
-	file_uri = g_build_filename (gnome_app_config_get_cache_dir (conf), "appdata.xml", NULL);
-	g_object_unref (conf);
-
-        doc_ptr = xmlParseFile (file_uri);
-
-        root_node = xmlDocGetRootElement (doc_ptr);
-
-        for (app_node = root_node->xmlChildrenNode; app_node; app_node = app_node->next) {
-                if (strcmp (app_node->name, "application") == 0) {
-			GnomeAppItem *item = gnome_app_item_new_with_node (app_node);
-			if (item)
-				store->priv->apps = g_slist_prepend (store->priv->apps, item);			
-                }
-        }
-
-        xmlFreeDoc(doc_ptr);
-	g_free (file_uri);
-}
-
-static void
 gnome_app_store_init (GnomeAppStore *store)
 {
 	GnomeAppStorePrivate *priv;
+	GnomeAppConfig *config;
 
 	store->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (store,
-                                                   GNOME_TYPE_APP_STORE,
+                                                   GNOME_APP_TYPE_STORE,
                                                    GnomeAppStorePrivate);
 
-	priv->apps = NULL;
-
-
-	load_apps (store);
+	priv->cidlist_group = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_list_free);
+	priv->cname_id = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	priv->appid_list = NULL;
+	priv->app_id = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
+	priv->app_timestamp = -1;	/* FIXME: not implement yet */
+	config = gnome_app_config_new ();
+	priv->server = app_server_new_from_config (config);
+	g_object_unref (config);
 }
 
 static void
@@ -89,7 +74,15 @@ gnome_app_store_finalize (GObject *object)
 {
 	GnomeAppStore *store = GNOME_APP_STORE (object);
 	GnomeAppStorePrivate *priv = store->priv;
-/*FIXME: should free lots of things ... */
+
+	if (priv->cidlist_group)
+		g_hash_table_destroy (priv->cidlist_group);
+	if (priv->cname_id)
+		g_hash_table_destroy (priv->cname_id);
+	if (priv->appid_list)
+		g_list_free (priv->appid_list);
+	if (priv->app_id)
+		g_hash_table_destroy (priv->app_id);
 
 	G_OBJECT_CLASS (gnome_app_store_parent_class)->finalize (object);
 }
@@ -108,51 +101,87 @@ gnome_app_store_class_init (GnomeAppStoreClass *klass)
 GnomeAppStore *
 gnome_app_store_new (void)
 {
-	return g_object_new (GNOME_TYPE_APP_STORE, NULL);
+	return g_object_new (GNOME_APP_TYPE_STORE, NULL);
 }
 
-/**
- * gnome_app_store_get_apps
- *
- * get all the apps from the given store
- *
- * Return value: (transfer none): GSList 
- */
-
-GSList *
-gnome_app_store_get_apps (GnomeAppStore *store)
+const GList *
+gnome_app_store_get_cid_list_by_group (GnomeAppStore *store, gchar *group)
 {
-        GnomeAppStorePrivate *priv = store->priv;
+	GList *list;
 
-	return priv->apps;
-}
+	if (!group)
+		list = g_hash_table_lookup (store->priv->cidlist_group, "All");
+	else
+		list = g_hash_table_lookup (store->priv->cidlist_group, group);
 
-guint
-gnome_app_store_get_counts (GnomeAppStore *store)
-{
-        GnomeAppStorePrivate *priv = store->priv;
-
-	return g_slist_length (priv->apps);
-}
-
-/**
- * gnome_app_store_get_nth_app
- *
- * get the nth app from the given store
- *
- * Return value: (transfer none): GnomeAppItem * 
- */
-GnomeAppItem *
-gnome_app_store_get_nth_app (GnomeAppStore *store, guint pos)
-{
-        GnomeAppStorePrivate *priv = store->priv;
-	GSList *l;
-	guint i;
-
-	for (i = 0, l = priv->apps; (i < pos) && l; i++, l = l->next) {
+	if (!list) {
+		list = app_server_get_cid_list_by_group (store->priv->server, group);
+		if (list) {
+			if (!group)
+				g_hash_table_insert (store->priv->cidlist_group, g_strdup ("All"), list);
+			else
+				g_hash_table_insert (store->priv->cidlist_group, g_strdup (group), list);
+		}
 	}
 
-	return (GnomeAppItem *) l->data;
+	return list;
 }
 
+const gchar *
+gnome_app_store_get_cname_by_id (GnomeAppStore *store, gchar *cid)
+{
+	gchar *cname;
+
+	cname = g_hash_table_lookup (store->priv->cname_id, cid);
+	if (!cname) {
+		cname = app_server_get_cname_by_id (store->priv->server, cid);
+		if (cname) {
+			/*cname is new allocated, no need to g_strdup it */
+			g_hash_table_insert (store->priv->cname_id, g_strdup (cid), cname);
+		}
+	}
+
+	return cname;
+}
+
+const GList *
+gnome_app_store_get_appid_list_by_cid_list (GnomeAppStore *store, const GList *cid_list)
+{
+	if (!store->priv->appid_list)
+		store->priv->appid_list = app_server_get_appid_list_by_cid_list (store->priv->server, cid_list);
+
+	return store->priv->appid_list;
+}
+
+static gboolean
+app_need_reload (GnomeAppStore *store, gchar *app_id)
+{
+	/*FIXME: not implement */
+	/* timestamp */
+	return FALSE;
+}
+
+static void
+app_timestamp_mark (GnomeAppStore *store, GnomeAppItem *item)
+{
+	/*FIXME: not implement */
+}
+
+const GnomeAppItem *
+gnome_app_store_get_app_by_id (GnomeAppStore *store, gchar *app_id)
+{
+	GnomeAppItem *item;
+
+	item = g_hash_table_lookup (store->priv->app_id, app_id);
+	if (!item) {
+		item = app_server_get_app_by_id (store->priv->server, app_id);
+		app_timestamp_mark (store, item);
+		g_hash_table_insert (store->priv->app_id, g_strdup (app_id), item);
+	} else if (app_need_reload (store, app_id)){
+		item = app_server_get_app_by_id (store->priv->server, app_id);
+		g_hash_table_replace (store->priv->app_id, g_strdup (app_id), item);
+	}
+
+	return item;
+}
 

@@ -1,4 +1,4 @@
-/* libgnome-app-store.h - 
+/* gnome-app-store.h - 
 
    Copyright 2011, Novell, Inc.
 
@@ -24,16 +24,17 @@
 #define __GNOME_APP_STORE_H__
 
 #include <glib.h>
-#include "gnome-app-item.h"
+#include <glib-object.h>
+#include "common/gnome-app-item.h"
 
 G_BEGIN_DECLS
 
-#define GNOME_TYPE_APP_STORE            (gnome_app_store_get_type ())
-#define GNOME_APP_STORE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GNOME_TYPE_APP_STORE, GnomeAppStore))
-#define GNOME_APP_STORE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  GNOME_TYPE_APP_STORE, GnomeAppStoreClass))
-#define GNOME_IS_APP_STORE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GNOME_TYPE_APP_STORE))
-#define GNOME_IS_APP_STORE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  GNOME_TYPE_APP_STORE))
-#define GNOME_APP_STORE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  GNOME_TYPE_APP_STORE, GnomeAppStoreClass))
+#define GNOME_APP_TYPE_STORE            (gnome_app_store_get_type ())
+#define GNOME_APP_STORE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GNOME_APP_TYPE_STORE, GnomeAppStore))
+#define GNOME_APP_STORE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  GNOME_APP_TYPE_STORE, GnomeAppStoreClass))
+#define GNOME_APP_IS_STORE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GNOME_APP_TYPE_STORE))
+#define GNOME_APP_IS_STORE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  GNOME_APP_TYPE_STORE))
+#define GNOME_APP_STORE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  GNOME_APP_TYPE_STORE, GnomeAppStoreClass))
 
 typedef struct _GnomeAppStore GnomeAppStore;
 typedef struct _GnomeAppStoreClass GnomeAppStoreClass;
@@ -51,11 +52,12 @@ struct _GnomeAppStoreClass
         GObjectClass parent_class;
 };
 
-GType  		          gnome_app_store_get_type              (void);
-GnomeAppStore *        	  gnome_app_store_new                   (void);
-guint			  gnome_app_store_get_counts            (GnomeAppStore *store);
-GnomeAppItem *            gnome_app_store_get_nth_app		(GnomeAppStore *store, guint pos);
-GSList *		  gnome_app_store_get_apps		(GnomeAppStore *store);
+GType			gnome_app_store_get_type			(void);
+GnomeAppStore *		gnome_app_store_new				(void);
+const	GList *		gnome_app_store_get_cid_list_by_group		(GnomeAppStore *store, gchar *group);
+const	gchar *		gnome_app_store_get_cname_by_id 		(GnomeAppStore *store, gchar *cid);
+const	GList *		gnome_app_store_get_appid_list_by_cid_list	(GnomeAppStore *store, const GList *cid_list);
+const	GnomeAppItem *	gnome_app_store_get_app_by_id			(GnomeAppStore *store, gchar *app_id);
 
 G_END_DECLS
 
