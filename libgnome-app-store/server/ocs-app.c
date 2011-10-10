@@ -25,6 +25,7 @@
 #include <stdlib.h>
 
 #include "gnome-app-item.h"
+#include "gnome-app-config.h"
 #include "ocs-app.h"
 
 typedef enum _OCS_KEY_WORDS {
@@ -96,12 +97,67 @@ get_type_from_name (gchar *name)
 	return OCS_LAST;
 }
 
+static void
+download_file (gchar *source, gchar *dest)
+{
+}
+
+static gchar *
+get_md5 (gchar *url)
+{
+}
+
+static gchar *
+get_local_url (gchar *url)
+{
+	GnomeAppConfig *config;
+	gchar *cache_dir;
+	gchar *md5;
+	gchar *local_url;
+/* FIXME: maybe we should use some functions like gnome_app_config_get_default () */ 
+	config = gnome_app_config_new ();
+	cache_dir = gnome_app_config_get_cache_dir ();
+	md5 = get_md5 (url);
+	local_url = g_build_filename (cache_dir, md5, NULL);
+	if (!g_file_test (local_url, G_FILE_TEST_EXISTS)) {
+		download_file (url, local_url);
+	}
+	g_free (md5);
+	g_free (cache_dir);
+	g_object_unref (config);
+	return local_url;
+}
+
+static gchar *
+get_local_icon_url (GnomeAppItem *item)
+{
+	const gchar *icon;
+	gchar *local_url;
+
+	icon = gnome_app_item_get_icon_name (item);
+	local_url = get_local_url (icon);
+
+	return local_url;
+}
+
+static gchar *
+get_local_screenshot_url (GnomeAppItem *item)
+{
+	const gchar *screenshot;
+
+	screenshot = gnome_app_item_get_screenshot (item);
+	local_url = get_local_url (screenshot);
+
+	return local_url;
+}
+
 /*FIXME: it is 'full' content, the summary one could be used at the first glance */
 GnomeAppItem *
 parse_app (OcsServer *ocs_server, xmlNodePtr data_node)
 {
 	OcsServerPrivate *priv = ocs_server->priv;
         xmlNodePtr app_node, node;
+        GnomeAppItemClass *class;
 	GnomeAppItem *item = NULL;
 	OCS_KEY_WORDS type;
 	gchar *content;
@@ -182,8 +238,17 @@ parse_app (OcsServer *ocs_server, xmlNodePtr data_node)
 						/*not implement*/
 						break;
 					case OCS_PREVIEW1:
+						/*not implement*/
+						break;
 					case OCS_PREVIEWPIC1:
+						g_object_set (G_OBJECT (item), "screenshot", content, NULL);
+						class = GNOME_APP_ITEM_GET_CLASS (item);
+						class->get_local_screenshot_url = get_local_screenshot_url;
+						break;
 					case OCS_SMALLPREVIEWPIC1:
+						g_object_set (G_OBJECT (item), "icon", content, NULL);
+						class = GNOME_APP_ITEM_GET_CLASS (item);
+						class->get_local_icon_url = get_local_icon_url;
 						break;
 					case OCS_DETAILPAGE:
 					case OCS_DOWNLOADTYPE1:
@@ -200,7 +265,6 @@ parse_app (OcsServer *ocs_server, xmlNodePtr data_node)
 					default:
 						break;
 				}
-				//	id = xmlNodeGetContent (node);
 			}
 		}
 	}
