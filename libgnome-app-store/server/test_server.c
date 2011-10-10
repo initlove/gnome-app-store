@@ -45,6 +45,7 @@ int main ()
 	const gchar *type;
 	const GList *local_categories;
 	GList *l;
+	gboolean ocs_debug = TRUE;
 
 	g_type_init ();
 
@@ -53,10 +54,34 @@ int main ()
 	type = app_server_get_server_type (server);
 	printf ("server type is %s\n", type);
 
-	debug_categories (server);
-	local_categories = gnome_app_get_local_categories ();
-	for (l = local_categories; l; l = l->next)
-		debug_apps_by_group (server, (gchar *)l->data);
+	if (!ocs_debug) {
+		debug_categories (server);
+		local_categories = gnome_app_get_local_categories ();
+		for (l = local_categories; l; l = l->next)
+			debug_apps_by_group (server, (gchar *)l->data);
+	} else {
+	/*FIXME: in ocs debug, we use api.test.opendesktop.org, so the category should not be the local one ... shit */
+		GList *ocs_list, *app_list;
+		gchar *id, *name;
+
+		ocs_list = app_server_get_cid_list_by_group (server, NULL);
+		for (l = ocs_list; l; l = l->next) {
+			id = (gchar *) l->data;
+			name = app_server_get_cname_by_id (server, id);
+			printf ("%s:%s\n", id, name);
+		}
+
+		app_list = app_server_get_appid_list_by_cid_list (server, ocs_list);
+		for (l = app_list; l; l = l->next) {
+			id = (gchar *) l->data;
+			printf ("app id %s\n", id);
+		}
+
+		GnomeAppItem *item;
+		item = app_server_get_app_by_id (server, id);
+		g_list_free (ocs_list);
+		g_list_free (app_list);
+	}
 
 	g_object_unref (config);
 	g_object_unref (server);
