@@ -1,4 +1,4 @@
-SUBDIRS = libgnome-app-store po
+SUBDIRS = libgnome-app-store ui po
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
