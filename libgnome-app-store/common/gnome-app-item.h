@@ -50,8 +50,9 @@ struct _GnomeAppItemClass
 {
         GObjectClass parent_class;
 
-	gint	(*get_comment_counts)		(GnomeAppItem *item);
-	gfloat  (*get_rate)			(GnomeAppItem *item);
+	glong	(*get_comment_counts)		(GnomeAppItem *item);
+	glong	(*get_download_counts)		(GnomeAppItem *item);
+	gint	(*get_score)			(GnomeAppItem *item);
 	gchar 	*(*get_local_icon_url) 		(GnomeAppItem *item);
 	gchar 	*(*get_local_screenshot_url) 	(GnomeAppItem *item);
 };
@@ -64,8 +65,10 @@ const gchar *		gnome_app_item_get_name			(GnomeAppItem *item);
 const gchar *		gnome_app_item_get_pkgname		(GnomeAppItem *item);
 const gchar *		gnome_app_item_get_icon_name		(GnomeAppItem *item);	/* no need to use it */
 const gchar *		gnome_app_item_get_categories		(GnomeAppItem *item);
-gint			gnome_app_item_get_comment_counts	(GnomeAppItem *item);
-gfloat			gnome_app_item_get_rate			(GnomeAppItem *item);
+const gchar *		gnome_app_item_get_license		(GnomeAppItem *item);
+glong			gnome_app_item_get_comment_counts	(GnomeAppItem *item);
+glong			gnome_app_item_get_download_counts	(GnomeAppItem *item);
+gint			gnome_app_item_get_score		(GnomeAppItem *item);
 const gchar *		gnome_app_item_get_local_icon_url	(GnomeAppItem *item);
 const gchar *		gnome_app_item_get_local_screenshot_url	(GnomeAppItem *item);
 void			gnome_app_item_debug			(GnomeAppItem *item);

@@ -23,15 +23,19 @@ struct _GnomeAppItemPrivate
 	/* The way to install the pkg. */
 	gchar *		pkgname;
 	gchar *		icon;
-	gchar *		_local_icon_url;
-	gchar *		_local_screenshot_url;
-	gint		_comment_counts;
-	gfloat		_rate;
 	gchar *		summary;
 	/* type1;type2 */
 	gchar *		categories;
 	/* mime1;mime2 */
 	gchar *		mimetypes;
+	gchar *		license;
+
+	/*the var begin with '_' may have function binding */
+	gchar *		_local_icon_url;
+	gchar *		_local_screenshot_url;
+	glong		_comment_counts;
+	glong		_download_counts;
+	gfloat		_score;
 
 };
 
@@ -43,7 +47,11 @@ enum {
         PROP_ICON,
         PROP_SUMMARY,
         PROP_CATEGORIES,
-	PROP_MIMETYPES
+	PROP_MIMETYPES,
+	PROP_LICENSE,
+	PROP_COMMENT_COUNTS,
+	PROP_DOWNLOAD_COUNTS,
+	PROP_SCORE
 };
 
 
@@ -62,12 +70,15 @@ gnome_app_item_init (GnomeAppItem *item)
 	priv->name = NULL;
 	priv->pkgname = NULL;
 	priv->icon = NULL;
-	priv->_local_icon_url = NULL;
-	priv->_local_screenshot_url = NULL;
 	priv->summary = NULL;
 	priv->categories = NULL;
 	priv->mimetypes = NULL;
-
+	priv->license = NULL;
+	priv->_local_icon_url = NULL;
+	priv->_local_screenshot_url = NULL;
+	priv->_comment_counts = -1;
+	priv->_download_counts = -1;
+	priv->_score = -1;
 }
 
 static void
@@ -100,6 +111,8 @@ gnome_app_item_finalize (GObject *object)
 		g_free (priv->categories);
 	if (priv->mimetypes)
 		g_free (priv->mimetypes);
+	if (priv->license)
+		g_free (priv->license);
 
 	G_OBJECT_CLASS (gnome_app_item_parent_class)->finalize (object);
 }
@@ -149,6 +162,20 @@ gnome_app_item_set_property (GObject      *object,
 				g_free (priv->mimetypes);
 			priv->mimetypes = g_strdup (g_value_get_string (value));
 			break;
+		case PROP_LICENSE:
+			if (priv->license)
+				g_free (priv->license);
+			priv->license = g_strdup (g_value_get_string (value));
+			break;
+		case PROP_COMMENT_COUNTS:
+			priv->_comment_counts = g_value_get_long (value);
+			break;
+		case PROP_DOWNLOAD_COUNTS:
+			priv->_download_counts = g_value_get_long (value);
+			break;
+		case PROP_SCORE:
+			priv->_score = g_value_get_int (value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -185,6 +212,18 @@ gnome_app_item_get_property (GObject        *object,
 			break;
 		case PROP_MIMETYPES:
 			g_value_set_string (value, priv->mimetypes);
+			break;
+		case PROP_LICENSE:
+			g_value_set_string (value, priv->license);
+			break;
+		case PROP_COMMENT_COUNTS:
+			g_value_set_long (value, priv->_comment_counts);
+			break;
+		case PROP_DOWNLOAD_COUNTS:
+			g_value_set_long (value, priv->_download_counts);
+			break;
+		case PROP_SCORE:
+			g_value_set_int (value, priv->_score);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -244,10 +283,34 @@ gnome_app_item_class_init (GnomeAppItemClass *klass)
                                      NULL,
                                      G_PARAM_READWRITE));
 
+	g_object_class_install_property (object_class, PROP_LICENSE,
+		g_param_spec_string ("license",
+                                     "license", "The license of the app",
+                                     NULL,
+                                     G_PARAM_READWRITE));
+
+	g_object_class_install_property (object_class, PROP_COMMENT_COUNTS,
+		g_param_spec_long ("comment-counts",
+                                     "comment-counts", "The comment counts of the app",
+                                     NULL,
+                                     G_PARAM_READWRITE));
+
+	g_object_class_install_property (object_class, PROP_DOWNLOAD_COUNTS,
+		g_param_spec_long ("download-counts",
+                                     "download-counts", "The download counts of the app",
+                                     NULL,
+                                     G_PARAM_READWRITE));
+
+	g_object_class_install_property (object_class, PROP_SCORE,
+		g_param_spec_int ("score",
+                                     "score", "The score of the app",
+                                     NULL,
+                                     G_PARAM_READWRITE));
+
 	klass->get_local_icon_url = NULL;
 	klass->get_local_screenshot_url = NULL;
 	klass->get_comment_counts = NULL;
-	klass->get_rate = NULL;
+	klass->get_score = NULL;
 
 	g_type_class_add_private (object_class, sizeof (GnomeAppItemPrivate));
 }
@@ -298,27 +361,35 @@ gnome_app_item_get_categories (GnomeAppItem *item)
 	return priv->categories;
 }
 
+const gchar *
+gnome_app_item_get_license (GnomeAppItem *item)
+{
+        GnomeAppItemPrivate *priv = item->priv;
+
+	return priv->license;
+}
+
 /*FIXME: should ask the sever every time ? */
-gint
+glong
 gnome_app_item_get_comment_counts (GnomeAppItem *item)
 {
 	GnomeAppItemClass *class = GNOME_APP_ITEM_GET_CLASS (item);
 
 	if (class->get_comment_counts)
-		return 	class->get_comment_counts (item);
+		return class->get_comment_counts (item);
 	else
-		return -1;	/* the server did not support this */
+		return item->priv->_comment_counts;
 }
 
-gfloat
-gnome_app_item_get_rate (GnomeAppItem *item)
+gint
+gnome_app_item_get_score (GnomeAppItem *item)
 {
 	GnomeAppItemClass *class = GNOME_APP_ITEM_GET_CLASS (item);
 
-	if (class->get_rate)
-		return 	class->get_rate (item);
+	if (class->get_score)
+		return 	class->get_score (item);
 	else
-		return -1.0; 	/* the server did not support this */
+		return item->priv->_score;
 }
 
 const gchar *
