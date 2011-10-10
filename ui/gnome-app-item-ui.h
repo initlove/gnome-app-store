@@ -25,6 +25,8 @@
 #include <glib.h>
 #include <clutter/clutter.h>
 
+#include "../libgnome-app-store/common/gnome-app-item.h"
+
 G_BEGIN_DECLS
 
 #define GNOME_APP_ITEM_UI_LOG_DOMAIN = "item ui"
@@ -53,13 +55,10 @@ struct _GnomeAppItemUIClass
 };
 
 GType  		          gnome_app_item_ui_get_type		(void);
-GnomeAppItemUI *        	  gnome_app_item_ui_new			(void);
-
-GnomeAppItemUI *          gnome_app_item_ui_new_with_item (GnomeAppItem *app);
-
-ClutterActor *		  gnome_app_item_ui_get_icon(GnomeAppItem *item);
-
-gboolean gnome_app_item_ui_set_item (GnomeAppItemUI *ui, GnomeAppItem *app);
+GnomeAppItemUI *      	  gnome_app_item_ui_new			(void);
+GnomeAppItemUI *          gnome_app_item_ui_new_with_app 	(GnomeAppItem *app);
+ClutterActor *		  gnome_app_item_ui_get_icon		(GnomeAppItemUI *ui);
+gboolean 		  gnome_app_item_ui_set_item 		(GnomeAppItemUI *ui, GnomeAppItem *app);
 
 G_END_DECLS
 

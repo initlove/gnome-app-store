@@ -18,7 +18,9 @@ Author: Lance Wang <lzwang@suse.com>
 
 #include <clutter/clutter.h>
 
-#include "gnome-app-item.h"
+#include "gnome-app-item-ui.h"
+#include "../libgnome-app-store/common/gnome-app-item.h"
+#include "../libgnome-app-store/common/gnome-app-install.h"
 
 struct _GnomeAppItemUIPrivate
 {
@@ -33,9 +35,11 @@ gnome_app_item_ui_init (GnomeAppItemUI *ui)
 {
 	GnomeAppItemUIPrivate *priv;
 
-	item->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
+	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
 							 GNOME_TYPE_APP_ITEM_UI,
 							 GnomeAppItemUIPrivate);
+	priv->app = NULL;
+	priv->icon = NULL;
 }
 
 static void
@@ -64,7 +68,7 @@ gnome_app_item_ui_class_init (GnomeAppItemUIClass *klass)
 GnomeAppItemUI *
 gnome_app_item_ui_new (void)
 {
-	return g_object_new (GNOME_TYPE_APP_ITEM, NULL);
+	return g_object_new (GNOME_APP_TYPE_ITEM, NULL);
 }
 
 static void
@@ -78,7 +82,7 @@ free_ui_resources (GnomeAppItemUI *ui)
 	}
 }
 
-void
+gboolean
 gnome_app_item_ui_set_app (GnomeAppItemUI *ui,
 			    GnomeAppItem *app)
 {
@@ -86,7 +90,6 @@ gnome_app_item_ui_set_app (GnomeAppItemUI *ui,
 
 	g_return_val_if_fail (ui != NULL, FALSE);
 	g_return_val_if_fail (app != NULL, FALSE);
-
 	priv = ui->priv;
 
 	if (priv->app != NULL) {
@@ -94,7 +97,9 @@ gnome_app_item_ui_set_app (GnomeAppItemUI *ui,
 	}
 	g_object_ref (app);
 	priv->app = app;
-	free_ui_resources (ui);
+//	free_ui_resources (ui);
+
+	return TRUE;
 }
 
 GnomeAppItemUI *
@@ -127,34 +132,46 @@ get_icon (GnomeAppItemUI *ui)
 static ClutterActor *
 get_icon_from_app (GnomeAppItem *app)
 {
+	const gchar *icon_name;
+	const gchar *app_name;
 	const gchar *uri;
-
-	ClutterActor *icon = NULL;
-
 	GError *err = NULL;
 
-	uri = gnome_app_item_get_icon_uri (app);
-	if (uri == NULL) {
-		g_log (GNOME_APP_ITEM_UI_LOG_DOMAIN,
-		       G_LOG_LEVEL_WARNING,
-		       "there is no icon");
-		return NULL;
-	}
+	uri = gnome_app_item_get_local_icon_url (app);
 
-	icon = clutter_texture_new_from_file (uri, &err);
-	if (icon == NULL) {
-		g_log (GNOME_APP_ITEM_UI_LOG_DOMAIN,
-		       G_LOG_LEVEL_WARNING,
-		       "failed to get icon %s: %s",
-		       uri,
-		       err->message);
-		g_error_free (err);
-		return NULL;
-	}
-	clutter_actor_set_width (icon, 64);
-	clutter_actor_set_height (icon, 64);
+        ClutterActor *box, *text;
+        ClutterActor *icon = NULL; //*FIXME we have icon, but can not be recognized by clutter
+        ClutterLayoutManager *layout;
+        ClutterAction *action;
 
-	return CLUTTER_ACTOR (icon);
+        layout = clutter_box_layout_new ();
+        clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (layout), TRUE);
+        clutter_box_layout_set_spacing (CLUTTER_BOX_LAYOUT (layout), 6);
+
+	app_name = gnome_app_item_get_name (app);
+        box = clutter_box_new (layout);
+        text = clutter_text_new ();
+        clutter_text_set_ellipsize (CLUTTER_TEXT (text), PANGO_ELLIPSIZE_END);
+        clutter_text_set_text (CLUTTER_TEXT (text), app_name);
+        clutter_actor_set_width (text, 64);
+        clutter_container_add_actor (CLUTTER_CONTAINER (box), text);
+
+        if (uri) {
+                icon = clutter_texture_new_from_file (uri, NULL);
+        }
+
+        if (icon) {
+        	clutter_actor_set_width (icon, 64);
+	        clutter_actor_set_height (icon, 64);
+        	clutter_container_add_actor (CLUTTER_CONTAINER (box), icon);
+	        clutter_actor_set_reactive (box, TRUE);
+	} else {
+	/* what to do? */
+	}
+        g_signal_connect_swapped (box, "button-press-event",
+                            G_CALLBACK (gnome_app_install), gnome_app_item_get_pkgname (app));
+
+	return box;
 }
 
 ClutterActor *
@@ -164,7 +181,7 @@ gnome_app_item_ui_get_icon (GnomeAppItemUI *ui)
 
 	g_return_val_if_fail (GNOME_IS_APP_ITEM_UI(ui), NULL);
 
-	if (ui->app == NULL) {
+	if (ui->priv->app == NULL) {
 		return NULL;
 	}
 
@@ -173,11 +190,10 @@ gnome_app_item_ui_get_icon (GnomeAppItemUI *ui)
 		return icon;
 	}
 
-	icon = get_icon_from_app (ui->app);
+	icon = get_icon_from_app (ui->priv->app);
 	if (icon != NULL) {
 		set_icon (ui, icon);
 	}
 
 	return icon;
 }
-
