@@ -144,10 +144,11 @@ gnome_app_config_get_cache_dir (GnomeAppConfig *config)
 	if (error) {
 		g_error_free (error);
 		/*FIXME: might do better? */
-		if (strcmp (type, "ocs") == 0)
+		if (strcmp (type, "ocs") == 0) {
 			val = g_build_filename (g_get_home_dir (), ".gnome-app-store", "cache", type, NULL);
-		else
+		} else if (strcmp (type, "app_stream") == 0) {
 			val = g_build_filename (g_get_home_dir (), ".gnome-app-store", "cache", NULL);
+		}
 	} else
 		val = g_strdup (val);
 	
