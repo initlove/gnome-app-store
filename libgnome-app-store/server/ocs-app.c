@@ -199,7 +199,7 @@ parse_app (OcsServer *ocs_server, xmlNodePtr data_node)
 
 	for (app_node = data_node->xmlChildrenNode; app_node; app_node = app_node->next) {
 		if (strcmp (app_node->name, "content") == 0) {
-			for (node = node->xmlChildrenNode; node; node = node->next) {
+			for (node = app_node->xmlChildrenNode; node; node = node->next) {
 				type = get_type_from_name ((gchar *)node->name);
 				content = xmlNodeGetContent (node);
 				switch (type) {
