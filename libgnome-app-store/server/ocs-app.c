@@ -19,11 +19,14 @@
  *
  * Author: Liang chenye <liangchenye@gmail.com>
  */
+#include <libsoup/soup-session.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "gnome-app-utils.h"
 #include "gnome-app-item.h"
 #include "gnome-app-config.h"
 #include "ocs-app.h"
@@ -98,17 +101,44 @@ get_type_from_name (gchar *name)
 }
 
 static void
-download_file (gchar *source, gchar *dest)
+download_file (const gchar *source, const gchar *dest)
 {
+	SoupSession *session;
+	gchar *cafile;
+	gboolean sync;
+	gchar *data;
+	gint len;
+	FILE *fp;
+
+	sync = TRUE;
+	cafile = NULL;
+	session = gnome_app_soup_session_new (sync, cafile);
+	data = gnome_app_get_data_from_url (session, source, &len);
+
+	fp = fopen (dest, "w");
+	if (fp) {
+		fwrite (data, 1, len, fp);
+		fclose (fp);
+	}
+
+	g_free (data);
+	g_object_unref (session);
 }
 
 static gchar *
-get_md5 (gchar *url)
+get_md5 (const gchar *url)
 {
+	gchar *checksum;
+
+	checksum = g_compute_checksum_for_data (G_CHECKSUM_MD5,
+                                      (const guchar *) url,
+                                      strlen (url));
+
+	return checksum;
 }
 
 static gchar *
-get_local_url (gchar *url)
+get_local_url (const gchar *url)
 {
 	GnomeAppConfig *config;
 	gchar *cache_dir;
@@ -116,15 +146,16 @@ get_local_url (gchar *url)
 	gchar *local_url;
 /* FIXME: maybe we should use some functions like gnome_app_config_get_default () */ 
 	config = gnome_app_config_new ();
-	cache_dir = gnome_app_config_get_cache_dir ();
+	cache_dir = gnome_app_config_get_cache_dir (config);
 	md5 = get_md5 (url);
 	local_url = g_build_filename (cache_dir, md5, NULL);
 	if (!g_file_test (local_url, G_FILE_TEST_EXISTS)) {
-		download_file (url, local_url);
+		download_file (url, (const gchar *)local_url);
 	}
 	g_free (md5);
 	g_free (cache_dir);
 	g_object_unref (config);
+
 	return local_url;
 }
 
@@ -144,6 +175,7 @@ static gchar *
 get_local_screenshot_url (GnomeAppItem *item)
 {
 	const gchar *screenshot;
+	gchar *local_url;
 
 	screenshot = gnome_app_item_get_screenshot (item);
 	local_url = get_local_url (screenshot);

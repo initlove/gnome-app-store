@@ -19,24 +19,16 @@
  *
  * Author: Liang chenye <liangchenye@gmail.com>
  */
-#ifdef HAVE_GNOME
-#include <libsoup/soup-gnome.h>
-#else
-#include <libsoup/soup.h>
-#endif
-#include <libsoup/soup-address.h>
-#include <libsoup/soup-auth-domain-basic.h>
-#include <libsoup/soup-auth-domain-digest.h>
-#include <libsoup/soup-message.h>
-#include <libsoup/soup-server.h>
+
+#include <libsoup/soup-session.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-
 #include <stdio.h>
 
 #include "ocs-app.h"
 #include "ocs-server.h"
 #include "gnome-app-config.h"
+#include "gnome-app-utils.h"
 
 #if 0
 #define server_debug TRUE
@@ -65,76 +57,6 @@ enum {
 
 G_DEFINE_TYPE (OcsServer, ocs_server, APP_TYPE_SERVER)
 
-static gchar *
-get_url (OcsServer *server, const char *url, gint *len)
-{
-	const char *name;
-	SoupMessage *msg;
-	const char *header;
-	const char *method;
-	SoupSession *session;
-	gchar *val = NULL;
-
-	printf ("Resolve: %s\n", url);
-
-	session = server->priv->session;
-	method = SOUP_METHOD_GET;
-	msg = soup_message_new (method, url);
-	soup_message_set_flags (msg, SOUP_MESSAGE_NO_REDIRECT);
-
-	soup_session_send_message (session, msg);
-
-	name = soup_message_get_uri (msg)->path;
-
-	if (server_debug) {
-		SoupMessageHeadersIter iter;
-		const char *hname, *value;
-		char *path = soup_uri_to_string (soup_message_get_uri (msg), TRUE);
-
-		printf ("%s %s HTTP/1.%d\n", method, path,
-		        soup_message_get_http_version (msg));
-		g_free (path);
-		soup_message_headers_iter_init (&iter, msg->request_headers);
-		while (soup_message_headers_iter_next (&iter, &hname, &value))
-		        printf ("%s: %s\r\n", hname, value);
-		printf ("\n");
-
-		printf ("HTTP/1.%d %d %s\n",
-		        soup_message_get_http_version (msg),
-		        msg->status_code, msg->reason_phrase);
-		soup_message_headers_iter_init (&iter, msg->response_headers);
-		while (soup_message_headers_iter_next (&iter, &hname, &value))
-		        printf ("%s: %s\r\n", hname, value);
-		printf ("\n");
-	} else if (SOUP_STATUS_IS_TRANSPORT_ERROR (msg->status_code))
-		printf ("%s: %d %s\n", name, msg->status_code, msg->reason_phrase);
-
-	if (SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
-		header = soup_message_headers_get_one (msg->response_headers,
-		                                       "Location");
-		if (header) {
-		        SoupURI *uri;
-		        char *uri_string;
-
-		        if (!server_debug)
-		                printf ("  -> %s\n", header);
-
-		        uri = soup_uri_new_with_base (soup_message_get_uri (msg), header);
-		        uri_string = soup_uri_to_string (uri, FALSE);
-		        val = get_url (server, uri_string, len);
-		        g_free (uri_string);
-		        soup_uri_free (uri);
-		}
-	} else if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
-		val = g_strdup (msg->response_body->data);
-		*len = msg->response_body->length;
-	}
-
-	g_object_unref (msg);
-
-	return val;
-}
-
 static void
 ocs_server_init (OcsServer *server)
 {
@@ -145,6 +67,12 @@ ocs_server_init (OcsServer *server)
 						OcsServerPrivate);
 	priv->all_cid = NULL;
 	priv->cid_cname = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	priv->server_uri = NULL;
+	priv->username = NULL;
+	priv->password = NULL;
+	priv->sync = TRUE;
+	priv->cafile = NULL;
+	priv->session = NULL;
 }
 
 static const gchar *
@@ -236,7 +164,7 @@ init_cid (AppServer *server)
 	get_cate_string = "/v1/content/categories";
 	url = g_strdup_printf ("http://%s:%s@%s%s", priv->username, priv->password,
 	                        priv->server_uri, get_cate_string);
-	val = get_url (ocs_server, url, &len);
+	val = gnome_app_get_data_from_url (priv->session, url, &len);
 
         doc_ptr = xmlParseMemory (val, len);
 	if (!doc_ptr) {
@@ -343,7 +271,7 @@ get_appid_list_by_cid_list (AppServer *server, GList *cid_list)
 	gint len;
 	GList *list = NULL;
 
-	val = get_url (ocs_server, url, &len);
+	val = gnome_app_get_data_from_url (priv->session, url, &len);
 
         doc_ptr = xmlParseMemory (val, len);
 	if (!doc_ptr) {
@@ -378,7 +306,7 @@ get_app_by_id (AppServer *server, gchar *app_id)
 	gint len;
 	GnomeAppItem *item = NULL;
 
-	val = get_url (ocs_server, url, &len);
+	val = gnome_app_get_data_from_url (priv->session, url, &len);
         doc_ptr = xmlParseMemory (val, len);
 	if (!doc_ptr) {
 		printf ("Cannot parse the value:\n%s\n", val);
@@ -407,30 +335,7 @@ set_config (AppServer *server, GnomeAppConfig *config)
 	priv->password = g_strdup ("novell123456");
 	priv->sync = TRUE;
 	priv->cafile = NULL;
-
-	if (priv->sync) {
-		priv->session = soup_session_sync_new_with_options (
-		        SOUP_SESSION_SSL_CA_FILE, priv->cafile,
-#ifdef HAVE_GNOME
-		        SOUP_SESSION_ADD_FEATURE_BY_TYPE, SOUP_TYPE_GNOME_FEATURES_2_26,
-#endif
-		        SOUP_SESSION_ADD_FEATURE_BY_TYPE, SOUP_TYPE_CONTENT_DECODER,
-		        SOUP_SESSION_ADD_FEATURE_BY_TYPE, SOUP_TYPE_COOKIE_JAR,
-		        SOUP_SESSION_USER_AGENT, "get ",
-		        SOUP_SESSION_ACCEPT_LANGUAGE_AUTO, TRUE,
-		        NULL);
-	} else {
-		priv->session = soup_session_async_new_with_options (
-		        SOUP_SESSION_SSL_CA_FILE, priv->cafile,
-#ifdef HAVE_GNOME
-		        SOUP_SESSION_ADD_FEATURE_BY_TYPE, SOUP_TYPE_GNOME_FEATURES_2_26,
-#endif
-		        SOUP_SESSION_ADD_FEATURE_BY_TYPE, SOUP_TYPE_CONTENT_DECODER,
-		        SOUP_SESSION_ADD_FEATURE_BY_TYPE, SOUP_TYPE_COOKIE_JAR,
-		        SOUP_SESSION_USER_AGENT, "get ",
-		        SOUP_SESSION_ACCEPT_LANGUAGE_AUTO, TRUE,
-		        NULL);
-	}
+	priv->session = gnome_app_soup_session_new (priv->sync, priv->cafile);
 
 	return TRUE;
 }
@@ -447,12 +352,20 @@ ocs_server_finalize (GObject *object)
         OcsServer *server = OCS_SERVER (object);
         OcsServerPrivate *priv = server->priv;
 
-        if (priv->cid_cname) {
+        if (priv->cid_cname)
                 g_hash_table_destroy (priv->cid_cname);
-        }
-	if (priv->all_cid) {
+	if (priv->all_cid)
 		g_list_free (priv->all_cid);
-	}
+	if (priv->server_uri)
+		g_free (priv->server_uri);
+	if (priv->username)
+		g_free (priv->username);
+	if (priv->password)
+		g_free (priv->password);
+	if (priv->cafile)
+		g_free (priv->cafile);
+	if (priv->session)
+		g_object_unref (priv->session);
 
         G_OBJECT_CLASS (ocs_server_parent_class)->finalize (object);
 }

@@ -61,7 +61,7 @@ struct _OcsServerClass
 	AppServerClass parent_class;
 };
 
-GType        ocs_server_get_type                 (void) G_GNUC_CONST;
+GType		ocs_server_get_type	(void) G_GNUC_CONST;
 
 G_END_DECLS
 
