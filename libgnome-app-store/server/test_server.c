@@ -63,7 +63,9 @@ int main ()
 	/*FIXME: in ocs debug, we use api.test.opendesktop.org, so the category should not be the local one ... shit */
 		GList *ocs_list, *app_list;
 		gchar *id, *name;
-
+		GnomeAppItem *item;
+		const gchar *local_screenshot_url;
+		const gchar *local_icon_url;
 		ocs_list = app_server_get_cid_list_by_group (server, NULL);
 		for (l = ocs_list; l; l = l->next) {
 			id = (gchar *) l->data;
@@ -75,13 +77,13 @@ int main ()
 		for (l = app_list; l; l = l->next) {
 			id = (gchar *) l->data;
 			printf ("app id %s\n", id);
+			item = app_server_get_app_by_id (server, id);
+			local_screenshot_url = gnome_app_item_get_local_screenshot_url (item);
+printf ("local screenshot url %s\n\n", local_screenshot_url);
+			local_icon_url = gnome_app_item_get_local_icon_url (item);
+printf ("local icon url %s\n\n", local_icon_url);
 		}
 
-		GnomeAppItem *item;
-		gchar *local_screenshot_url;
-		item = app_server_get_app_by_id (server, id);
-		local_screenshot_url = gnome_app_item_get_local_screenshot_url (item);
-printf ("local screenshot url %s\n", local_screenshot_url);
 		g_list_free (ocs_list);
 		g_list_free (app_list);
 	}

@@ -157,7 +157,10 @@ get_icon_from_app (GnomeAppItem *app)
         clutter_container_add_actor (CLUTTER_CONTAINER (box), text);
 
         if (uri) {
+printf ("we use uri %s\n", uri);
                 icon = clutter_texture_new_from_file (uri, NULL);
+if (icon == NULL) 
+printf ("but the icon is NULL\n");
         }
 
         if (icon) {

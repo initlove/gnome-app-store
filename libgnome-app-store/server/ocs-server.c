@@ -54,6 +54,7 @@ enum {
 	PROP_CONFIG,
 };
 
+static SoupSession *current_session = NULL;
 
 G_DEFINE_TYPE (OcsServer, ocs_server, APP_TYPE_SERVER)
 
@@ -335,6 +336,8 @@ set_config (AppServer *server, GnomeAppConfig *config)
 	priv->cafile = NULL;
 	priv->session = gnome_app_soup_session_new (priv->sync, priv->cafile);
 
+	current_session = priv->session;
+
 	return TRUE;
 }
 
@@ -364,6 +367,7 @@ ocs_server_finalize (GObject *object)
 		g_free (priv->cafile);
 	if (priv->session)
 		g_object_unref (priv->session);
+	current_session = NULL;
 
         G_OBJECT_CLASS (ocs_server_parent_class)->finalize (object);
 }
@@ -391,3 +395,8 @@ ocs_server_class_init (OcsServerClass *klass)
 	g_type_class_add_private (object_class, sizeof (OcsServerPrivate));
 }
 
+SoupSession *
+ocs_server_get_current_session ()
+{
+	return current_session;
+}

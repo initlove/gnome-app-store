@@ -37,7 +37,12 @@
 #include <string.h>
 #include "gnome-app-utils.h"
 
+#if 0
 #define server_debug TRUE
+#else
+#define server_debug FALSE
+#endif
+
 
 static GList *local_categories = NULL;
 
@@ -131,7 +136,8 @@ gnome_app_get_data_from_url (SoupSession *session, const char *url)
 	const char *method;
 	SoupBuffer *buf = NULL;
 
-	printf ("Resolve: %s\n", url);
+	if (server_debug)
+		printf ("Resolve: %s\n", url);
 
 	method = SOUP_METHOD_GET;
 	msg = soup_message_new (method, url);

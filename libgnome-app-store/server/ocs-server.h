@@ -23,6 +23,7 @@
 #ifndef __OCS_SERVER_H__
 #define __OCS_SERVER_H__
 
+#include <libsoup/soup-session.h>
 #include "app-server.h"
 
 G_BEGIN_DECLS
@@ -62,6 +63,7 @@ struct _OcsServerClass
 };
 
 GType		ocs_server_get_type	(void) G_GNUC_CONST;
+SoupSession	*ocs_server_get_current_session ();	/*FIXME: tmp*/
 
 G_END_DECLS
 

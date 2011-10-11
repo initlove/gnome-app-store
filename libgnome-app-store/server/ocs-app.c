@@ -108,12 +108,28 @@ download_file (const gchar *source, const gchar *dest)
 	gchar *cafile;
 	gboolean sync;
 	FILE *fp;
-
+	
+	buf = NULL;
 	sync = TRUE;
 	cafile = NULL;
-	session = gnome_app_soup_session_new (sync, cafile);
-	buf = gnome_app_get_data_from_url (session, source);
+	session = ocs_server_get_current_session ();
 
+	gint retry;
+	for (retry = 0; retry <3; retry ++) {
+		buf = gnome_app_get_data_from_url (session, source);
+		if (buf)
+			break;
+printf ("retry %d\n", retry);
+	}
+	
+/*FIXME: tmp */
+	if (!buf) {
+		gchar *cmd;
+		cmd = g_strdup_printf ("wget \"%s\" -O \"%s\"", source, dest);
+printf ("we using wget .. <%s>\n", cmd);
+		system (cmd);
+		return;
+	}
 	fp = fopen (dest, "w");
 	if (fp) {
 		fwrite (buf->data, 1, buf->length, fp);
@@ -121,7 +137,6 @@ download_file (const gchar *source, const gchar *dest)
 	}
 
 	soup_buffer_free (buf);
-	g_object_unref (session);
 }
 
 static gchar *
@@ -278,7 +293,6 @@ parse_app (OcsServer *ocs_server, xmlNodePtr data_node)
 						/*not implement*/
 						break;
 					case OCS_PREVIEWPIC1:
-printf ("content <%s> <%d>\n", content, strlen (content));
 						g_object_set (G_OBJECT (item), "screenshot", content, NULL);
 						class = GNOME_APP_ITEM_GET_CLASS (item);
 						class->get_local_screenshot_url = get_local_screenshot_url;
