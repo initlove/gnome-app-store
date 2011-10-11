@@ -46,6 +46,7 @@ create_default_key_file (gchar *file_url)
 	data = g_key_file_to_data (key_file, &len, NULL);
 	fwrite (data, 1, len, fp);
 	fclose (fp);
+	g_free (data);
 
 	return key_file;	
 }
