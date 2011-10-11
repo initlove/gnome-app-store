@@ -203,8 +203,10 @@ parse_app (OcsServer *ocs_server, xmlNodePtr data_node)
 	for (app_node = data_node->xmlChildrenNode; app_node; app_node = app_node->next) {
 		if (strcmp (app_node->name, "content") == 0) {
 			for (node = app_node->xmlChildrenNode; node; node = node->next) {
-				type = get_type_from_name ((gchar *)node->name);
 				content = xmlNodeGetContent (node);
+				if (!content || strlen (content) < 1)
+					continue;
+				type = get_type_from_name ((gchar *)node->name);
 				switch (type) {
         				case OCS_ID:
 						item = gnome_app_item_new ();
@@ -276,6 +278,7 @@ parse_app (OcsServer *ocs_server, xmlNodePtr data_node)
 						/*not implement*/
 						break;
 					case OCS_PREVIEWPIC1:
+printf ("content <%s> <%d>\n", content, strlen (content));
 						g_object_set (G_OBJECT (item), "screenshot", content, NULL);
 						class = GNOME_APP_ITEM_GET_CLASS (item);
 						class->get_local_screenshot_url = get_local_screenshot_url;
