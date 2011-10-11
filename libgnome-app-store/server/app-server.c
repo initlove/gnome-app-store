@@ -108,12 +108,16 @@ app_server_new_from_config (GnomeAppConfig *config)
 	g_return_val_if_fail (GNOME_APP_IS_CONFIG (config), NULL);
 	
 	AppServer *server;
+	gchar *type;
 
-/*FIXME: more check here */
-	if (0)
+	type = gnome_app_config_get_server_type (config);
+	
+	if (strcmp (type, "ocs") == 0)
 		server = g_object_new (TYPE_OCS_SERVER, NULL);
-	else
+	else if (strcmp (type, "app_stream") == 0)
 		server = g_object_new (TYPE_APP_STREAM_SERVER, NULL);
+	else
+		return NULL;
 
 	app_server_set_config (server, config);
 

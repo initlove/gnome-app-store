@@ -130,3 +130,21 @@ gnome_app_config_get_server_uri (GnomeAppConfig *config)
 
 	return g_strdup (val);
 }
+
+gchar *
+gnome_app_config_get_server_type (GnomeAppConfig *config)
+{
+        GError  *error = NULL;
+	gchar *val;
+
+	val = g_key_file_get_value (config->priv->key_file, "Server", "type", &error);
+
+	if (error) {
+		g_warning ("Failed to load server type %s", error->message);
+		g_error_free (error);
+		return NULL;
+	}
+
+	return g_strdup (val);
+}
+
