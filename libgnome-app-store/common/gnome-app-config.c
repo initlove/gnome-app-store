@@ -12,6 +12,7 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
+#include <stdio.h>
 #include "gnome-app-config.h"
 
 struct _GnomeAppConfigPrivate
@@ -20,6 +21,34 @@ struct _GnomeAppConfigPrivate
 };
 
 G_DEFINE_TYPE (GnomeAppConfig, gnome_app_config, G_TYPE_OBJECT)
+
+static GKeyFile *
+create_default_key_file (gchar *file_url)
+{
+	GKeyFile *key_file;
+	const gchar *default_url;
+	const gchar *default_type;
+	gchar *data;
+	gint len;
+	FILE *fp;
+
+	fp = fopen (file_url, "w");
+	if (fp == NULL) {
+		printf ("Cannot create key file!\n");
+		return NULL;
+	}
+
+	key_file = g_key_file_new ();
+	default_url = "api.opendesktop.org";
+	default_type = "ocs";
+	g_key_file_set_value (key_file, "Server", "uri", default_url);
+	g_key_file_set_value (key_file, "Server", "type", default_type);
+	data = g_key_file_to_data (key_file, &len, NULL);
+	fwrite (data, 1, len, fp);
+	fclose (fp);
+
+	return key_file;	
+}
 
 static void
 gnome_app_config_init (GnomeAppConfig *config)
@@ -38,7 +67,6 @@ gnome_app_config_init (GnomeAppConfig *config)
                 filename = g_build_filename (CONFIGDIR, "gnome-app-store.conf", NULL);
         }
 
-	/*FIXME: it is the tmp usage for debug. should create default one with better way */
 	if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
 		gchar *dir, *cmd;
 
@@ -50,19 +78,19 @@ gnome_app_config_init (GnomeAppConfig *config)
 
                 g_free (filename);
                 filename = g_build_filename (g_get_home_dir (), ".gnome-app-store", "gnome-app-store.conf", NULL);
-		system ("cp ../gnome-app-store.conf ~/.gnome-app-store");
-        }
+		priv->key_file = create_default_key_file (filename);
+        } else {
+		priv->key_file = g_key_file_new ();
+		error = NULL;
+        	g_key_file_load_from_file (priv->key_file, filename, G_KEY_FILE_NONE, &error);
 
-	priv->key_file = g_key_file_new ();
-	error = NULL;
-        g_key_file_load_from_file (priv->key_file, filename, G_KEY_FILE_NONE, &error);
+		if (error) {
+			g_warning ("Failed to load keyfile %s  %s", filename, error->message);
+			g_error_free (error);
 
-	if (error) {
-		g_warning ("Failed to load keyfile %s  %s", filename, error->message);
-		g_error_free (error);
-
-		g_key_file_free (priv->key_file);
-		priv->key_file = NULL;
+			g_key_file_free (priv->key_file);
+			priv->key_file = NULL;
+		}
 	}
 	g_free (filename);
 }
