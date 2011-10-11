@@ -162,7 +162,7 @@ get_local_url (const gchar *url)
 	config = gnome_app_config_new ();
 	cache_dir = gnome_app_config_get_cache_dir (config);
 	md5 = get_md5 (url);
-	local_url = g_build_filename (cache_dir, "ocs", md5, NULL);
+	local_url = g_build_filename (cache_dir, md5, NULL);
 	if (!g_file_test (local_url, G_FILE_TEST_EXISTS)) {
 		download_file (url, (const gchar *)local_url);
 	}
