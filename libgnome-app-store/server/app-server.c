@@ -110,7 +110,7 @@ app_server_new_from_config (GnomeAppConfig *config)
 	AppServer *server;
 
 /*FIXME: more check here */
-	if (1)
+	if (0)
 		server = g_object_new (TYPE_OCS_SERVER, NULL);
 	else
 		server = g_object_new (TYPE_APP_STREAM_SERVER, NULL);
