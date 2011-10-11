@@ -25,6 +25,7 @@ struct _GnomeAppItemPrivate
 	gchar *		icon;
 	gchar *		screenshot;
 	gchar *		summary;
+	gchar *		description;
 	/* type1;type2 */
 	gchar *		categories;
 	/* mime1;mime2 */
@@ -46,8 +47,9 @@ enum {
         PROP_NAME,
         PROP_PKGNAME,
         PROP_ICON,
-        PROP_SCREENSHOT,	/*FIXME: need this?*/
+        PROP_SCREENSHOT,
         PROP_SUMMARY,
+        PROP_DESCRIPTION,
         PROP_CATEGORIES,
 	PROP_MIMETYPES,
 	PROP_LICENSE,
@@ -74,6 +76,7 @@ gnome_app_item_init (GnomeAppItem *item)
 	priv->icon = NULL;
 	priv->screenshot = NULL;
 	priv->summary = NULL;
+	priv->description = NULL;
 	priv->categories = NULL;
 	priv->mimetypes = NULL;
 	priv->license = NULL;
@@ -112,6 +115,8 @@ gnome_app_item_finalize (GObject *object)
 		g_free (priv->_local_screenshot_url);
 	if (priv->summary)
 		g_free (priv->summary);
+	if (priv->description)
+		g_free (priv->description);
 	if (priv->categories)
 		g_free (priv->categories);
 	if (priv->mimetypes)
@@ -161,6 +166,11 @@ gnome_app_item_set_property (GObject      *object,
 			if (priv->summary)
 				g_free (priv->summary);
 			priv->summary = g_strdup (g_value_get_string (value));
+			break;
+		case PROP_DESCRIPTION:
+			if (priv->description)
+				g_free (priv->description);
+			priv->description = g_strdup (g_value_get_string (value));
 			break;
 		case PROP_CATEGORIES:
 			if (priv->categories)
@@ -219,6 +229,9 @@ gnome_app_item_get_property (GObject        *object,
 			break;
 		case PROP_SUMMARY:
 			g_value_set_string (value, priv->summary);
+			break;
+		case PROP_DESCRIPTION:
+			g_value_set_string (value, priv->description);
 			break;
 		case PROP_CATEGORIES:
 			g_value_set_string (value, priv->categories);
@@ -287,6 +300,12 @@ gnome_app_item_class_init (GnomeAppItemClass *klass)
 	g_object_class_install_property (object_class, PROP_SUMMARY,
 		g_param_spec_string ("summary",
                                      "summary", "The summary of the app",
+                                     NULL,
+                                     G_PARAM_READWRITE));
+
+	g_object_class_install_property (object_class, PROP_DESCRIPTION,
+		g_param_spec_string ("description",
+                                     "description", "The description of the app",
                                      NULL,
                                      G_PARAM_READWRITE));
 
@@ -368,6 +387,22 @@ gnome_app_item_get_name (GnomeAppItem *item)
         GnomeAppItemPrivate *priv = item->priv;
 
 	return priv->name;
+}
+
+const gchar *
+gnome_app_item_get_summary (GnomeAppItem *item)
+{
+        GnomeAppItemPrivate *priv = item->priv;
+
+	return priv->summary;
+}
+
+const gchar *
+gnome_app_item_get_description (GnomeAppItem *item)
+{
+        GnomeAppItemPrivate *priv = item->priv;
+
+	return priv->description;
 }
 
 const gchar *
