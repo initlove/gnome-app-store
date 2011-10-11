@@ -33,10 +33,11 @@
 #include <libsoup/soup-auth-domain-digest.h>
 #include <libsoup/soup-message.h>
 #include <libsoup/soup-server.h>
-
+#include <stdio.h>
 #include "gnome-app-utils.h"
 
-	
+#define server_debug FALSE
+
 static GList *local_categories = NULL;
 
 static void
@@ -174,7 +175,7 @@ gnome_app_get_data_from_url (SoupSession *session, const char *url, gint *len)
 
 			uri = soup_uri_new_with_base (soup_message_get_uri (msg), header);
 			uri_string = soup_uri_to_string (uri, FALSE);
-			val = get_data (session, uri_string, len);
+			val = gnome_app_get_data_from_url (session, uri_string, len);
 			g_free (uri_string);
 			soup_uri_free (uri);
 		}
