@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 
 /*FIXME: the return value should better be a tree */
 const GList *	gnome_app_get_local_categories ();
-gchar *         gnome_app_get_data_from_url (SoupSession *session, const char *url, gint *len);
+SoupBuffer *	gnome_app_get_data_from_url (SoupSession *session, const char *url);
 SoupSession *	gnome_app_soup_session_new (gboolean sync, gchar *cafile);
 
 G_END_DECLS

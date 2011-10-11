@@ -34,9 +34,10 @@
 #include <libsoup/soup-message.h>
 #include <libsoup/soup-server.h>
 #include <stdio.h>
+#include <string.h>
 #include "gnome-app-utils.h"
 
-#define server_debug FALSE
+#define server_debug TRUE
 
 static GList *local_categories = NULL;
 
@@ -121,14 +122,14 @@ gnome_app_soup_session_new (gboolean sync, gchar *cafile)
 	return session;
 }
 
-gchar *
-gnome_app_get_data_from_url (SoupSession *session, const char *url, gint *len)
+SoupBuffer *
+gnome_app_get_data_from_url (SoupSession *session, const char *url)
 {
 	const char *name;
 	SoupMessage *msg;
 	const char *header;
 	const char *method;
-	gchar *val = NULL;
+	SoupBuffer *buf = NULL;
 
 	printf ("Resolve: %s\n", url);
 
@@ -175,17 +176,16 @@ gnome_app_get_data_from_url (SoupSession *session, const char *url, gint *len)
 
 			uri = soup_uri_new_with_base (soup_message_get_uri (msg), header);
 			uri_string = soup_uri_to_string (uri, FALSE);
-			val = gnome_app_get_data_from_url (session, uri_string, len);
+			buf = gnome_app_get_data_from_url (session, uri_string);
 			g_free (uri_string);
 			soup_uri_free (uri);
 		}
 	} else if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
-		val = g_strdup (msg->response_body->data);
-		*len = msg->response_body->length;
+		buf = soup_message_body_get_chunk (msg->response_body, msg->response_body->length);
 	}
 
 	g_object_unref (msg);
 
-	return val;
+	return buf;
 }
 
