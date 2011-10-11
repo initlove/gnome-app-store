@@ -379,10 +379,9 @@ set_config (AppServer *server, GnomeAppConfig *conf)
 	icon_dir = g_build_filename (app_stream_server->priv->cache_dir, "icons", NULL);
 	/*FIXME: tmp */
 	if (!g_file_test (appdata_uri, G_FILE_TEST_EXISTS)) {
-		gchar *cmd;
-		cmd = g_strdup_printf ("cp -fr ../../test-data/*  \"%s\"", app_stream_server->priv->cache_dir);
-		system (cmd);
-		g_free (cmd);
+		printf ("The thin server is not done, might not be done forever..!");
+		printf ("the tmp solution is, you should  copy the all the data in test-data dir to %s\n", app_stream_server->priv->cache_dir);
+		exit (1);
 	}
 	load_apps (app_stream_server, appdata_uri);
 	load_icons (app_stream_server, icon_dir);
