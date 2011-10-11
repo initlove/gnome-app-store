@@ -153,8 +153,7 @@ init_cid (AppServer *server)
 	OcsServerPrivate *priv = ocs_server->priv;
 	const gchar *get_cate_string;
 	gchar *url;
-	gchar *val;
-	gint len;
+	SoupBuffer *buf;
         xmlDocPtr doc_ptr;
         xmlNodePtr data_node;
 
@@ -164,18 +163,18 @@ init_cid (AppServer *server)
 	get_cate_string = "/v1/content/categories";
 	url = g_strdup_printf ("http://%s:%s@%s%s", priv->username, priv->password,
 	                        priv->server_uri, get_cate_string);
-	val = gnome_app_get_data_from_url (priv->session, url, &len);
-
-        doc_ptr = xmlParseMemory (val, len);
+	buf = gnome_app_get_data_from_url (priv->session, url);
+        doc_ptr = xmlParseMemory (buf->data, buf->length);
 	if (!doc_ptr) {
-		printf ("Cannot parse the value:\n%s\n", val);
+		printf ("Cannot parse the value!\n");
 	} else {
 		data_node = get_data_node (doc_ptr);
 		parse_all_cid (ocs_server, data_node);
         	xmlFreeDoc(doc_ptr);
 	}
+	
+	soup_buffer_free (buf);
 	g_free (url);
-	g_free (val);
 }
 
 static GList *
@@ -267,22 +266,22 @@ get_appid_list_by_cid_list (AppServer *server, GList *cid_list)
 
         xmlDocPtr doc_ptr;
         xmlNodePtr data_node;
-	gchar *val;
-	gint len;
+	SoupBuffer *buf;
 	GList *list = NULL;
 
-	val = gnome_app_get_data_from_url (priv->session, url, &len);
+	buf = gnome_app_get_data_from_url (priv->session, url);
 
-        doc_ptr = xmlParseMemory (val, len);
+        doc_ptr = xmlParseMemory (buf->data, buf->length);
 	if (!doc_ptr) {
-		printf ("Cannot parse the value:\n%s\n", val);
+		printf ("Cannot parse the value!\n");
 	} else {
 		data_node = get_data_node (doc_ptr);
 		list = parse_appid_list (ocs_server, data_node);
         	xmlFreeDoc(doc_ptr);
 	}
+
+	soup_buffer_free (buf);
 	g_free (url);
-	g_free (val);
 
 	return list;
 }
@@ -302,14 +301,13 @@ get_app_by_id (AppServer *server, gchar *app_id)
 
         xmlDocPtr doc_ptr;
         xmlNodePtr data_node;
-	gchar *val;
-	gint len;
+	SoupBuffer *buf;
 	GnomeAppItem *item = NULL;
 
-	val = gnome_app_get_data_from_url (priv->session, url, &len);
-        doc_ptr = xmlParseMemory (val, len);
+	buf = gnome_app_get_data_from_url (priv->session, url);
+        doc_ptr = xmlParseMemory (buf->data, buf->length);
 	if (!doc_ptr) {
-		printf ("Cannot parse the value:\n%s\n", val);
+		printf ("Cannot parse the value!\n");
 	} else {
 		data_node = get_data_node (doc_ptr);
 		/*parse_app is done in a seperate file */
@@ -317,8 +315,8 @@ get_app_by_id (AppServer *server, gchar *app_id)
         	xmlFreeDoc(doc_ptr);
 	}
 
+	soup_buffer_free (buf);
         g_free (url);
-	g_free (val);
 
 	return item;
 }

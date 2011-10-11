@@ -78,7 +78,11 @@ int main ()
 		}
 
 		GnomeAppItem *item;
+		gchar *local_screenshot_url;
 		item = app_server_get_app_by_id (server, id);
+printf ("get it!\n\n");
+		local_screenshot_url = gnome_app_item_get_local_screenshot_url (item);
+printf ("local screenshot url %s\n", local_screenshot_url);
 		g_list_free (ocs_list);
 		g_list_free (app_list);
 	}

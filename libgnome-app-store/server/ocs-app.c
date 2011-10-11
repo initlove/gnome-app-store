@@ -104,24 +104,23 @@ static void
 download_file (const gchar *source, const gchar *dest)
 {
 	SoupSession *session;
+	SoupBuffer *buf;
 	gchar *cafile;
 	gboolean sync;
-	gchar *data;
-	gint len;
 	FILE *fp;
 
 	sync = TRUE;
 	cafile = NULL;
 	session = gnome_app_soup_session_new (sync, cafile);
-	data = gnome_app_get_data_from_url (session, source, &len);
+	buf = gnome_app_get_data_from_url (session, source);
 
 	fp = fopen (dest, "w");
 	if (fp) {
-		fwrite (data, 1, len, fp);
+		fwrite (buf->data, 1, buf->length, fp);
 		fclose (fp);
 	}
 
-	g_free (data);
+	soup_buffer_free (buf);
 	g_object_unref (session);
 }
 
@@ -148,7 +147,7 @@ get_local_url (const gchar *url)
 	config = gnome_app_config_new ();
 	cache_dir = gnome_app_config_get_cache_dir (config);
 	md5 = get_md5 (url);
-	local_url = g_build_filename (cache_dir, md5, NULL);
+	local_url = g_build_filename (cache_dir, "ocs", md5, NULL);
 	if (!g_file_test (local_url, G_FILE_TEST_EXISTS)) {
 		download_file (url, (const gchar *)local_url);
 	}
@@ -166,6 +165,8 @@ get_local_icon_url (GnomeAppItem *item)
 	gchar *local_url;
 
 	icon = gnome_app_item_get_icon_name (item);
+	if (!icon)
+		return NULL;
 	local_url = get_local_url (icon);
 
 	return local_url;
@@ -178,6 +179,8 @@ get_local_screenshot_url (GnomeAppItem *item)
 	gchar *local_url;
 
 	screenshot = gnome_app_item_get_screenshot (item);
+	if (!screenshot)
+		return NULL;
 	local_url = get_local_url (screenshot);
 
 	return local_url;

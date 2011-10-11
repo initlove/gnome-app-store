@@ -181,7 +181,7 @@ gnome_app_get_data_from_url (SoupSession *session, const char *url)
 			soup_uri_free (uri);
 		}
 	} else if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
-		buf = soup_message_body_get_chunk (msg->response_body, msg->response_body->length);
+		buf = soup_message_body_flatten (msg->response_body);
 	}
 
 	g_object_unref (msg);
