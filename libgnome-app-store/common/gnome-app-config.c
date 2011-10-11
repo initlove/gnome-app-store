@@ -12,7 +12,6 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
-#include <sys/stat.h>
 #include "gnome-app-config.h"
 
 struct _GnomeAppConfigPrivate
