@@ -28,18 +28,30 @@ gnome_app_config_init (GnomeAppConfig *config)
 	GnomeAppConfigPrivate *priv;
         GError  *error;
         gchar *filename;
-        struct stat statbuf;
-        int r;
 
 	config->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (config,
 	                                                 GNOME_APP_TYPE_CONFIG,
 	                                                 GnomeAppConfigPrivate);
 
         filename = g_build_filename (g_get_home_dir (), ".gnome-app-store", "gnome-app-store.conf", NULL);
-        r = g_stat (filename, &statbuf);
-        if (r < 0) {
+	if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
                 g_free (filename);
                 filename = g_build_filename (CONFIGDIR, "gnome-app-store.conf", NULL);
+        }
+
+	/*FIXME: it is the tmp usage for debug. should create default one with better way */
+	if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
+		gchar *dir, *cmd;
+
+		dir = g_build_filename (g_get_home_dir (), ".gnome-app-store", NULL);
+		if (!g_file_test (dir, G_FILE_TEST_EXISTS)) {
+			g_mkdir (dir, 0755);
+		}
+		g_free (dir);
+
+                g_free (filename);
+                filename = g_build_filename (g_get_home_dir (), ".gnome-app-store", "gnome-app-store.conf", NULL);
+		system ("cp ../gnome-app-store.conf ~/.gnome-app-store");
         }
 
 	priv->key_file = g_key_file_new ();
