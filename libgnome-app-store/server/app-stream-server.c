@@ -296,29 +296,18 @@ gboolean
 item_match_categories (GnomeAppItem *item, GList *categories)
 {
 	GList *l;
-	const gchar *str;
+	gchar *str;
 	gchar *category;
-	str = gnome_app_item_get_categories (item);
+	str = (gchar *)gnome_app_item_get_categories (item);
 
 	if (!str)
 		return FALSE;
 
 	for (l = categories; l; l = l->next) {
 		category = (gchar *) l->data;
-		if (!category)
-			continue;
-/*FIXME: seems simple compare did not work.. likes Games vs Game ..
-	use the three chars at the beginning...
-*/
-		gchar *better_category;
-		better_category = g_strdup (category);
-		if (strlen (better_category) > 3)
-			*(better_category + 3) = 0;
-		if (!strcasestr (str,better_category)) {
-			g_free (better_category);
+
+		if (!gnome_app_category_match_group (str, category))
 			return FALSE;
-		} else
-			g_free (better_category);
 	}
 
 	return TRUE;

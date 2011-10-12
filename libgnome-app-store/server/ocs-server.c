@@ -178,24 +178,6 @@ init_cid (AppServer *server)
 	g_free (url);
 }
 
-static GList *
-get_cid_list_by_group (AppServer *server, gchar *group)
-{
-	OcsServer *ocs_server = OCS_SERVER (server);
-	OcsServerPrivate *priv = ocs_server->priv;
-	GList *list = NULL;
-
-	if (!priv->all_cid)
-		init_cid (server);
-
-	if (group == NULL)
-		return g_list_copy (priv->all_cid);
-	else {
-		/*FIXME: not done yet ! */
-	}
-	return list;
-}
-
 static gchar *
 get_cname_by_id (AppServer *server, gchar *category_id)
 {
@@ -211,6 +193,33 @@ get_cname_by_id (AppServer *server, gchar *category_id)
 	}
 }
 
+static GList *
+get_cid_list_by_group (AppServer *server, gchar *group)
+{
+	OcsServer *ocs_server = OCS_SERVER (server);
+	OcsServerPrivate *priv = ocs_server->priv;
+	GList *list = NULL, *l;
+	gchar *id, *cname;
+
+	if (!priv->all_cid)
+		init_cid (server);
+
+	if (group == NULL) {
+	/*FIXME: TODO: should make all_cid a struct with more category fileds */
+		return g_list_copy (priv->all_cid);
+	} else {
+		for (l = priv->all_cid; l; l = l->next) {
+			id = (gchar *) l->data;
+			cname = get_cname_by_id (server, id);
+			if (gnome_app_category_match_group (cname, group))
+				list = g_list_prepend (list, g_strdup (id));
+			g_free (cname);
+		}	
+	}
+	if (list)
+		list = g_list_reverse (list);
+	return list;
+}
 
 static GList *
 parse_appid_list (OcsServer *ocs_server, xmlNodePtr data_node)
