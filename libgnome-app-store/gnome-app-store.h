@@ -25,7 +25,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include "gnome-app-item.h"
+/*FIXME: why should add common here? */
+#include "common/gnome-app-item.h"
 
 G_BEGIN_DECLS
 
