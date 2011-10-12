@@ -95,6 +95,28 @@ gnome_app_get_local_categories ()
 	return (const GList *) local_categories;
 }
 
+/*FIXME: better way to get matched group, maybe ocs/appstream different? */
+gboolean
+gnome_app_category_match_group (gchar *cname, gchar *group)
+{
+	if (!group)
+		return TRUE;
+	if (!cname)
+		return FALSE;
+
+	gchar *short_name;
+	short_name = g_strdup (group);
+	if (strlen (short_name) > 3)
+		*(short_name + 3) = 0;
+	if (strcasestr (cname, short_name)) {
+		g_free (short_name);
+		return TRUE;
+	} else {
+		g_free (short_name);
+		return FALSE;
+	}
+}
+
 SoupSession *
 gnome_app_soup_session_new (gboolean sync, gchar *cafile)
 {
