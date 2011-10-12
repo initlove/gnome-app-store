@@ -23,8 +23,8 @@ Author: David Liang <dliang@novell.com>
 
 #include "gnome-app-store.h"
 #include "server/app-server.h"
-#include "gnome-app-item.h"
-#include "gnome-app-config.h"
+#include "common/gnome-app-item.h"
+#include "common/gnome-app-config.h"
 
 struct _GnomeAppStorePrivate
 {
@@ -33,6 +33,7 @@ struct _GnomeAppStorePrivate
 	GHashTable *cidlist_group;
 	GHashTable *cname_id;	/*FIXME: better name ? */
 
+	/*FIXME: Donnot use this at present */
 	GList *appid_list;	/* should be reload every timestamp time */
 	GHashTable *app_id;
 	gint app_timestamp;	/*FIXME: 1. should category have timestamp too?
@@ -104,7 +105,7 @@ gnome_app_store_new (void)
 	return g_object_new (GNOME_APP_TYPE_STORE, NULL);
 }
 
-const GList *
+GList *
 gnome_app_store_get_cid_list_by_group (GnomeAppStore *store, gchar *group)
 {
 	GList *list;
@@ -124,10 +125,10 @@ gnome_app_store_get_cid_list_by_group (GnomeAppStore *store, gchar *group)
 		}
 	}
 
-	return list;
+	return g_list_copy (list);
 }
 
-const gchar *
+gchar *
 gnome_app_store_get_cname_by_id (GnomeAppStore *store, gchar *cid)
 {
 	gchar *cname;
@@ -141,16 +142,24 @@ gnome_app_store_get_cname_by_id (GnomeAppStore *store, gchar *cid)
 		}
 	}
 
-	return cname;
+	return g_strdup (cname);
 }
 
-const GList *
-gnome_app_store_get_appid_list_by_cid_list (GnomeAppStore *store, const GList *cid_list)
+GList *
+gnome_app_store_get_appid_list_by_cid_list (GnomeAppStore *store, GList *cid_list)
 {
+#if 0
 	if (!store->priv->appid_list)
 		store->priv->appid_list = app_server_get_appid_list_by_cid_list (store->priv->server, cid_list);
 
 	return store->priv->appid_list;
+#else
+	GList *appid_list;
+
+	appid_list = app_server_get_appid_list_by_cid_list (store->priv->server, cid_list);
+
+	return appid_list;
+#endif
 }
 
 static gboolean
@@ -167,7 +176,7 @@ app_timestamp_mark (GnomeAppStore *store, GnomeAppItem *item)
 	/*FIXME: not implement */
 }
 
-const GnomeAppItem *
+GnomeAppItem *
 gnome_app_store_get_app_by_id (GnomeAppStore *store, gchar *app_id)
 {
 	GnomeAppItem *item;
@@ -182,6 +191,6 @@ gnome_app_store_get_app_by_id (GnomeAppStore *store, gchar *app_id)
 		g_hash_table_replace (store->priv->app_id, g_strdup (app_id), item);
 	}
 
-	return item;
+	return g_object_ref (item);
 }
 

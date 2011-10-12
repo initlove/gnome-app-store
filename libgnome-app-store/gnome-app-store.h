@@ -55,10 +55,10 @@ struct _GnomeAppStoreClass
 
 GType			gnome_app_store_get_type			(void);
 GnomeAppStore *		gnome_app_store_new				(void);
-const	GList *		gnome_app_store_get_cid_list_by_group		(GnomeAppStore *store, gchar *group);
-const	gchar *		gnome_app_store_get_cname_by_id 		(GnomeAppStore *store, gchar *cid);
-const	GList *		gnome_app_store_get_appid_list_by_cid_list	(GnomeAppStore *store, const GList *cid_list);
-const	GnomeAppItem *	gnome_app_store_get_app_by_id			(GnomeAppStore *store, gchar *app_id);
+GList *			gnome_app_store_get_cid_list_by_group		(GnomeAppStore *store, gchar *group);
+gchar *			gnome_app_store_get_cname_by_id 		(GnomeAppStore *store, gchar *cid);
+GList *			gnome_app_store_get_appid_list_by_cid_list	(GnomeAppStore *store, GList *cid_list);
+GnomeAppItem *		gnome_app_store_get_app_by_id			(GnomeAppStore *store, gchar *app_id);
 
 G_END_DECLS
 
