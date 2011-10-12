@@ -1,6 +1,7 @@
 AM_CPPFLAGS =                                                   \
 	-I$(top_srcdir)                                         \
 	-I$(top_srcdir)/libgnome-app-store                      \
+	-I$(top_srcdir)/libgnome-app-store/common               \
 	$(GNOME_APP_STORE_CFLAGS)                               \
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"                        \
 	-DGNOMELOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale\""  \

@@ -4,8 +4,8 @@
 #include <clutter/clutter.h>
 #include <glib/gi18n.h>
 
-#include "../libgnome-app-store/common/gnome-app-config.h"
-#include "../libgnome-app-store/gnome-app-store.h"
+#include "gnome-app-config.h"
+#include "gnome-app-store.h"
 
 #include "gnome-app-stage.h"
 #include "gnome-app-item-ui.h"
@@ -21,7 +21,6 @@ main (int argc, char *argv[])
 	  return 1;
 
 	conf = gnome_app_config_new ();
-	printf ("se %s, ca %s\n", gnome_app_config_get_server_uri (conf), gnome_app_config_get_cache_dir (conf));
 
 	stage = clutter_stage_new ();
 	clutter_stage_set_title (CLUTTER_STAGE (stage), _("Scrolling"));
@@ -45,29 +44,12 @@ main (int argc, char *argv[])
 	GList *l, *app_l;
 
 	store = gnome_app_store_new ();
-	gboolean ocs_debug = TRUE;
 
-	if (!ocs_debug) {
-	        local_categories = (const GList *)gnome_app_get_local_categories ();
-        	for (l = (GList *)local_categories; l; l = l->next) {
-			cid_list = gnome_app_store_get_cid_list_by_group (store, (gchar *)l->data);
-			appid_list = gnome_app_store_get_appid_list_by_cid_list (store, cid_list);
-			for (app_l = appid_list; app_l; app_l = app_l->next) {
-				item = gnome_app_store_get_app_by_id (store, (gchar *)app_l->data);
-				item_ui = gnome_app_item_ui_new_with_app (item);
-				box = gnome_app_item_ui_get_icon (item_ui);
-				gnome_app_stage_add_actor (GNOME_APP_STAGE (scroll), box);
-				g_object_unref (item_ui);
-			}
-		}
-	} else {
-                GList *ocs_list, *app_list;
-                gchar *id, *name;
-                GnomeAppItem *item;
-                const gchar *local_screenshot_url;
-
-                ocs_list = gnome_app_store_get_cid_list_by_group (store, NULL);
-		appid_list = gnome_app_store_get_appid_list_by_cid_list (store, ocs_list);
+	local_categories = (const GList *)gnome_app_get_local_categories ();
+	for (l = (GList *)local_categories; l; l = l->next) {
+printf ("We use <%s>\n", l->data);
+		cid_list = gnome_app_store_get_cid_list_by_group (store, (gchar *)l->data);
+		appid_list = gnome_app_store_get_appid_list_by_cid_list (store, cid_list);
 		for (app_l = appid_list; app_l; app_l = app_l->next) {
 			item = gnome_app_store_get_app_by_id (store, (gchar *)app_l->data);
 			item_ui = gnome_app_item_ui_new_with_app (item);
@@ -75,11 +57,8 @@ main (int argc, char *argv[])
 			gnome_app_stage_add_actor (GNOME_APP_STAGE (scroll), box);
 			g_object_unref (item_ui);
 		}
-		
 
-                g_list_free (ocs_list);
-                g_list_free (app_list);
-
+		break;
 	}
 
 	clutter_actor_show (stage);
