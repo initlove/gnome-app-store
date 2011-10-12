@@ -23,8 +23,8 @@ Author: David Liang <dliang@novell.com>
 
 #include "gnome-app-store.h"
 #include "server/app-server.h"
-#include "common/gnome-app-item.h"
-#include "common/gnome-app-config.h"
+#include "gnome-app-item.h"
+#include "gnome-app-config.h"
 
 struct _GnomeAppStorePrivate
 {

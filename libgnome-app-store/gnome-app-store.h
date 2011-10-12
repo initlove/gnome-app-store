@@ -25,7 +25,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include "common/gnome-app-item.h"
+#include "gnome-app-item.h"
 
 G_BEGIN_DECLS
 

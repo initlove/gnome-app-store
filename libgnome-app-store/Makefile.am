@@ -6,7 +6,7 @@ lib_LTLIBRARIES = libgnome-app-store.la
 
 AM_CPPFLAGS =							\
 	-I$(top_srcdir)						\
-	-I$(top_srcdir)/common					\
+	-I$(top_srcdir)/libgnome-app-store/common		\
 	$(GNOME_APP_STORE_CFLAGS)				\
 	-DCONFIGDIR=\""/etc/gnome-app-store\""                  \
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"			\

@@ -23,8 +23,8 @@
 #ifndef __APP_SERVER_H__
 #define __APP_SERVER_H__
 
-#include "../common/gnome-app-item.h"
-#include "../common/gnome-app-config.h"
+#include "gnome-app-item.h"
+#include "gnome-app-config.h"
 
 G_BEGIN_DECLS
 
