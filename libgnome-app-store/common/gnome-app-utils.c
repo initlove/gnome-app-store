@@ -37,7 +37,7 @@
 #include <string.h>
 #include "gnome-app-utils.h"
 
-#if 0
+#if 1
 #define server_debug TRUE
 #else
 #define server_debug FALSE
@@ -149,6 +149,18 @@ gnome_app_soup_session_new (gboolean sync, gchar *cafile)
 	return session;
 }
 
+gchar *
+gnome_app_get_md5 (gchar *str)
+{
+	gchar *checksum;
+
+	checksum = g_compute_checksum_for_data (G_CHECKSUM_MD5,
+					(const guchar *) str,
+					strlen (str));
+
+	return checksum;
+}
+
 SoupBuffer *
 gnome_app_get_data_from_url (SoupSession *session, const char *url)
 {
@@ -158,8 +170,7 @@ gnome_app_get_data_from_url (SoupSession *session, const char *url)
 	const char *method;
 	SoupBuffer *buf = NULL;
 
-	if (server_debug)
-		printf ("Resolve: %s\n", url);
+	printf ("Resolve: %s\n", url);
 
 	method = SOUP_METHOD_GET;
 	msg = soup_message_new (method, url);
