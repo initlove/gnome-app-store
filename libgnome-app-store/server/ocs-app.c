@@ -140,35 +140,25 @@ printf ("we using wget .. <%s>\n", cmd);
 }
 
 static gchar *
-get_md5 (const gchar *url)
-{
-	gchar *checksum;
-
-	checksum = g_compute_checksum_for_data (G_CHECKSUM_MD5,
-                                      (const guchar *) url,
-                                      strlen (url));
-
-	return checksum;
-}
-
-static gchar *
 get_local_url (const gchar *url)
 {
 	GnomeAppConfig *config;
-	gchar *cache_dir;
 	gchar *md5;
+	gchar *cache_dir;
 	gchar *local_url;
 /* FIXME: maybe we should use some functions like gnome_app_config_get_default () */ 
 	config = gnome_app_config_new ();
 	cache_dir = gnome_app_config_get_cache_dir (config);
-	md5 = get_md5 (url);
-	local_url = g_build_filename (cache_dir, md5, NULL);
+	md5 = gnome_app_get_md5 (url);
+	local_url = g_build_filename (cache_dir, "img", md5, NULL);
+/*TODO: mkdir for the img*/
 	if (!g_file_test (local_url, G_FILE_TEST_EXISTS)) {
 		download_file (url, (const gchar *)local_url);
 	}
+
+	g_object_unref (config);
 	g_free (md5);
 	g_free (cache_dir);
-	g_object_unref (config);
 
 	return local_url;
 }

@@ -92,6 +92,41 @@ get_server_icon_name (AppServer *server)
 {
 }
 
+static xmlDocPtr
+get_doc_ptr (AppServer *server, gchar *url)
+{
+	OcsServer *ocs_server = OCS_SERVER (server);
+	OcsServerPrivate *priv = ocs_server->priv;
+
+	GnomeAppConfig *config;
+	gchar *md5;
+	gchar *cache_dir;
+	gchar *local_url;
+	xmlDocPtr doc_ptr;
+
+	md5 = gnome_app_get_md5 (url);
+        config = gnome_app_config_new ();
+        cache_dir = gnome_app_config_get_cache_dir (config);
+	local_url = g_build_filename (cache_dir, "xml", md5, NULL);
+
+	if (g_file_test (local_url, G_FILE_TEST_EXISTS)) {
+		doc_ptr = xmlParseFile (local_url);
+	} else {
+		SoupBuffer *buf;
+		buf = gnome_app_get_data_from_url (priv->session, url);
+	        doc_ptr = xmlParseMemory (buf->data, buf->length);
+		soup_buffer_free (buf);
+	}
+	if (!doc_ptr)
+		printf ("Cannot parse the value!\n");
+	g_object_unref (config);
+	g_free (md5);
+	g_free (cache_dir);
+	g_free (local_url);
+
+	return doc_ptr;
+}
+
 /*FIXME: there must be such function in xml interface !*/
 static xmlNodePtr
 get_data_node (xmlDocPtr doc_ptr)
@@ -154,7 +189,6 @@ init_cid (AppServer *server)
 	OcsServerPrivate *priv = ocs_server->priv;
 	const gchar *get_cate_string;
 	gchar *url;
-	SoupBuffer *buf;
         xmlDocPtr doc_ptr;
         xmlNodePtr data_node;
 
@@ -164,17 +198,13 @@ init_cid (AppServer *server)
 	get_cate_string = "/v1/content/categories";
 	url = g_strdup_printf ("http://%s:%s@%s%s", priv->username, priv->password,
 	                        priv->server_uri, get_cate_string);
-	buf = gnome_app_get_data_from_url (priv->session, url);
-        doc_ptr = xmlParseMemory (buf->data, buf->length);
-	if (!doc_ptr) {
-		printf ("Cannot parse the value!\n");
-	} else {
+        doc_ptr = get_doc_ptr (server, url);
+	if (doc_ptr) {
 		data_node = get_data_node (doc_ptr);
 		parse_all_cid (ocs_server, data_node);
         	xmlFreeDoc(doc_ptr);
 	}
 	
-	soup_buffer_free (buf);
 	g_free (url);
 }
 
@@ -257,6 +287,8 @@ get_appid_list_by_cid_list (AppServer *server, GList *cid_list)
 	GList *l;
 	GString *ids = NULL;
 	
+	/*FIXME: I use pagesize == 100 for now ... */
+	const gchar *pagesize = "&pagesize=20";
         get_apps_with_id = "/v1/content/data?categories=";
 
 	for (l = cid_list; l; l = l->next) {
@@ -270,27 +302,21 @@ get_appid_list_by_cid_list (AppServer *server, GList *cid_list)
 	}
 	if (!ids)
 		return NULL;
-        url = g_strdup_printf ("http://%s:%s@%s%s%s", priv->username, priv->password,
-                                priv->server_uri, get_apps_with_id, ids->str);
+        url = g_strdup_printf ("http://%s:%s@%s%s%s%s", priv->username, priv->password,
+                                priv->server_uri, get_apps_with_id, ids->str, pagesize);
 	g_string_free (ids, TRUE);
 
         xmlDocPtr doc_ptr;
         xmlNodePtr data_node;
-	SoupBuffer *buf;
 	GList *list = NULL;
 
-	buf = gnome_app_get_data_from_url (priv->session, url);
-
-        doc_ptr = xmlParseMemory (buf->data, buf->length);
-	if (!doc_ptr) {
-		printf ("Cannot parse the value!\n");
-	} else {
+        doc_ptr = get_doc_ptr (server, url);
+	if (doc_ptr) {
 		data_node = get_data_node (doc_ptr);
 		list = parse_appid_list (ocs_server, data_node);
         	xmlFreeDoc(doc_ptr);
 	}
 
-	soup_buffer_free (buf);
 	g_free (url);
 
 	return list;
@@ -311,21 +337,16 @@ get_app_by_id (AppServer *server, gchar *app_id)
 
         xmlDocPtr doc_ptr;
         xmlNodePtr data_node;
-	SoupBuffer *buf;
 	GnomeAppItem *item = NULL;
 
-	buf = gnome_app_get_data_from_url (priv->session, url);
-        doc_ptr = xmlParseMemory (buf->data, buf->length);
-	if (!doc_ptr) {
-		printf ("Cannot parse the value!\n");
-	} else {
+        doc_ptr = get_doc_ptr (server, url);
+	if (doc_ptr) {
 		data_node = get_data_node (doc_ptr);
 		/*parse_app is done in a seperate file */
 		item = parse_app (ocs_server, data_node);
         	xmlFreeDoc(doc_ptr);
 	}
 
-	soup_buffer_free (buf);
         g_free (url);
 
 	return item;
