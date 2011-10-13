@@ -24,6 +24,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "ocs-app.h"
 #include "ocs-server.h"
@@ -92,44 +93,10 @@ get_server_icon_name (AppServer *server)
 {
 }
 
-static xmlDocPtr
-get_doc_ptr (AppServer *server, gchar *url)
-{
-	OcsServer *ocs_server = OCS_SERVER (server);
-	OcsServerPrivate *priv = ocs_server->priv;
-
-	GnomeAppConfig *config;
-	gchar *md5;
-	gchar *cache_dir;
-	gchar *local_url;
-	xmlDocPtr doc_ptr;
-
-	md5 = gnome_app_get_md5 (url);
-        config = gnome_app_config_new ();
-        cache_dir = gnome_app_config_get_cache_dir (config);
-	local_url = g_build_filename (cache_dir, "xml", md5, NULL);
-
-	if (g_file_test (local_url, G_FILE_TEST_EXISTS)) {
-		doc_ptr = xmlParseFile (local_url);
-	} else {
-		SoupBuffer *buf;
-		buf = gnome_app_get_data_from_url (priv->session, url);
-	        doc_ptr = xmlParseMemory (buf->data, buf->length);
-		soup_buffer_free (buf);
-	}
-	if (!doc_ptr)
-		printf ("Cannot parse the value!\n");
-	g_object_unref (config);
-	g_free (md5);
-	g_free (cache_dir);
-	g_free (local_url);
-
-	return doc_ptr;
-}
-
 /*FIXME: there must be such function in xml interface !*/
+/*Search in the childnode of the rootnode*/
 static xmlNodePtr
-get_data_node (xmlDocPtr doc_ptr)
+find_node (xmlDocPtr doc_ptr, gchar *node_name)
 {
 	xmlNodePtr root_node, data_node;
 
@@ -141,12 +108,120 @@ get_data_node (xmlDocPtr doc_ptr)
 	}
 
 	for (data_node = root_node->xmlChildrenNode; data_node; data_node = data_node->next) {
-		if (strcmp (data_node->name, "data") == 0)
+		if (strcmp (data_node->name, node_name) == 0)
 			return data_node;
 	}
 	return NULL;
 }
-	
+
+static gboolean
+check_data_valid (xmlDocPtr doc_ptr)
+{
+	xmlNodePtr meta_node, status_node;
+	gchar *content;
+	gint status_code;
+	gchar *message;
+
+	meta_node = find_node (doc_ptr, "meta");
+	if (!meta_node) {
+		return FALSE;
+	} else {
+		for (status_node = meta_node->xmlChildrenNode; status_node; status_node = status_node->next) {
+			content = xmlNodeGetContent (status_node);
+			if (!content || strlen (content) < 1)
+				continue;
+			if (strcmp (status_node->name, "statuscode") == 0) {
+				status_code = atoi (content);
+			} else if (strcmp (status_node->name, "message") == 0) {
+				message = content;
+			}
+		}
+	}
+	if (status_code == 100) {
+		return TRUE;
+	} else {
+		printf ("Get the error msg from server:\n\t%s\n", message);
+		return FALSE;
+	}
+}
+		
+/*TODO: check the timestamp first, different api should have different refresh time.
+ * If the current time  - create_time of the file longer than refresh time.
+ * load from server anyway!
+*/
+static gboolean
+need_to_refresh (gchar *local_url)
+{
+	return FALSE;
+}
+
+static xmlDocPtr
+get_doc_ptr (AppServer *server, gchar *url)
+{
+	OcsServer *ocs_server = OCS_SERVER (server);
+	OcsServerPrivate *priv = ocs_server->priv;
+
+	GnomeAppConfig *config;
+	gchar *md5;
+	gchar *cache_dir;
+	gchar *local_url;
+	xmlDocPtr doc_ptr;
+	gboolean refresh = TRUE;
+
+	md5 = gnome_app_get_md5 (url);
+        config = gnome_app_config_new ();
+        cache_dir = gnome_app_config_get_cache_dir (config);
+	local_url = g_build_filename (cache_dir, "xml", md5, NULL);
+
+	if (g_file_test (local_url, G_FILE_TEST_EXISTS)) {
+		if (need_to_refresh (local_url)) {
+			refresh = TRUE;
+		} else {
+			doc_ptr = xmlParseFile (local_url);
+			if (!doc_ptr) {
+				g_unlink (local_url);
+				refresh = TRUE;
+			} else if (!check_data_valid (doc_ptr)) {
+        			xmlFreeDoc(doc_ptr);
+				g_unlink (local_url);
+				doc_ptr = NULL;
+				refresh = TRUE;
+			} else {
+				refresh = FALSE;
+			}
+		}
+	} 
+	if (refresh) {
+		SoupBuffer *buf;
+		buf = gnome_app_get_data_from_url (priv->session, url);
+	        doc_ptr = xmlParseMemory (buf->data, buf->length);
+		if (!doc_ptr) {
+			printf ("Cannot parse the value!\n");
+		} else if (!check_data_valid (doc_ptr)) {
+        		xmlFreeDoc(doc_ptr);
+			doc_ptr = NULL;
+		} else {
+			FILE *fp;
+			fp = fopen (local_url, "w");
+			if (!fp) {
+				/*TODO: popup more error, cause it is local disk issue */
+				printf ("Cannot save the xml file to disk!\n");
+			} else {
+				fwrite (buf->data, 1, buf->length, fp);
+				fclose (fp);
+			}
+		}
+		soup_buffer_free (buf);
+	}
+
+	g_object_unref (config);
+	g_free (md5);
+	g_free (cache_dir);
+	g_free (local_url);
+
+	return doc_ptr;
+}
+
 static void
 parse_all_cid (OcsServer *ocs_server, xmlNodePtr data_node)
 {
@@ -200,7 +275,7 @@ init_cid (AppServer *server)
 	                        priv->server_uri, get_cate_string);
         doc_ptr = get_doc_ptr (server, url);
 	if (doc_ptr) {
-		data_node = get_data_node (doc_ptr);
+		data_node = find_node (doc_ptr, "data");
 		parse_all_cid (ocs_server, data_node);
         	xmlFreeDoc(doc_ptr);
 	}
@@ -312,7 +387,7 @@ get_appid_list_by_cid_list (AppServer *server, GList *cid_list)
 
         doc_ptr = get_doc_ptr (server, url);
 	if (doc_ptr) {
-		data_node = get_data_node (doc_ptr);
+		data_node = find_node (doc_ptr, "data");
 		list = parse_appid_list (ocs_server, data_node);
         	xmlFreeDoc(doc_ptr);
 	}
@@ -341,7 +416,7 @@ get_app_by_id (AppServer *server, gchar *app_id)
 
         doc_ptr = get_doc_ptr (server, url);
 	if (doc_ptr) {
-		data_node = get_data_node (doc_ptr);
+		data_node = find_node (doc_ptr, "data");
 		/*parse_app is done in a seperate file */
 		item = parse_app (ocs_server, data_node);
         	xmlFreeDoc(doc_ptr);
