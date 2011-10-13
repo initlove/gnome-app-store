@@ -32,6 +32,9 @@ G_BEGIN_DECLS
 const GList *	gnome_app_get_local_categories ();
 gchar *		gnome_app_get_md5 (gchar *str);
 gboolean	gnome_app_category_match_group (gchar *cname, gchar *group);
+/*TODO FIXME:	get_data_from_url
+*		the cache should be implement in this function !
+*/
 SoupBuffer *	gnome_app_get_data_from_url (SoupSession *session, const char *url);
 SoupSession *	gnome_app_soup_session_new (gboolean sync, gchar *cafile);
 
