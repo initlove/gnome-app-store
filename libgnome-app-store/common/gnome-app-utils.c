@@ -88,9 +88,9 @@ gnome_app_get_local_categories ()
 	apps_tree = gmenu_tree_lookup ("applications.menu", GMENU_TREE_FLAGS_INCLUDE_NODISPLAY);
 	trunk = gmenu_tree_get_root_directory (apps_tree);
 	gather_entries_recurse (trunk);
-
 	gmenu_tree_item_unref (trunk);
 	gmenu_tree_unref (apps_tree);
+	local_categories = g_list_reverse (local_categories);
 
 	return (const GList *) local_categories;
 }
