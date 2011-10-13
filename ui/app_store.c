@@ -10,6 +10,9 @@
 #include "gnome-app-stage.h"
 #include "gnome-app-item-ui.h"
 
+#define TEST_SERVER TRUE
+#define TEST_GAME TRUE
+
 int
 main (int argc, char *argv[])
 {
@@ -38,17 +41,32 @@ main (int argc, char *argv[])
 	GnomeAppStore *store;
 	GnomeAppItem *item;
 	GnomeAppItemUI *item_ui;
-	const GList *local_categories;
-	const GList *cid_list;
-	const GList *appid_list;
+	GList *local_categories;
+	GList *cid_list;
+	GList *appid_list;
 	GList *l, *app_l;
+	gchar *group;
 
 	store = gnome_app_store_new ();
 
-	local_categories = (const GList *)gnome_app_get_local_categories ();
+	local_categories = (GList *)gnome_app_get_local_categories ();
+#if TEST_SERVER
+		
+	cid_list = gnome_app_store_get_cid_list_by_group (store, NULL);
+	appid_list = gnome_app_store_get_appid_list_by_cid_list (store, cid_list);
+	for (app_l = appid_list; app_l; app_l = app_l->next) {
+		item = gnome_app_store_get_app_by_id (store, (gchar *)app_l->data);
+		item_ui = gnome_app_item_ui_new_with_app (item);
+		box = gnome_app_item_ui_get_icon (item_ui);
+		gnome_app_stage_add_actor (GNOME_APP_STAGE (scroll), box);
+		g_object_unref (item_ui);
+	}
+#else
 	for (l = (GList *)local_categories; l; l = l->next) {
-printf ("We use <%s>\n", l->data);
-		cid_list = gnome_app_store_get_cid_list_by_group (store, (gchar *)l->data);
+#if TEST_GAME
+		group = "Game";
+#endif
+		cid_list = gnome_app_store_get_cid_list_by_group (store, group);
 		appid_list = gnome_app_store_get_appid_list_by_cid_list (store, cid_list);
 		for (app_l = appid_list; app_l; app_l = app_l->next) {
 			item = gnome_app_store_get_app_by_id (store, (gchar *)app_l->data);
@@ -57,10 +75,11 @@ printf ("We use <%s>\n", l->data);
 			gnome_app_stage_add_actor (GNOME_APP_STAGE (scroll), box);
 			g_object_unref (item_ui);
 		}
-
+#if TEST_GAME
 		break;
+#endif
 	}
-
+#endif
 	clutter_actor_show (stage);
 	clutter_main ();
 
