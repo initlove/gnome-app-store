@@ -140,18 +140,23 @@ printf ("we using wget .. <%s>\n", cmd);
 }
 
 static gchar *
-get_local_url (const gchar *url)
+get_local_url (gchar *url)
 {
 	GnomeAppConfig *config;
 	gchar *md5;
 	gchar *cache_dir;
+	gchar *img_dir;
 	gchar *local_url;
+
 /* FIXME: maybe we should use some functions like gnome_app_config_get_default () */ 
 	config = gnome_app_config_new ();
 	cache_dir = gnome_app_config_get_cache_dir (config);
 	md5 = gnome_app_get_md5 (url);
-	local_url = g_build_filename (cache_dir, "img", md5, NULL);
-/*TODO: mkdir for the img*/
+	img_dir = g_build_filename (cache_dir, "img", NULL);
+	local_url = g_build_filename (img_dir, md5, NULL);
+
+	if (!g_file_test (img_dir, G_FILE_TEST_EXISTS))
+		g_mkdir_with_parents (img_dir, 0755);
 	if (!g_file_test (local_url, G_FILE_TEST_EXISTS)) {
 		download_file (url, (const gchar *)local_url);
 	}
@@ -159,6 +164,7 @@ get_local_url (const gchar *url)
 	g_object_unref (config);
 	g_free (md5);
 	g_free (cache_dir);
+	g_free (img_dir);
 
 	return local_url;
 }
@@ -172,7 +178,7 @@ get_local_icon_url (GnomeAppItem *item)
 	icon = gnome_app_item_get_icon_name (item);
 	if (!icon)
 		return NULL;
-	local_url = get_local_url (icon);
+	local_url = get_local_url ((gchar *)icon);
 
 	return local_url;
 }
@@ -186,7 +192,7 @@ get_local_screenshot_url (GnomeAppItem *item)
 	screenshot = gnome_app_item_get_screenshot (item);
 	if (!screenshot)
 		return NULL;
-	local_url = get_local_url (screenshot);
+	local_url = get_local_url ((gchar *)screenshot);
 
 	return local_url;
 }

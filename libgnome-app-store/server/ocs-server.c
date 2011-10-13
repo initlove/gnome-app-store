@@ -202,10 +202,17 @@ get_doc_ptr (AppServer *server, gchar *url)
 			doc_ptr = NULL;
 		} else {
 			FILE *fp;
+			gchar *xml_dir;
+
+			xml_dir =  g_build_filename (cache_dir, "xml", NULL);
+			if (!g_file_test (xml_dir, G_FILE_TEST_EXISTS))
+				g_mkdir_with_parents (xml_dir, 0755);
+			g_free (xml_dir);
+
 			fp = fopen (local_url, "w");
 			if (!fp) {
 				/*TODO: popup more error, cause it is local disk issue */
-				printf ("Cannot save the xml file to disk!\n");
+				printf ("Cannot save the xml file to disk %s!\n", local_url);
 			} else {
 				fwrite (buf->data, 1, buf->length, fp);
 				fclose (fp);
