@@ -12,8 +12,12 @@ Boston, MA 02111-1307, USA.
 Author: Liang chenye <liangchenye@gmail.com>
 
 */
-#include <clutter/clutter.h>
+#include "st.h"
+#define ST_H_INSIDE
+#include "st/st-button.h"
+#undef ST_H_INSIDE
 
+#include <clutter/clutter.h>
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-stage.h"
 
@@ -61,7 +65,7 @@ create_category_list (GnomeAppFrameUI *frame_ui)
 	list = (const GList *)gnome_app_get_local_categories ();
 	for (l = (GList *)list; l; l = l->next) {
 		name = (gchar *)l->data;
-		actor = clutter_text_new_full (NULL, name, CLUTTER_COLOR_Blue);
+		actor = st_button_new_with_label (name);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
 		row ++;
 	}
