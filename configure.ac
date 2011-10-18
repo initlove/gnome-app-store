@@ -7,6 +7,19 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
+# Sets GLIB_GENMARSHAL and GLIB_MKENUMS
+AM_PATH_GLIB_2_0()
+G_IR_SCANNER=`$PKG_CONFIG --variable=g_ir_scanner gobject-introspection-1.0`
+AC_SUBST(G_IR_SCANNER)
+G_IR_COMPILER=`$PKG_CONFIG --variable=g_ir_compiler gobject-introspection-1.0`
+AC_SUBST(G_IR_COMPILER)
+G_IR_GENERATE=`$PKG_CONFIG --variable=g_ir_generate gobject-introspection-1.0`
+AC_SUBST(G_IR_GENERATE)
+GIRDIR=`$PKG_CONFIG --variable=girdir gobject-introspection-1.0`
+AC_SUBST(GIRDIR)
+TYPELIBDIR="$($PKG_CONFIG --variable=typelibdir gobject-introspection-1.0)"
+AC_SUBST(TYPELIBDIR)
+
 LT_VERSION=2:0:0
 AC_SUBST(LT_VERSION)
 
@@ -39,7 +52,7 @@ AC_SUBST(CLUTTER_REQUIRED)
 dnl pkg-config dependency checks
 
 PKG_CHECK_MODULES(GNOME_APP_STORE, libxml-2.0 >= $LIBXML_REQUIRED gnome-desktop-3.0 >= $GNOME_DESKTOP_REQUIRED gdk-pixbuf-2.0 >= $GDK_PIXBUF_REQUIRED gtk+-3.0 >= $GTK_REQUIRED glib-2.0 >= $GLIB_REQUIRED gio-2.0 >= $GLIB_REQUIRED gsettings-desktop-schemas >= $GSETTINGS_DESKTOP_SCHEMAS_REQUIRED clutter-1.0 >= $CLUTTER_REQUIRED libgnome-menu)
-
+PKG_CHECK_MODULES(ST, clutter-1.0 gtk+-3.0 libcroco-0.6 >= 0.6.2 gnome-desktop-3.0 >= 2.90.0 x11)
 PKG_CHECK_MODULES(LIBSOUP, libsoup-2.4)
 
 dnl gnome-doc-utils stuff
