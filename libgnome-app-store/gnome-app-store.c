@@ -105,6 +105,17 @@ gnome_app_store_new (void)
 	return g_object_new (GNOME_APP_TYPE_STORE, NULL);
 }
 
+GnomeAppStore *
+gnome_app_store_get_default ()
+{
+	static GnomeAppStore *default_store = NULL;
+
+	if (!default_store)
+		default_store = gnome_app_store_new ();
+
+	return default_store;
+}
+
 GList *
 gnome_app_store_get_cid_list_by_group (GnomeAppStore *store, gchar *group)
 {
@@ -192,5 +203,17 @@ gnome_app_store_get_app_by_id (GnomeAppStore *store, gchar *app_id)
 	}
 
 	return g_object_ref (item);
+}
+
+GList *
+gnome_app_store_get_appid_list_by_group (GnomeAppStore *store, gchar *group)
+{
+	GList *cid_list, *appid_list;
+
+	cid_list = gnome_app_store_get_cid_list_by_group (store, group);
+	appid_list = gnome_app_store_get_appid_list_by_cid_list (store, cid_list);
+	g_list_free (cid_list);
+		
+	return appid_list;
 }
 
