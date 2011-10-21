@@ -27,6 +27,7 @@
 #include <glib-object.h>
 /*FIXME: why should add common here? */
 #include "common/gnome-app-item.h"
+#include "common/gnome-app-query.h"
 
 G_BEGIN_DECLS
 
@@ -56,16 +57,15 @@ struct _GnomeAppStoreClass
 GType			gnome_app_store_get_type			(void);
 GnomeAppStore *		gnome_app_store_new				(void);
 const GnomeAppStore *	gnome_app_store_get_default			(void);
-GList *			gnome_app_store_get_appid_list_by_group		(GnomeAppStore *store, gchar *group);
+GList *			gnome_app_store_get_apps_by_query		(GnomeAppStore *store, GnomeAppQuery *query);
+GList *			gnome_app_store_get_cid_list_by_group		(GnomeAppStore *store, gchar *group);
+GnomeAppItem *		gnome_app_store_get_app_by_id			(GnomeAppStore *store, gchar *app_id);
 /*
  *TODO
  *The following three function should be removed
 */
-GList *			gnome_app_store_get_cid_list_by_group		(GnomeAppStore *store, gchar *group);
 gchar *			gnome_app_store_get_cname_by_id 		(GnomeAppStore *store, gchar *cid);
 GList *			gnome_app_store_get_appid_list_by_cid_list	(GnomeAppStore *store, GList *cid_list);
-GList *			gnome_app_store_get_apps			(GnomeAppStore *store, GList *cid_list, gint pagesize, gint pagecount);
-GnomeAppItem *		gnome_app_store_get_app_by_id			(GnomeAppStore *store, gchar *app_id);
 
 G_END_DECLS
 

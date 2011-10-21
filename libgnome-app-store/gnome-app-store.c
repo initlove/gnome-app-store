@@ -25,6 +25,7 @@ Author: David Liang <dliang@novell.com>
 #include "server/app-server.h"
 #include "common/gnome-app-item.h"
 #include "common/gnome-app-config.h"
+#include "common/gnome-app-query.h"
 
 struct _GnomeAppStorePrivate
 {
@@ -105,10 +106,10 @@ gnome_app_store_new (void)
 	return g_object_new (GNOME_APP_TYPE_STORE, NULL);
 }
 
-GnomeAppStore *
+const GnomeAppStore *
 gnome_app_store_get_default ()
 {
-	static GnomeAppStore *default_store = NULL;
+	static const GnomeAppStore *default_store = NULL;
 
 	if (!default_store)
 		default_store = gnome_app_store_new ();
@@ -215,5 +216,13 @@ gnome_app_store_get_appid_list_by_group (GnomeAppStore *store, gchar *group)
 	g_list_free (cid_list);
 		
 	return appid_list;
+}
+
+GList *
+gnome_app_store_get_apps_by_query (GnomeAppStore *store, GnomeAppQuery *query)
+{
+	GList *list;
+
+	list = app_server_get_apps_by_query (store->priv->server, query);
 }
 
