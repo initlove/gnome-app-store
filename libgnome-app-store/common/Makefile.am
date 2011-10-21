@@ -10,6 +10,7 @@ AM_CPPFLAGS =							\
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"			\
 	-DGNOMELOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale\""	\
 	-DPNP_IDS=\""$(PNP_IDS)"\"				\
+	-DG_ENABLE_DEBUG					\
 	$(DISABLE_DEPRECATED_CFLAGS)				\
 	$(NULL)
 
@@ -19,6 +20,7 @@ libgnome_app_common_la_SOURCES = 	\
 	gnome-app-config.c gnome-app-config.h \
 	gnome-app-item.c gnome-app-item.h \
 	gnome-app-utils.c gnome-app-utils.h \
+	gnome-app-query.c gnome-app-query.h \
 	gnome-app-install.c gnome-app-install.h \
 	$(NULL)
 
