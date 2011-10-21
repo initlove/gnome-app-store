@@ -55,7 +55,7 @@ struct _GnomeAppStoreClass
 
 GType			gnome_app_store_get_type			(void);
 GnomeAppStore *		gnome_app_store_new				(void);
-GnomeAppStore *		gnome_app_store_get_default			(void);
+const GnomeAppStore *	gnome_app_store_get_default			(void);
 GList *			gnome_app_store_get_appid_list_by_group		(GnomeAppStore *store, gchar *group);
 /*
  *TODO
@@ -64,6 +64,7 @@ GList *			gnome_app_store_get_appid_list_by_group		(GnomeAppStore *store, gchar 
 GList *			gnome_app_store_get_cid_list_by_group		(GnomeAppStore *store, gchar *group);
 gchar *			gnome_app_store_get_cname_by_id 		(GnomeAppStore *store, gchar *cid);
 GList *			gnome_app_store_get_appid_list_by_cid_list	(GnomeAppStore *store, GList *cid_list);
+GList *			gnome_app_store_get_apps			(GnomeAppStore *store, GList *cid_list, gint pagesize, gint pagecount);
 GnomeAppItem *		gnome_app_store_get_app_by_id			(GnomeAppStore *store, gchar *app_id);
 
 G_END_DECLS
