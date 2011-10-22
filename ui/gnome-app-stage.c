@@ -16,8 +16,8 @@ Author: David Liang <dliang@novell.com>
 #include <clutter/clutter.h>
 #include "st.h"
 #include "gnome-app-store.h"
-#include "gnome-app-item.h"
-#include "gnome-app-item-ui.h"
+#include "gnome-app-info.h"
+#include "gnome-app-info-ui.h"
 #include "gnome-app-stage.h"
 
 struct _GnomeAppStagePrivate
@@ -214,14 +214,14 @@ load_query (GnomeAppStage *stage)
 		return;
 
         for (l = list; l; l = l->next) {
-               	GnomeAppItem *item;
-		GnomeAppItemUI *item_ui;
+               	GnomeAppInfo *info;
+		GnomeAppInfoUI *info_ui;
                 ClutterActor *box;
-		item = gnome_app_store_get_app_by_id (store, (gchar *)l->data);
-		item_ui = gnome_app_item_ui_new_with_app (item);
-		box = gnome_app_item_ui_get_icon (item_ui);
+		info = gnome_app_store_get_app_by_id (store, (gchar *)l->data);
+		info_ui = gnome_app_info_ui_new_with_app (info);
+		box = gnome_app_info_ui_get_icon (info_ui);
 		gnome_app_stage_add_actor (stage, box);
-		g_object_unref (item_ui);
+		g_object_unref (info_ui);
         }
 }
 

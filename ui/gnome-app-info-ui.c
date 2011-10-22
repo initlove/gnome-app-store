@@ -18,63 +18,63 @@ Author: Lance Wang <lzwang@suse.com>
 
 #include <clutter/clutter.h>
 
-#include "gnome-app-item-ui.h"
-#include "gnome-app-item.h"
+#include "gnome-app-info-ui.h"
+#include "gnome-app-info.h"
 #include "gnome-app-install.h"
 
-struct _GnomeAppItemUIPrivate
+struct _GnomeAppInfoUIPrivate
 {
-	GnomeAppItem *app;
+	GnomeAppInfo *app;
 	ClutterActor *icon;
 };
 
-G_DEFINE_TYPE (GnomeAppItemUI, gnome_app_item_ui, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GnomeAppInfoUI, gnome_app_info_ui, G_TYPE_OBJECT)
 
 static void
-gnome_app_item_ui_init (GnomeAppItemUI *ui)
+gnome_app_info_ui_init (GnomeAppInfoUI *ui)
 {
-	GnomeAppItemUIPrivate *priv;
+	GnomeAppInfoUIPrivate *priv;
 
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
-							 GNOME_TYPE_APP_ITEM_UI,
-							 GnomeAppItemUIPrivate);
+							 GNOME_TYPE_APP_INFO_UI,
+							 GnomeAppInfoUIPrivate);
 	priv->app = NULL;
 	priv->icon = NULL;
 }
 
 static void
-gnome_app_item_ui_dispose (GObject *object)
+gnome_app_info_ui_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (gnome_app_item_ui_parent_class)->dispose (object);
+	G_OBJECT_CLASS (gnome_app_info_ui_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_item_ui_finalize (GObject *object)
+gnome_app_info_ui_finalize (GObject *object)
 {
-	G_OBJECT_CLASS (gnome_app_item_ui_parent_class)->finalize (object);
+	G_OBJECT_CLASS (gnome_app_info_ui_parent_class)->finalize (object);
 }
 
 static void
-gnome_app_item_ui_class_init (GnomeAppItemUIClass *klass)
+gnome_app_info_ui_class_init (GnomeAppInfoUIClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = gnome_app_item_ui_dispose;
-	object_class->finalize = gnome_app_item_ui_finalize;
+	object_class->dispose = gnome_app_info_ui_dispose;
+	object_class->finalize = gnome_app_info_ui_finalize;
 	 
-	g_type_class_add_private (object_class, sizeof (GnomeAppItemUIPrivate));
+	g_type_class_add_private (object_class, sizeof (GnomeAppInfoUIPrivate));
 }
 
-GnomeAppItemUI *
-gnome_app_item_ui_new (void)
+GnomeAppInfoUI *
+gnome_app_info_ui_new (void)
 {
-	return g_object_new (GNOME_APP_TYPE_ITEM, NULL);
+	return g_object_new (GNOME_APP_TYPE_INFO, NULL);
 }
 
 static void
-free_ui_resources (GnomeAppItemUI *ui)
+free_ui_resources (GnomeAppInfoUI *ui)
 {
-	GnomeAppItemUIPrivate *priv;
+	GnomeAppInfoUIPrivate *priv;
 
 	if (priv->icon != NULL) {
 		g_object_unref (priv->icon);
@@ -83,10 +83,10 @@ free_ui_resources (GnomeAppItemUI *ui)
 }
 
 gboolean
-gnome_app_item_ui_set_app (GnomeAppItemUI *ui,
-			    GnomeAppItem *app)
+gnome_app_info_ui_set_app (GnomeAppInfoUI *ui,
+			    GnomeAppInfo *app)
 {
-	GnomeAppItemUIPrivate *priv;
+	GnomeAppInfoUIPrivate *priv;
 
 	g_return_val_if_fail (ui != NULL, FALSE);
 	g_return_val_if_fail (app != NULL, FALSE);
@@ -102,20 +102,20 @@ gnome_app_item_ui_set_app (GnomeAppItemUI *ui,
 	return TRUE;
 }
 
-GnomeAppItemUI *
-gnome_app_item_ui_new_with_app (GnomeAppItem *app)
+GnomeAppInfoUI *
+gnome_app_info_ui_new_with_app (GnomeAppInfo *app)
 {
-	GnomeAppItemUI *ui;
+	GnomeAppInfoUI *ui;
 
 	g_return_val_if_fail (app != NULL, NULL);
 
-	ui = g_object_new (GNOME_TYPE_APP_ITEM_UI, NULL);
-	gnome_app_item_ui_set_app (ui, app);
+	ui = g_object_new (GNOME_TYPE_APP_INFO_UI, NULL);
+	gnome_app_info_ui_set_app (ui, app);
 	return ui;
 }
 
 static inline void
-set_icon (GnomeAppItemUI *ui, ClutterActor *icon)
+set_icon (GnomeAppInfoUI *ui, ClutterActor *icon)
 {
 	if (ui->priv->icon != NULL) {
 		g_object_unref (icon);
@@ -124,20 +124,20 @@ set_icon (GnomeAppItemUI *ui, ClutterActor *icon)
 }
 
 static inline ClutterActor *
-get_icon (GnomeAppItemUI *ui)
+get_icon (GnomeAppInfoUI *ui)
 {
 	return ui->priv->icon;
 }
 
 static ClutterActor *
-get_icon_from_app (GnomeAppItem *app)
+get_icon_from_app (GnomeAppInfo *app)
 {
 	const gchar *icon_name;
 	const gchar *app_name;
 	const gchar *uri;
 	GError *err = NULL;
 
-	uri = gnome_app_item_get_local_icon_url (app);
+	uri = gnome_app_info_get_local_icon_url (app);
 
         ClutterActor *box, *text;
         ClutterActor *icon = NULL; //*FIXME we have icon, but can not be recognized by clutter
@@ -148,7 +148,7 @@ get_icon_from_app (GnomeAppItem *app)
         clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (layout), TRUE);
         clutter_box_layout_set_spacing (CLUTTER_BOX_LAYOUT (layout), 6);
 
-	app_name = gnome_app_item_get_name (app);
+	app_name = gnome_app_info_get_name (app);
         box = clutter_box_new (layout);
         text = clutter_text_new ();
         clutter_text_set_ellipsize (CLUTTER_TEXT (text), PANGO_ELLIPSIZE_END);
@@ -172,17 +172,17 @@ get_icon_from_app (GnomeAppItem *app)
 	/* what to do? */
 	}
         g_signal_connect_swapped (box, "button-press-event",
-                            G_CALLBACK (gnome_app_install), gnome_app_item_get_pkgname (app));
+                            G_CALLBACK (gnome_app_install), gnome_app_info_get_pkgname (app));
 
 	return box;
 }
 
 ClutterActor *
-gnome_app_item_ui_get_icon (GnomeAppItemUI *ui)
+gnome_app_info_ui_get_icon (GnomeAppInfoUI *ui)
 {
 	ClutterActor *icon;
 
-	g_return_val_if_fail (GNOME_IS_APP_ITEM_UI(ui), NULL);
+	g_return_val_if_fail (GNOME_IS_APP_INFO_UI(ui), NULL);
 
 	if (ui->priv->app == NULL) {
 		return NULL;

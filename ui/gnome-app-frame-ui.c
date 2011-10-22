@@ -16,8 +16,6 @@ Author: Liang chenye <liangchenye@gmail.com>
 
 #include <clutter/clutter.h>
 #include "gnome-app-store.h"
-#include "gnome-app-item.h"
-#include "gnome-app-item-ui.h"
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-stage.h"
 

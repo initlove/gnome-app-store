@@ -94,7 +94,7 @@ app_backend_get_apps_by_query (AppBackend *backend, GnomeAppQuery *query)
 	return APP_BACKEND_GET_CLASS (backend)->get_apps_by_query (backend, query);
 }
 
-GnomeAppItem *
+GnomeAppInfo *
 app_backend_get_app_by_id (AppBackend *backend, gchar *app_id)
 {
 	g_return_val_if_fail (APP_IS_BACKEND (backend), NULL);

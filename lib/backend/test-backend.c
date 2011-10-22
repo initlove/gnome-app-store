@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "gnome-app-item.h"
+#include "gnome-app-info.h"
 #include "gnome-app-config.h"
 #include "app-backend.h"
 
@@ -9,17 +9,17 @@ debug_apps_by_group (AppBackend *backend, gchar *group)
 {
 	GList *cid_list, *appid_list, *l;
 	gchar *appid;
-	GnomeAppItem *item;
+	GnomeAppInfo *info;
 	const gchar *local_screenshot_url;
 
 	cid_list = app_backend_get_cid_list_by_group (backend, group);
 	appid_list = app_backend_get_appid_list_by_cid_list (backend, cid_list);
 	for (l = appid_list; l; l = l->next) {
 		appid = l->data;
-		item = app_backend_get_app_by_id (backend, appid);
-		local_screenshot_url = gnome_app_item_get_local_screenshot_url (item);
+		info = app_backend_get_app_by_id (backend, appid);
+		local_screenshot_url = gnome_app_info_get_local_screenshot_url (info);
 printf ("local screenshot url %s\n\n", local_screenshot_url);
-		gnome_app_item_debug (item);
+		gnome_app_info_debug (info);
 	}
 	g_list_free (cid_list);
 	g_list_free (appid_list);

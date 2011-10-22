@@ -23,7 +23,7 @@ Author: David Liang <dliang@novell.com>
 
 #include "gnome-app-store.h"
 #include "backend/app-backend.h"
-#include "common/gnome-app-item.h"
+#include "common/gnome-app-info.h"
 #include "common/gnome-app-config.h"
 #include "common/gnome-app-query.h"
 
@@ -31,15 +31,12 @@ struct _GnomeAppStorePrivate
 {
 	AppBackend *backend;
 	
-	GHashTable *cidlist_group;
-	GHashTable *cname_id;	/*FIXME: better name ? */
-
 	/*FIXME: Donnot use this at present */
 	GList *appid_list;	/* should be reload every timestamp time */
 	GHashTable *app_id;
 	gint app_timestamp;	/*FIXME: 1. should category have timestamp too?
 					 2. should appid_list and app_id have their own timestamp?
-					 3. should each app have its own timestamp?  add to the GnomeAppItem ?
+					 3. should each app have its own timestamp?  add to the GnomeAppInfo ?
 				*/
 };
 
@@ -55,8 +52,6 @@ gnome_app_store_init (GnomeAppStore *store)
                                                    GNOME_APP_TYPE_STORE,
                                                    GnomeAppStorePrivate);
 
-	priv->cidlist_group = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_list_free);
-	priv->cname_id = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	priv->appid_list = NULL;
 	priv->app_id = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 	priv->app_timestamp = -1;	/* FIXME: not implement yet */
@@ -77,10 +72,6 @@ gnome_app_store_finalize (GObject *object)
 	GnomeAppStore *store = GNOME_APP_STORE (object);
 	GnomeAppStorePrivate *priv = store->priv;
 
-	if (priv->cidlist_group)
-		g_hash_table_destroy (priv->cidlist_group);
-	if (priv->cname_id)
-		g_hash_table_destroy (priv->cname_id);
 	if (priv->appid_list)
 		g_list_free (priv->appid_list);
 	if (priv->app_id)
@@ -106,6 +97,48 @@ gnome_app_store_new (void)
 	return g_object_new (GNOME_APP_TYPE_STORE, NULL);
 }
 
+static gboolean
+app_need_reload (GnomeAppStore *store, gchar *app_id)
+{
+	/*FIXME: not implement */
+	/* timestamp */
+	return FALSE;
+}
+
+static void
+app_timestamp_mark (GnomeAppStore *store, GnomeAppInfo *info)
+{
+	/*FIXME: not implement */
+}
+
+GnomeAppInfo *
+gnome_app_store_get_app_by_id (GnomeAppStore *store, gchar *app_id)
+{
+	GnomeAppInfo *info;
+
+	info = g_hash_table_lookup (store->priv->app_id, app_id);
+	if (!info) {
+		info = app_backend_get_app_by_id (store->priv->backend, app_id);
+		app_timestamp_mark (store, info);
+		g_hash_table_insert (store->priv->app_id, g_strdup (app_id), info);
+	} else if (app_need_reload (store, app_id)){
+		info = app_backend_get_app_by_id (store->priv->backend, app_id);
+		g_hash_table_replace (store->priv->app_id, g_strdup (app_id), info);
+	}
+
+	return g_object_ref (info);
+}
+
+GList *
+gnome_app_store_get_apps_by_query (GnomeAppStore *store, GnomeAppQuery *query)
+{
+	GList *list;
+
+	list = app_backend_get_apps_by_query (store->priv->backend, query);
+
+	return list;
+}
+
 const GnomeAppStore *
 gnome_app_store_get_default ()
 {
@@ -117,112 +150,4 @@ gnome_app_store_get_default ()
 	return default_store;
 }
 
-GList *
-gnome_app_store_get_cid_list_by_group (GnomeAppStore *store, gchar *group)
-{
-	GList *list;
-
-	if (!group)
-		list = g_hash_table_lookup (store->priv->cidlist_group, "All");
-	else
-		list = g_hash_table_lookup (store->priv->cidlist_group, group);
-
-	if (!list) {
-		list = app_backend_get_cid_list_by_group (store->priv->backend, group);
-		if (list) {
-			if (!group)
-				g_hash_table_insert (store->priv->cidlist_group, g_strdup ("All"), list);
-			else
-				g_hash_table_insert (store->priv->cidlist_group, g_strdup (group), list);
-		}
-	}
-
-	return g_list_copy (list);
-}
-
-gchar *
-gnome_app_store_get_cname_by_id (GnomeAppStore *store, gchar *cid)
-{
-	gchar *cname;
-
-	cname = g_hash_table_lookup (store->priv->cname_id, cid);
-	if (!cname) {
-		cname = app_backend_get_cname_by_id (store->priv->backend, cid);
-		if (cname) {
-			/*cname is new allocated, no need to g_strdup it */
-			g_hash_table_insert (store->priv->cname_id, g_strdup (cid), cname);
-		}
-	}
-
-	return g_strdup (cname);
-}
-
-GList *
-gnome_app_store_get_appid_list_by_cid_list (GnomeAppStore *store, GList *cid_list)
-{
-#if 0
-	if (!store->priv->appid_list)
-		store->priv->appid_list = app_backend_get_appid_list_by_cid_list (store->priv->backend, cid_list);
-
-	return store->priv->appid_list;
-#else
-	GList *appid_list;
-
-	appid_list = app_backend_get_appid_list_by_cid_list (store->priv->backend, cid_list);
-
-	return appid_list;
-#endif
-}
-
-static gboolean
-app_need_reload (GnomeAppStore *store, gchar *app_id)
-{
-	/*FIXME: not implement */
-	/* timestamp */
-	return FALSE;
-}
-
-static void
-app_timestamp_mark (GnomeAppStore *store, GnomeAppItem *item)
-{
-	/*FIXME: not implement */
-}
-
-GnomeAppItem *
-gnome_app_store_get_app_by_id (GnomeAppStore *store, gchar *app_id)
-{
-	GnomeAppItem *item;
-
-	item = g_hash_table_lookup (store->priv->app_id, app_id);
-	if (!item) {
-		item = app_backend_get_app_by_id (store->priv->backend, app_id);
-		app_timestamp_mark (store, item);
-		g_hash_table_insert (store->priv->app_id, g_strdup (app_id), item);
-	} else if (app_need_reload (store, app_id)){
-		item = app_backend_get_app_by_id (store->priv->backend, app_id);
-		g_hash_table_replace (store->priv->app_id, g_strdup (app_id), item);
-	}
-
-	return g_object_ref (item);
-}
-
-GList *
-gnome_app_store_get_appid_list_by_group (GnomeAppStore *store, gchar *group)
-{
-	GList *cid_list, *appid_list;
-
-	cid_list = gnome_app_store_get_cid_list_by_group (store, group);
-	appid_list = gnome_app_store_get_appid_list_by_cid_list (store, cid_list);
-	g_list_free (cid_list);
-		
-	return appid_list;
-}
-
-GList *
-gnome_app_store_get_apps_by_query (GnomeAppStore *store, GnomeAppQuery *query)
-{
-	GList *list;
-
-	list = app_backend_get_apps_by_query (store->priv->backend, query);
-}
 

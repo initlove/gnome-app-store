@@ -28,9 +28,9 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
-#include "gnome-app-item.h"
+#include "gnome-app-info.h"
 #include "ocs-backend.h"
 
-GnomeAppItem *parse_app (OcsBackend *ocs_backend, xmlNodePtr data_node);
+GnomeAppInfo *parse_app (OcsBackend *ocs_backend, xmlNodePtr data_node);
 
 #endif

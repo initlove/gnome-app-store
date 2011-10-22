@@ -27,7 +27,7 @@
 #include <string.h>
 
 #include "gnome-app-utils.h"
-#include "gnome-app-item.h"
+#include "gnome-app-info.h"
 #include "gnome-app-config.h"
 #include "ocs-app.h"
 
@@ -170,12 +170,12 @@ get_local_url (gchar *url)
 }
 
 static gchar *
-get_local_icon_url (GnomeAppItem *item)
+get_local_icon_url (GnomeAppInfo *info)
 {
 	const gchar *icon;
 	gchar *local_url;
 
-	icon = gnome_app_item_get_icon_name (item);
+	icon = gnome_app_info_get_icon_name (info);
 	if (!icon)
 		return NULL;
 	local_url = get_local_url ((gchar *)icon);
@@ -184,12 +184,12 @@ get_local_icon_url (GnomeAppItem *item)
 }
 
 static gchar *
-get_local_screenshot_url (GnomeAppItem *item)
+get_local_screenshot_url (GnomeAppInfo *info)
 {
 	const gchar *screenshot;
 	gchar *local_url;
 
-	screenshot = gnome_app_item_get_screenshot (item);
+	screenshot = gnome_app_info_get_screenshot (info);
 	if (!screenshot)
 		return NULL;
 	local_url = get_local_url ((gchar *)screenshot);
@@ -198,13 +198,13 @@ get_local_screenshot_url (GnomeAppItem *item)
 }
 
 /*FIXME: it is 'full' content, the summary one could be used at the first glance */
-GnomeAppItem *
+GnomeAppInfo *
 parse_app (OcsBackend *ocs_backend, xmlNodePtr data_node)
 {
 	OcsBackendPrivate *priv = ocs_backend->priv;
         xmlNodePtr app_node, node;
-        GnomeAppItemClass *class;
-	GnomeAppItem *item = NULL;
+        GnomeAppInfoClass *class;
+	GnomeAppInfo *info = NULL;
 	OCS_KEY_WORDS type;
 	gchar *content;
 	gchar *str;
@@ -220,11 +220,11 @@ parse_app (OcsBackend *ocs_backend, xmlNodePtr data_node)
 				type = get_type_from_name ((gchar *)node->name);
 				switch (type) {
         				case OCS_ID:
-						item = gnome_app_item_new ();
-						g_object_set (G_OBJECT (item), (gchar *)node->name, content, NULL);
+						info = gnome_app_info_new ();
+						g_object_set (G_OBJECT (info), (gchar *)node->name, content, NULL);
 						break;
 					case OCS_NAME:
-						g_object_set (G_OBJECT (item), (gchar *)node->name, content, NULL);
+						g_object_set (G_OBJECT (info), (gchar *)node->name, content, NULL);
 						break;
 					case OCS_VERSION:
 						/*not implement*/
@@ -235,7 +235,7 @@ parse_app (OcsBackend *ocs_backend, xmlNodePtr data_node)
 					case OCS_TYPENAME:
 						/*FIXME: not sure if there were more than two OCS_TYPENAME, if so, we should add it */
 						str = g_strdup_printf ("%s;", content);
-						g_object_set (G_OBJECT (item), "categories", str, NULL);
+						g_object_set (G_OBJECT (info), "categories", str, NULL);
 						g_free (str);
 						break;
 					case OCS_LANGUAGE:
@@ -247,17 +247,17 @@ parse_app (OcsBackend *ocs_backend, xmlNodePtr data_node)
 						break;
 					case OCS_DOWNLOADS:
 						counts = atol (content);
-						g_object_set (G_OBJECT (item), "download-counts", counts, NULL);
+						g_object_set (G_OBJECT (info), "download-counts", counts, NULL);
 						break;
 					case OCS_SCORE:
 						score = atoi (content);
-						g_object_set (G_OBJECT (item), "score", score, NULL);
+						g_object_set (G_OBJECT (info), "score", score, NULL);
 						break;
 					case OCS_DESCRIPTION:
-						g_object_set (G_OBJECT (item), (gchar *)node->name, content, NULL);
+						g_object_set (G_OBJECT (info), (gchar *)node->name, content, NULL);
 						break;
 					case OCS_SUMMARY:
-						g_object_set (G_OBJECT (item), (gchar *)node->name, content, NULL);
+						g_object_set (G_OBJECT (info), (gchar *)node->name, content, NULL);
 						break;
 					case OCS_FEEDBACKURL:
 					case OCS_CHANGELOG:
@@ -267,14 +267,14 @@ parse_app (OcsBackend *ocs_backend, xmlNodePtr data_node)
 						/*not implement*/
 						break;
 					case OCS_LICENSE:
-						g_object_set (G_OBJECT (item), (gchar *)node->name, content, NULL);
+						g_object_set (G_OBJECT (info), (gchar *)node->name, content, NULL);
 						break;
 					case OCS_DONATIONPAGE:
 						/*not implement*/
 						break;
 					case OCS_COMMENTS:
 						counts = atol (content);
-						g_object_set (G_OBJECT (item), "comment-counts", counts, NULL);
+						g_object_set (G_OBJECT (info), "comment-counts", counts, NULL);
 						break;
 					case OCS_COMMENTSPAGE:
 						break;
@@ -289,13 +289,13 @@ parse_app (OcsBackend *ocs_backend, xmlNodePtr data_node)
 						/*not implement*/
 						break;
 					case OCS_PREVIEWPIC1:
-						g_object_set (G_OBJECT (item), "screenshot", content, NULL);
-						class = GNOME_APP_ITEM_GET_CLASS (item);
+						g_object_set (G_OBJECT (info), "screenshot", content, NULL);
+						class = GNOME_APP_INFO_GET_CLASS (info);
 						class->get_local_screenshot_url = get_local_screenshot_url;
 						break;
 					case OCS_SMALLPREVIEWPIC1:
-						g_object_set (G_OBJECT (item), "icon", content, NULL);
-						class = GNOME_APP_ITEM_GET_CLASS (item);
+						g_object_set (G_OBJECT (info), "icon", content, NULL);
+						class = GNOME_APP_INFO_GET_CLASS (info);
 						class->get_local_icon_url = get_local_icon_url;
 						break;
 					case OCS_DETAILPAGE:
@@ -317,6 +317,6 @@ parse_app (OcsBackend *ocs_backend, xmlNodePtr data_node)
 		}
 	}
 
-	return item;
+	return info;
 }
 

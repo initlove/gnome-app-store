@@ -4,11 +4,7 @@
 #include <clutter/clutter.h>
 #include <glib/gi18n.h>
 
-#include "gnome-app-config.h"
-#include "gnome-app-store.h"
-
 #include "gnome-app-frame-ui.h"
-#include "gnome-app-item-ui.h"
 
 int
 main (int argc, char *argv[])

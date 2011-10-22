@@ -24,7 +24,7 @@
 #include <libxml/tree.h>
 #include <stdio.h>
 #include <string.h>
-#include "gnome-app-item.h"
+#include "gnome-app-info.h"
 #include "gnome-app-utils.h"
 #include "app-stream-backend.h"
 #include "gnome-app-config.h"
@@ -78,12 +78,12 @@ get_type_from_name (gchar *name)
 }
 
 static gchar *
-get_local_icon_url (GnomeAppItem *item)
+get_local_icon_url (GnomeAppInfo *info)
 {
 	const gchar *icon_name;
 	gchar *url = NULL;
 
-	icon_name = gnome_app_item_get_icon_name (item);
+	icon_name = gnome_app_info_get_icon_name (info);
 
         if (icon_name) {
                 gchar *p, *content;
@@ -102,9 +102,9 @@ get_local_icon_url (GnomeAppItem *item)
 }
 
 static void
-set_item_callbacks (GnomeAppItem *item)
+set_info_callbacks (GnomeAppInfo *info)
 {
-	GnomeAppItemClass *class = GNOME_APP_ITEM_GET_CLASS (item);
+	GnomeAppInfoClass *class = GNOME_APP_INFO_GET_CLASS (info);
 
 	class->get_local_icon_url = get_local_icon_url;
 	/* if we did not set other callback 
@@ -115,27 +115,27 @@ set_item_callbacks (GnomeAppItem *item)
 	*/
 }
 
-static GnomeAppItem *
+static GnomeAppInfo *
 load_app (xmlNodePtr app_node)
 {
         xmlNodePtr node, sub_node;
         APP_STREAM_KEY_WORDS type;
 	gchar *p;
 	GString *str = NULL;
-        GnomeAppItem *item = NULL;
+        GnomeAppInfo *info = NULL;
 
         for (node = app_node->xmlChildrenNode; node; node = node->next) {
                 type = get_type_from_name ((gchar *)(node->name));
                 switch (type) {
                         case APP_STREAM_ID:
 				/* Should we just move this to the begin of load_app? cause it was a backend bug ! */
-				item = gnome_app_item_new ();
-				set_item_callbacks (item);
+				info = gnome_app_info_new ();
+				set_info_callbacks (info);
                         case APP_STREAM_PKGNAME:
                         case APP_STREAM_NAME:
                         case APP_STREAM_SUMMARY:
                         case APP_STREAM_ICON:
-				g_object_set (G_OBJECT (item), (gchar *)node->name, xmlNodeGetContent (node), NULL);
+				g_object_set (G_OBJECT (info), (gchar *)node->name, xmlNodeGetContent (node), NULL);
                                 break;
                         case APP_STREAM_APPCATEGORIES:
                                 for (sub_node = node->xmlChildrenNode; sub_node; sub_node = sub_node->next) {
@@ -153,7 +153,7 @@ load_app (xmlNodePtr app_node)
 					}
                                 }
 				if (str) {
-					g_object_set (G_OBJECT (item), "categories", str->str, NULL);
+					g_object_set (G_OBJECT (info), "categories", str->str, NULL);
 					g_string_free (str, TRUE);
 					str = NULL;
 				}
@@ -174,7 +174,7 @@ load_app (xmlNodePtr app_node)
 					}
                                 }
 				if (str) {
-					g_object_set (G_OBJECT (item), "mimetypes", str->str, NULL);
+					g_object_set (G_OBJECT (info), "mimetypes", str->str, NULL);
 					g_string_free (str, TRUE);
 					str = NULL;
 				}
@@ -184,7 +184,7 @@ load_app (xmlNodePtr app_node)
                 }
         }
 
-	return item;
+	return info;
 }
 
 static void
@@ -199,9 +199,9 @@ load_apps (AppStreamBackend *backend, gchar *appdata_uri)
 
         for (app_node = root_node->xmlChildrenNode; app_node; app_node = app_node->next) {
                 if (strcmp (app_node->name, "application") == 0) {
-                        GnomeAppItem *item = load_app (app_node);
-                        if (item)
-                                backend->priv->apps = g_list_prepend (backend->priv->apps, item);
+                        GnomeAppInfo *info = load_app (app_node);
+                        if (info)
+                                backend->priv->apps = g_list_prepend (backend->priv->apps, info);
                 }
         }
 
@@ -293,12 +293,12 @@ get_cname_by_id (AppBackend *backend, gchar *category_id)
 }
 
 gboolean
-item_match_categories (GnomeAppItem *item, GList *categories)
+info_match_categories (GnomeAppInfo *info, GList *categories)
 {
 	GList *l;
 	gchar *str;
 	gchar *category;
-	str = (gchar *)gnome_app_item_get_categories (item);
+	str = (gchar *)gnome_app_info_get_categories (info);
 
 	if (!str)
 		return FALSE;
@@ -319,14 +319,14 @@ get_appid_list_by_cid_list (AppBackend *backend, GList *categories)
         AppStreamBackend *app_stream_backend = APP_STREAM_BACKEND (backend);
 
 	GList *list, *l;
-	GnomeAppItem *item;
+	GnomeAppInfo *info;
 	const gchar *app_id;
 
 	list = NULL;
 	for (l = app_stream_backend->priv->apps; l; l = l->next) {
-		item = GNOME_APP_ITEM (l->data);
-		if (item_match_categories (item, categories)) {
-			app_id = gnome_app_item_get_id (item);
+		info = GNOME_APP_INFO (l->data);
+		if (info_match_categories (info, categories)) {
+			app_id = gnome_app_info_get_id (info);
 			list = g_list_prepend (list, g_strdup (app_id));
 		}
 	}
@@ -334,20 +334,20 @@ get_appid_list_by_cid_list (AppBackend *backend, GList *categories)
 	return list;
 }
 
-static GnomeAppItem *
+static GnomeAppInfo *
 get_app_by_id (AppBackend *backend, gchar *id)
 {
         AppStreamBackend *app_stream_backend = APP_STREAM_BACKEND (backend);
 
-	GnomeAppItem *item;
+	GnomeAppInfo *info;
 	const gchar *app_id;
 	GList *l;
 
 	for (l = app_stream_backend->priv->apps; l; l = l->next) {
-		item = GNOME_APP_ITEM (l->data);
-		app_id = gnome_app_item_get_id (item);
+		info = GNOME_APP_INFO (l->data);
+		app_id = gnome_app_info_get_id (info);
 		if (strcmp (app_id, id) == 0)
-			return g_object_ref (item);
+			return g_object_ref (info);
 	}
 
 	return NULL;

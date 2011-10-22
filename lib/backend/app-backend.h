@@ -23,7 +23,7 @@
 #ifndef __APP_BACKEND_H__
 #define __APP_BACKEND_H__
 
-#include "gnome-app-item.h"
+#include "gnome-app-info.h"
 #include "gnome-app-config.h"
 #include "gnome-app-query.h"
 
@@ -90,7 +90,7 @@ struct _AppBackendClass
 						GList *categories);
 	GList	    *(*get_apps_by_query)	 (AppBackend *backend,
 						GnomeAppQuery *query);
-	GnomeAppItem *(*get_app_by_id)		(AppBackend *backend,
+	GnomeAppInfo *(*get_app_by_id)		(AppBackend *backend,
 						gchar *app_id);
 	gboolean     (*set_config)		(AppBackend *backend,
 						GnomeAppConfig *config);
@@ -105,7 +105,7 @@ GList *		app_backend_get_cid_list_by_group	(AppBackend	*backend, gchar *group);
 gchar *		app_backend_get_cname_by_id		(AppBackend	*backend, gchar *cid);
 GList *		app_backend_get_appid_list_by_cid_list	(AppBackend	*backend, GList *cid_list);
 GList *		app_backend_get_apps_by_query		(AppBackend	*backend, GnomeAppQuery *query);
-GnomeAppItem *	app_backend_get_app_by_id		(AppBackend	*backend, gchar *app_id);
+GnomeAppInfo *	app_backend_get_app_by_id		(AppBackend	*backend, gchar *app_id);
 
 GList        *	app_backend_get_all (void);
 G_END_DECLS

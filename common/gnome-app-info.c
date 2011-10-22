@@ -14,9 +14,9 @@ Author: David Liang <dliang@novell.com>
 */
 #include <stdio.h>
 
-#include "gnome-app-item.h"
+#include "gnome-app-info.h"
 
-struct _GnomeAppItemPrivate
+struct _GnomeAppInfoPrivate
 {
 	gchar *		id;
 	gchar *		name;
@@ -59,16 +59,16 @@ enum {
 };
 
 
-G_DEFINE_TYPE (GnomeAppItem, gnome_app_item, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GnomeAppInfo, gnome_app_info, G_TYPE_OBJECT)
 
 static void
-gnome_app_item_init (GnomeAppItem *item)
+gnome_app_info_init (GnomeAppInfo *info)
 {
-	GnomeAppItemPrivate *priv;
+	GnomeAppInfoPrivate *priv;
 
-	item->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (item,
-                                                   GNOME_APP_TYPE_ITEM,
-                                                   GnomeAppItemPrivate);
+	info->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (info,
+                                                   GNOME_APP_TYPE_INFO,
+                                                   GnomeAppInfoPrivate);
 
 	priv->id = NULL;
 	priv->name = NULL;
@@ -88,16 +88,16 @@ gnome_app_item_init (GnomeAppItem *item)
 }
 
 static void
-gnome_app_item_dispose (GObject *object)
+gnome_app_info_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (gnome_app_item_parent_class)->dispose (object);
+	G_OBJECT_CLASS (gnome_app_info_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_item_finalize (GObject *object)
+gnome_app_info_finalize (GObject *object)
 {
-	GnomeAppItem *item = GNOME_APP_ITEM (object);
-	GnomeAppItemPrivate *priv = item->priv;
+	GnomeAppInfo *info = GNOME_APP_INFO (object);
+	GnomeAppInfoPrivate *priv = info->priv;
 
 	if (priv->id)
 		g_free (priv->id);
@@ -124,17 +124,17 @@ gnome_app_item_finalize (GObject *object)
 	if (priv->license)
 		g_free (priv->license);
 
-	G_OBJECT_CLASS (gnome_app_item_parent_class)->finalize (object);
+	G_OBJECT_CLASS (gnome_app_info_parent_class)->finalize (object);
 }
 
 static void
-gnome_app_item_set_property (GObject      *object,
+gnome_app_info_set_property (GObject      *object,
 				guint         prop_id,
 				const GValue *value,
 				GParamSpec   *pspec)
 {
-	GnomeAppItem *item = GNOME_APP_ITEM (object);
-	GnomeAppItemPrivate *priv = item->priv;
+	GnomeAppInfo *info = GNOME_APP_INFO (object);
+	GnomeAppInfoPrivate *priv = info->priv;
 
 	switch (prop_id) {
 		case PROP_ID:
@@ -203,13 +203,13 @@ gnome_app_item_set_property (GObject      *object,
 }
 
 static void
-gnome_app_item_get_property (GObject        *object,
+gnome_app_info_get_property (GObject        *object,
                           guint           prop_id,
                           GValue         *value,
                           GParamSpec     *pspec)
 {
-	GnomeAppItem *item = GNOME_APP_ITEM (object);
-	GnomeAppItemPrivate *priv = item->priv;
+	GnomeAppInfo *info = GNOME_APP_INFO (object);
+	GnomeAppInfoPrivate *priv = info->priv;
 
 	switch (prop_id) {
 		case PROP_ID:
@@ -258,14 +258,14 @@ gnome_app_item_get_property (GObject        *object,
 }
                                                                     
 static void
-gnome_app_item_class_init (GnomeAppItemClass *klass)
+gnome_app_info_class_init (GnomeAppInfoClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->set_property = gnome_app_item_set_property;
-	object_class->get_property = gnome_app_item_get_property;
-	object_class->dispose = gnome_app_item_dispose;
-	object_class->finalize = gnome_app_item_finalize;
+	object_class->set_property = gnome_app_info_set_property;
+	object_class->get_property = gnome_app_info_get_property;
+	object_class->dispose = gnome_app_info_dispose;
+	object_class->finalize = gnome_app_info_finalize;
 	 
 	g_object_class_install_property (object_class, PROP_ID,
 		g_param_spec_string ("id",
@@ -356,143 +356,143 @@ gnome_app_item_class_init (GnomeAppItemClass *klass)
 	klass->get_comment_counts = NULL;
 	klass->get_score = NULL;
 
-	g_type_class_add_private (object_class, sizeof (GnomeAppItemPrivate));
+	g_type_class_add_private (object_class, sizeof (GnomeAppInfoPrivate));
 }
 
-GnomeAppItem *
-gnome_app_item_new (void)
+GnomeAppInfo *
+gnome_app_info_new (void)
 {
-	return g_object_new (GNOME_APP_TYPE_ITEM, NULL);
+	return g_object_new (GNOME_APP_TYPE_INFO, NULL);
 }
 
 const gchar *
-gnome_app_item_get_id (GnomeAppItem *item)
+gnome_app_info_get_id (GnomeAppInfo *info)
 {
-        GnomeAppItemPrivate *priv = item->priv;
+        GnomeAppInfoPrivate *priv = info->priv;
 
 	return priv->id;
 }
 
 const gchar *
-gnome_app_item_get_pkgname (GnomeAppItem *item)
+gnome_app_info_get_pkgname (GnomeAppInfo *info)
 {
-        GnomeAppItemPrivate *priv = item->priv;
+        GnomeAppInfoPrivate *priv = info->priv;
 
 	return priv->pkgname;
 }
 
 const gchar *
-gnome_app_item_get_name (GnomeAppItem *item)
+gnome_app_info_get_name (GnomeAppInfo *info)
 {
-        GnomeAppItemPrivate *priv = item->priv;
+        GnomeAppInfoPrivate *priv = info->priv;
 
 	return priv->name;
 }
 
 const gchar *
-gnome_app_item_get_summary (GnomeAppItem *item)
+gnome_app_info_get_summary (GnomeAppInfo *info)
 {
-        GnomeAppItemPrivate *priv = item->priv;
+        GnomeAppInfoPrivate *priv = info->priv;
 
 	return priv->summary;
 }
 
 const gchar *
-gnome_app_item_get_description (GnomeAppItem *item)
+gnome_app_info_get_description (GnomeAppInfo *info)
 {
-        GnomeAppItemPrivate *priv = item->priv;
+        GnomeAppInfoPrivate *priv = info->priv;
 
 	return priv->description;
 }
 
 const gchar *
-gnome_app_item_get_icon_name (GnomeAppItem *item)
+gnome_app_info_get_icon_name (GnomeAppInfo *info)
 {
-        GnomeAppItemPrivate *priv = item->priv;
+        GnomeAppInfoPrivate *priv = info->priv;
 
 	return priv->icon;
 }
 
 const gchar *
-gnome_app_item_get_screenshot (GnomeAppItem *item)
+gnome_app_info_get_screenshot (GnomeAppInfo *info)
 {
-        GnomeAppItemPrivate *priv = item->priv;
+        GnomeAppInfoPrivate *priv = info->priv;
 
 	return priv->screenshot;
 }
 
 const gchar *
-gnome_app_item_get_categories (GnomeAppItem *item)
+gnome_app_info_get_categories (GnomeAppInfo *info)
 {
-        GnomeAppItemPrivate *priv = item->priv;
+        GnomeAppInfoPrivate *priv = info->priv;
 
 	return priv->categories;
 }
 
 const gchar *
-gnome_app_item_get_license (GnomeAppItem *item)
+gnome_app_info_get_license (GnomeAppInfo *info)
 {
-        GnomeAppItemPrivate *priv = item->priv;
+        GnomeAppInfoPrivate *priv = info->priv;
 
 	return priv->license;
 }
 
 /*FIXME: should ask the sever every time ? */
 glong
-gnome_app_item_get_comment_counts (GnomeAppItem *item)
+gnome_app_info_get_comment_counts (GnomeAppInfo *info)
 {
-	GnomeAppItemClass *class = GNOME_APP_ITEM_GET_CLASS (item);
+	GnomeAppInfoClass *class = GNOME_APP_INFO_GET_CLASS (info);
 
 	if (class->get_comment_counts)
-		return class->get_comment_counts (item);
+		return class->get_comment_counts (info);
 	else
-		return item->priv->_comment_counts;
+		return info->priv->_comment_counts;
 }
 
 gint
-gnome_app_item_get_score (GnomeAppItem *item)
+gnome_app_info_get_score (GnomeAppInfo *info)
 {
-	GnomeAppItemClass *class = GNOME_APP_ITEM_GET_CLASS (item);
+	GnomeAppInfoClass *class = GNOME_APP_INFO_GET_CLASS (info);
 
 	if (class->get_score)
-		return class->get_score (item);
+		return class->get_score (info);
 	else
-		return item->priv->_score;
+		return info->priv->_score;
 }
 
 const gchar *
-gnome_app_item_get_local_icon_url (GnomeAppItem *item)
+gnome_app_info_get_local_icon_url (GnomeAppInfo *info)
 {
-        GnomeAppItemPrivate *priv = item->priv;
-	GnomeAppItemClass *class = GNOME_APP_ITEM_GET_CLASS (item);
+        GnomeAppInfoPrivate *priv = info->priv;
+	GnomeAppInfoClass *class = GNOME_APP_INFO_GET_CLASS (info);
 
 	if (!priv->_local_icon_url) {
 		if (class->get_local_icon_url)
-			priv->_local_icon_url = class->get_local_icon_url (item);
+			priv->_local_icon_url = class->get_local_icon_url (info);
 	}
 
 	return (const gchar *)priv->_local_icon_url;
 }
 
 const gchar *
-gnome_app_item_get_local_screenshot_url (GnomeAppItem *item)
+gnome_app_info_get_local_screenshot_url (GnomeAppInfo *info)
 {
-        GnomeAppItemPrivate *priv = item->priv;
-	GnomeAppItemClass *class = GNOME_APP_ITEM_GET_CLASS (item);
+        GnomeAppInfoPrivate *priv = info->priv;
+	GnomeAppInfoClass *class = GNOME_APP_INFO_GET_CLASS (info);
 
 	if (!priv->_local_screenshot_url) {
 		if (class->get_local_screenshot_url)
-			priv->_local_screenshot_url = class->get_local_screenshot_url (item);
+			priv->_local_screenshot_url = class->get_local_screenshot_url (info);
 	}
 
 	return (const gchar *)priv->_local_screenshot_url;
 }
 
 void
-gnome_app_item_debug (GnomeAppItem *item)
+gnome_app_info_debug (GnomeAppInfo *info)
 {
 	printf ("id %s\tname %s\t, icon %s\t, mime %s, cate %s\n",
-		item->priv->id, item->priv->name, item->priv->icon,
-		item->priv->mimetypes, item->priv->categories);
+		info->priv->id, info->priv->name, info->priv->icon,
+		info->priv->mimetypes, info->priv->categories);
 			
 }

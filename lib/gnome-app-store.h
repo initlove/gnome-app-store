@@ -25,7 +25,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include "common/gnome-app-item.h"
+#include "common/gnome-app-info.h"
 #include "common/gnome-app-query.h"
 
 G_BEGIN_DECLS
@@ -57,15 +57,7 @@ GType			gnome_app_store_get_type			(void);
 GnomeAppStore *		gnome_app_store_new				(void);
 const GnomeAppStore *	gnome_app_store_get_default			(void);
 GList *			gnome_app_store_get_apps_by_query		(GnomeAppStore *store, GnomeAppQuery *query);
-GnomeAppItem *		gnome_app_store_get_app_by_id			(GnomeAppStore *store, gchar *app_id);
-gchar *			gnome_app_store_get_cname_by_id 		(GnomeAppStore *store, gchar *cid);
-
-
-/* TODO: this function is deprecated; should be removed */
-GList *			gnome_app_store_get_cid_list_by_group		(GnomeAppStore *store, gchar *group);
-GList *			gnome_app_store_get_appid_list_by_cid_list	(GnomeAppStore *store, GList *cid_list);
-/* TODO */
-
+GnomeAppInfo *		gnome_app_store_get_app_by_id			(GnomeAppStore *store, gchar *app_id);
 
 G_END_DECLS
 

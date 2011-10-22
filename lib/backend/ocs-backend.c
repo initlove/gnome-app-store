@@ -462,7 +462,7 @@ get_appid_list_by_cid_list (AppBackend *backend, GList *cid_list)
 	return list;
 }
 
-static GnomeAppItem *
+static GnomeAppInfo *
 get_app_by_id (AppBackend *backend, gchar *app_id)
 {
 	OcsBackend *ocs_backend = OCS_BACKEND (backend);
@@ -477,19 +477,19 @@ get_app_by_id (AppBackend *backend, gchar *app_id)
 
         xmlDocPtr doc_ptr;
         xmlNodePtr data_node;
-	GnomeAppItem *item = NULL;
+	GnomeAppInfo *info = NULL;
 
         doc_ptr = get_doc_ptr (backend, url);
 	if (doc_ptr) {
 		data_node = find_node (doc_ptr, "data");
 		/*parse_app is done in a seperate file */
-		item = parse_app (ocs_backend, data_node);
+		info = parse_app (ocs_backend, data_node);
         	xmlFreeDoc(doc_ptr);
 	}
 
         g_free (url);
 
-	return item;
+	return info;
 }
 
 static gboolean
