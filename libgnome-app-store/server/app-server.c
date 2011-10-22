@@ -86,6 +86,14 @@ app_server_get_appid_list_by_cid_list (AppServer *server, GList *categories)
 	return APP_SERVER_GET_CLASS (server)->get_appid_list_by_cid_list (server, categories);
 }
 
+GList *
+app_server_get_apps_by_query (AppServer *server, GnomeAppQuery *query)
+{
+	g_return_val_if_fail (APP_IS_SERVER (server), NULL);
+
+	return APP_SERVER_GET_CLASS (server)->get_apps_by_query (server, query);
+}
+
 GnomeAppItem *
 app_server_get_app_by_id (AppServer *server, gchar *app_id)
 {

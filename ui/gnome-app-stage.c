@@ -14,7 +14,10 @@ Author: David Liang <dliang@novell.com>
 */
 #include <math.h>
 #include <clutter/clutter.h>
-
+#include "st.h"
+#include "gnome-app-store.h"
+#include "gnome-app-item.h"
+#include "gnome-app-item-ui.h"
 #include "gnome-app-stage.h"
 
 struct _GnomeAppStagePrivate
@@ -24,22 +27,17 @@ struct _GnomeAppStagePrivate
 	ClutterLayoutManager *layout;
 	ClutterActor *layout_box;
 
+	GList *app_actors;
 	gint count;
 	gint rows;
 	gint cols;
 	gint icon_width;
 	gint icon_height;
+
+	GnomeAppQuery *query;
 };
 
-enum {
-	CHANGED,
-	TRANSITIONED,
-	N_SIGNALS
-};
-
-static guint signals[N_SIGNALS] = { 0 };
-
-G_DEFINE_TYPE (GnomeAppStage, gnome_app_stage, CLUTTER_TYPE_GROUP);
+G_DEFINE_TYPE (GnomeAppStage, gnome_app_stage, CLUTTER_TYPE_GROUP)
 
 static void
 on_drag_end (ClutterDragAction   *action,
@@ -49,6 +47,9 @@ on_drag_end (ClutterDragAction   *action,
 	           ClutterModifierType  modifiers,
 		GnomeAppStage *stage)
 {
+//TODO:
+return ;
+
 	GnomeAppStagePrivate *priv;
 	gfloat viewport_x;
 	gfloat offset_x;
@@ -95,18 +96,20 @@ gnome_app_stage_init (GnomeAppStage *stage)
 	GnomeAppStagePrivate *priv;
 
 	stage->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (stage,
-	                                                 GNOME_TYPE_APP_STAGE,
+	                                                 GNOME_APP_TYPE_STAGE,
 	                                                 GnomeAppStagePrivate);
 
+	priv->app_actors = NULL;
 	priv->count = 0;
 	priv->rows = 5;	//FIXME: should be calculated
-	priv->cols = 8; //FIXME: should be calculated
+	priv->cols = 7; //FIXME: should be calculated
 	priv->icon_width = 96;
 	priv->icon_height = 96;
+	priv->query = NULL;
 
 	priv->viewport = clutter_box_new (clutter_box_layout_new ());
 	clutter_container_add_actor (CLUTTER_CONTAINER (stage), priv->viewport);
-
+	clutter_actor_set_anchor_point (CLUTTER_ACTOR (priv->viewport), -60, 20);
 	priv->action = clutter_drag_action_new ();
 	clutter_actor_add_action (priv->viewport, priv->action);
 	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (priv->action),
@@ -119,8 +122,8 @@ gnome_app_stage_init (GnomeAppStage *stage)
 	clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (priv->layout), priv->icon_width * 0.3);
 
 	priv->layout_box = clutter_box_new (priv->layout);
-  
 	clutter_container_add_actor (CLUTTER_CONTAINER (priv->viewport), priv->layout_box);
+
 }
 
 static void
@@ -135,6 +138,10 @@ gnome_app_stage_finalize (GObject *object)
 	GnomeAppStage *stage = GNOME_APP_STAGE (object);
 	GnomeAppStagePrivate *priv = stage->priv;
 
+	if (priv->query)
+		g_object_unref (priv->query);
+//TODO: any other thing to finalize ?
+	
 	G_OBJECT_CLASS (gnome_app_stage_parent_class)->finalize (object);
 }
 
@@ -152,7 +159,20 @@ gnome_app_stage_class_init (GnomeAppStageClass *klass)
 GnomeAppStage *
 gnome_app_stage_new (void)
 {
-	return g_object_new (GNOME_TYPE_APP_STAGE, NULL);
+	return g_object_new (GNOME_APP_TYPE_STAGE, NULL);
+}
+
+void
+gnome_app_stage_clean (GnomeAppStage *stage)
+{
+	GnomeAppStagePrivate *priv = stage->priv;
+
+	if (priv->count) {
+		GList *l;
+		for (l = priv->app_actors; l; l = l->next)
+			clutter_actor_destroy (CLUTTER_ACTOR (l->data));
+		priv->count = 0;
+	}
 }
 
 void
@@ -161,6 +181,7 @@ gnome_app_stage_add_actor (GnomeAppStage *stage, ClutterActor *actor)
 	GnomeAppStagePrivate *priv = stage->priv;
 	int col, row;
 
+	priv->app_actors = g_list_prepend (priv->app_actors, actor);
 	col = priv->count / priv->rows;
 	row = priv->count % priv->rows;
 	priv->count ++;
@@ -168,3 +189,73 @@ gnome_app_stage_add_actor (GnomeAppStage *stage, ClutterActor *actor)
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), actor, col, row);
 }
 
+void
+gnome_app_stage_add_actors (GnomeAppStage *stage, GList *actors)
+{
+	GList *l;
+
+	for (l = actors; l; l = l->next) {
+		gnome_app_stage_add_actor (stage, CLUTTER_ACTOR (l->data));
+	}
+}
+
+static void
+load_query (GnomeAppStage *stage)
+{
+        GList *list, *l;
+        const GnomeAppStore *store;
+
+	store = gnome_app_store_get_default (); 
+	list = gnome_app_store_get_apps_by_query (store, stage->priv->query);
+
+	if (list)
+		gnome_app_stage_clean (stage);
+	else
+		return;
+
+        for (l = list; l; l = l->next) {
+               	GnomeAppItem *item;
+		GnomeAppItemUI *item_ui;
+                ClutterActor *box;
+		item = gnome_app_store_get_app_by_id (store, (gchar *)l->data);
+		item_ui = gnome_app_item_ui_new_with_app (item);
+		box = gnome_app_item_ui_get_icon (item_ui);
+		gnome_app_stage_add_actor (stage, box);
+		g_object_unref (item_ui);
+        }
+}
+
+void
+gnome_app_stage_load_query (GnomeAppStage *stage, GnomeAppQuery *query)
+{
+	gint pagesize;
+	if (stage->priv->query)
+		g_object_unref (stage->priv->query);
+	stage->priv->query = g_object_ref (query);
+
+	pagesize = stage->priv->rows * stage->priv->cols;
+	if (pagesize < 1) {
+		printf ("fatal issus: rows and cols error!\n");
+		pagesize = 1;
+	}
+	g_object_set (stage->priv->query, "pagesize", pagesize, NULL);
+	g_object_set (stage->priv->query, "page", 0, NULL); // no need in fact
+	
+	load_query (stage);
+}
+
+void
+gnome_app_stage_page_change (GnomeAppStage *stage, gint change)
+{
+	gint page;
+
+	if (stage->priv->query) {
+		g_object_get (stage->priv->query, "page", &page, NULL);
+		if (page > 0) {
+			page += change;
+			g_object_set (stage->priv->query, "page", page, NULL);
+			load_query (stage);
+		}
+		
+	}
+}

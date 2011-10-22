@@ -13,11 +13,11 @@ Author: Liang chenye <liangchenye@gmail.com>
 
 */
 #include "st.h"
-#define ST_H_INSIDE
-#include "st/st-button.h"
-#undef ST_H_INSIDE
 
 #include <clutter/clutter.h>
+#include "gnome-app-store.h"
+#include "gnome-app-item.h"
+#include "gnome-app-item-ui.h"
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-stage.h"
 
@@ -29,6 +29,24 @@ struct _GnomeAppFrameUIPrivate
 };
 
 G_DEFINE_TYPE (GnomeAppFrameUI, gnome_app_frame_ui, CLUTTER_TYPE_GROUP)
+
+static void
+on_search_activate (ClutterText *text,
+                   gpointer     data)
+{
+	GnomeAppFrameUI *frame_ui;
+	gchar *search;
+	GnomeAppQuery *query;
+
+	search = clutter_text_get_text (text);
+printf ("query %s\n", search);	
+	query = gnome_app_query_new ();
+	g_object_set (query, "search", search, NULL);
+	frame_ui = gnome_app_frame_ui_get_default ();
+	gnome_app_stage_load_query (frame_ui->stage, query);
+
+	g_object_unref (query);
+}
 
 static ClutterActor *
 create_search_entry (GnomeAppFrameUI *frame_ui)
@@ -43,8 +61,57 @@ create_search_entry (GnomeAppFrameUI *frame_ui)
 	clutter_text_set_single_line_mode (CLUTTER_TEXT (entry), TRUE);
 	clutter_actor_set_reactive (entry, TRUE);
 	clutter_actor_grab_key_focus (entry);
-
+#if 1
+	g_signal_connect (entry, "activate",
+                    G_CALLBACK (on_search_activate),
+                    NULL);
+#endif
 	return entry;
+}
+
+static void
+gnome_app_frame_load_group (gchar *group)
+{
+	const GnomeAppStore *store;
+	GnomeAppFrameUI *frame_ui;
+	GnomeAppQuery *query;
+
+	store = gnome_app_store_get_default ();
+	query = gnome_app_query_new ();
+	g_object_set (query, "group", group, NULL);
+	frame_ui = gnome_app_frame_ui_get_default ();
+	gnome_app_stage_load_query (frame_ui->stage, query);
+
+	g_object_unref (query);
+}
+
+/*FIXME: the second args seems broken!!! */
+static void
+category_click_cb (StButton *button, gpointer userdata)
+{
+	const gchar *label_new;
+	label_new = st_button_get_label (button);
+	gnome_app_frame_load_group (label_new);
+}
+
+static void
+prev_cb (StButton *button, gpointer userdata)
+{
+//FIXME: should add time gap
+	GnomeAppFrameUI *frame_ui;
+
+	frame_ui = gnome_app_frame_ui_get_default ();
+	gnome_app_stage_page_change (frame_ui->stage, -1);
+}
+
+static void
+next_cb (StButton *button, gpointer userdata)
+{
+//FIXME: should add time gap
+	GnomeAppFrameUI *frame_ui;
+
+	frame_ui = gnome_app_frame_ui_get_default ();
+	gnome_app_stage_page_change (frame_ui->stage, 1);
 }
 
 static ClutterActor *
@@ -66,9 +133,23 @@ create_category_list (GnomeAppFrameUI *frame_ui)
 	for (l = (GList *)list; l; l = l->next) {
 		name = (gchar *)l->data;
 		actor = st_button_new_with_label (name);
+		g_signal_connect (ST_BUTTON (actor), "clicked", G_CALLBACK (category_click_cb), NULL);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
 		row ++;
 	}
+
+		
+	actor = st_button_new_with_label ("---------");
+	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
+	row ++;
+	actor = st_button_new_with_label ("Prev");
+	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
+	row ++;
+	g_signal_connect (ST_BUTTON (actor), "clicked", G_CALLBACK (prev_cb), NULL);
+	actor = st_button_new_with_label ("Next");
+	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
+	row ++;
+	g_signal_connect (ST_BUTTON (actor), "clicked", G_CALLBACK (next_cb), NULL);
 
 	return layout_box;
 }
@@ -91,17 +172,20 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *frame_ui)
 	clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (priv->layout), 10);
 	clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (priv->layout), 10);
 
-	frame_ui->search_entry = create_search_entry (frame_ui);
 	frame_ui->stage = gnome_app_stage_new ();
+	frame_ui->search_entry = create_search_entry (frame_ui);
 	frame_ui->category_list = create_category_list (frame_ui);
 
 	clutter_actor_set_width (frame_ui->search_entry, 180);
 	clutter_actor_set_width (frame_ui->category_list, 180);
-	clutter_actor_set_width (frame_ui->stage, 600);
+	clutter_actor_set_width (frame_ui->stage, 720);
 	
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), frame_ui->search_entry, 1, 0);
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->stage), 0, 1);
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->category_list), 1, 1);
+
+	clutter_table_layout_set_expand (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->stage), FALSE, FALSE);
+	clutter_table_layout_set_fill (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->stage), FALSE, FALSE);
 }
 
 static void
@@ -134,4 +218,17 @@ GnomeAppFrameUI *
 gnome_app_frame_ui_new (void)
 {
 	return g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
+}
+
+GnomeAppFrameUI *
+gnome_app_frame_ui_get_default (void)
+{
+	static GnomeAppFrameUI *ui = NULL;
+
+	if (!ui) {
+		ui = gnome_app_frame_ui_new ();
+		gnome_app_frame_load_group (NULL);
+	}
+
+	return ui;
 }

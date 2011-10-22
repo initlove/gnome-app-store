@@ -357,6 +357,62 @@ parse_appid_list (OcsServer *ocs_server, xmlNodePtr data_node)
 	return list;
 }
 
+static GList *
+get_apps_by_query (AppServer *server, GnomeAppQuery *query)
+{
+	OcsServer *ocs_server = OCS_SERVER (server);
+	OcsServerPrivate *priv = ocs_server->priv;
+	GString *request = NULL;
+	gchar *sprop [] = {"categories", "search", "user", "external", 
+			"distribution", "license", "sortmode", NULL};
+	gchar *iprop [] = {"page", "pagesize", NULL};
+	gchar *scontent;
+	gint icontent;
+	gint i;
+	gboolean begin;
+
+	request = g_string_new ("https://");
+	g_string_append_printf (request, "%s:%s@%s/v1/content/data?", priv->username, priv->password, priv->server_uri);
+
+	/*TODO: if the prop was not exist, solve it ! */
+	begin = TRUE;
+	for (i = 0; *(sprop + i); i++) {
+		g_object_get (query, *(sprop + i), &scontent, NULL);
+		if (scontent) {
+			if (begin)
+				begin = FALSE;
+			else
+				g_string_append_c (request, '&');
+			g_string_append_printf (request, "%s=%s", *(sprop + i), scontent);
+			g_free (scontent);
+		}
+	}
+
+	for (i = 0; *(iprop + i); i++) {
+		g_object_get (query, *(iprop + i), &icontent, NULL);
+		if (begin)
+			begin = FALSE;
+		else
+			g_string_append_c (request, '&');
+		g_string_append_printf (request, "%s=%d", *(iprop + i), icontent);
+	}
+
+	GList *list = NULL;
+        xmlDocPtr doc_ptr;
+        xmlNodePtr data_node;
+printf ("request %s\n", request->str);
+        doc_ptr = get_doc_ptr (server, request->str);
+	if (doc_ptr) {
+		data_node = find_node (doc_ptr, "data");
+		list = parse_appid_list (ocs_server, data_node);
+        	xmlFreeDoc(doc_ptr);
+	}
+
+	g_string_free (request, TRUE);
+
+	return list;
+}
+
 /*FIXME: it is the 'summary' content, we could preserve this content first .. */
 static GList *
 get_appid_list_by_cid_list (AppServer *server, GList *cid_list)
@@ -369,8 +425,7 @@ get_appid_list_by_cid_list (AppServer *server, GList *cid_list)
 	GList *l;
 	GString *ids = NULL;
 	
-	/*FIXME: I use pagesize == 100 for now ... */
-	const gchar *pagesize = "&pagesize=20";
+	const gchar *pagesize = "&pagesize=35";
         get_apps_with_id = "/v1/content/data?categories=";
 
 	for (l = cid_list; l; l = l->next) {
@@ -382,11 +437,14 @@ get_appid_list_by_cid_list (AppServer *server, GList *cid_list)
 			g_string_append (ids, cid);
 		}
 	}
-	if (!ids)
-		return NULL;
-        url = g_strdup_printf ("http://%s:%s@%s%s%s%s", priv->username, priv->password,
+	if (!ids) {
+	        url = g_strdup_printf ("http://%s:%s@%s", priv->username, priv->password,
+                                priv->server_uri, pagesize);
+	} else {
+	        url = g_strdup_printf ("http://%s:%s@%s%s%s%s", priv->username, priv->password,
                                 priv->server_uri, get_apps_with_id, ids->str, pagesize);
-	g_string_free (ids, TRUE);
+		g_string_free (ids, TRUE);
+	}
 
         xmlDocPtr doc_ptr;
         xmlNodePtr data_node;
@@ -501,6 +559,7 @@ ocs_server_class_init (OcsServerClass *klass)
 	parent_class->get_cid_list_by_group = get_cid_list_by_group;
 	parent_class->get_cname_by_id = get_cname_by_id;
 	parent_class->get_appid_list_by_cid_list = get_appid_list_by_cid_list;
+	parent_class->get_apps_by_query = get_apps_by_query;
 	parent_class->get_app_by_id = get_app_by_id;
 	parent_class->set_config = set_config;
 

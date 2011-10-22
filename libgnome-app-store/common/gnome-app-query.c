@@ -20,6 +20,7 @@ Author: David Liang <dliang@novell.com>
 struct _GnomeAppQueryPrivate
 {
  	gchar *categories;
+	gchar *group; 	/*group is the local policy to get categories */
 	gchar *search;
 	gchar *user;
 	gchar *external;
@@ -33,6 +34,7 @@ struct _GnomeAppQueryPrivate
 enum {
 	PROP_0,
 	PROP_CATEGORIES,
+	PROP_GROUP,
 	PROP_SEARCH,
 	PROP_USER,
 	PROP_EXTERNAL,
@@ -113,6 +115,11 @@ gnome_app_query_set_property (GObject        *object,
 				g_free (priv->categories);
 			priv->categories = g_strdup (g_value_get_string (value));
 			break;
+                case PROP_GROUP:
+			if (priv->group)
+				g_free (priv->group);
+			priv->group = g_strdup (g_value_get_string (value));
+			break;
                 case PROP_SEARCH:
 			if (priv->search)
 				g_free (priv->search);
@@ -168,6 +175,9 @@ gnome_app_query_get_property (GObject        *object,
                 case PROP_CATEGORIES:
 			g_value_set_string (value, priv->categories);
 			break;
+                case PROP_GROUP:
+			g_value_set_string (value, priv->group);
+			break;
                 case PROP_SEARCH:
 			g_value_set_string (value, priv->search);
 			break;
@@ -188,6 +198,7 @@ gnome_app_query_get_property (GObject        *object,
 			break;
                 case PROP_PAGE:
 			g_value_set_int (value, priv->page);
+			break;
                 case PROP_PAGESIZE:
 			g_value_set_int (value, priv->pagesize);
 			break;
@@ -210,6 +221,12 @@ gnome_app_query_class_init (GnomeAppQueryClass *klass)
 	g_object_class_install_property (object_class, PROP_CATEGORIES,
                 g_param_spec_string ("categories",
                                      "categories", "ids of the requested category ids seperated by 'X'",
+                                     NULL,
+                                     G_PARAM_READWRITE));
+
+	g_object_class_install_property (object_class, PROP_GROUP,
+                g_param_spec_string ("group",
+                                     "group", "the group, certain set of categories",
                                      NULL,
                                      G_PARAM_READWRITE));
 

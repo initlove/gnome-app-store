@@ -25,6 +25,7 @@
 
 #include "gnome-app-item.h"
 #include "gnome-app-config.h"
+#include "gnome-app-query.h"
 
 G_BEGIN_DECLS
 
@@ -87,6 +88,8 @@ struct _AppServerClass
 						gchar *category_id);
 	GList	    *(*get_appid_list_by_cid_list) (AppServer *server,
 						GList *categories);
+	GList	    *(*get_apps_by_query)	 (AppServer *server,
+						GnomeAppQuery *query);
 	GnomeAppItem *(*get_app_by_id)		(AppServer *server,
 						gchar *app_id);
 	gboolean     (*set_config)		(AppServer *server,
@@ -101,10 +104,10 @@ const gchar *	app_server_get_server_icon_name		(AppServer	*server);
 GList *		app_server_get_cid_list_by_group	(AppServer	*server, gchar *group);
 gchar *		app_server_get_cname_by_id		(AppServer	*server, gchar *cid);
 GList *		app_server_get_appid_list_by_cid_list	(AppServer	*server, GList *cid_list);
+GList *		app_server_get_apps_by_query		(AppServer	*server, GnomeAppQuery *query);
 GnomeAppItem *	app_server_get_app_by_id		(AppServer	*server, gchar *app_id);
 
 GList        *	app_server_get_all (void);
-
 G_END_DECLS
 
 #endif /* __APP_SERVER_H__ */

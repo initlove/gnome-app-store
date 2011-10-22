@@ -59,8 +59,8 @@ int main ()
 	debug_categories (server);
 	local_categories = gnome_app_get_local_categories ();
 		
-#if 0
-	debug_apps_by_group (server, "Game");
+#if 1
+	debug_apps_by_group (server, NULL);
 	return ;
 #endif
 	for (l = local_categories; l; l = l->next) {
