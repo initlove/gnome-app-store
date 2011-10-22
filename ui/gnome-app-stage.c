@@ -15,6 +15,7 @@ Author: David Liang <dliang@novell.com>
 #include <math.h>
 #include <clutter/clutter.h>
 #include "st.h"
+#include "gnome-app-query.h"
 #include "gnome-app-store.h"
 #include "gnome-app-info.h"
 #include "gnome-app-info-ui.h"
@@ -229,6 +230,8 @@ void
 gnome_app_stage_load_query (GnomeAppStage *stage, GnomeAppQuery *query)
 {
 	gint pagesize;
+	gchar *val;
+
 	if (stage->priv->query)
 		g_object_unref (stage->priv->query);
 	stage->priv->query = g_object_ref (query);
@@ -238,23 +241,34 @@ gnome_app_stage_load_query (GnomeAppStage *stage, GnomeAppQuery *query)
 		printf ("fatal issus: rows and cols error!\n");
 		pagesize = 1;
 	}
-	g_object_set (stage->priv->query, "pagesize", pagesize, NULL);
-	g_object_set (stage->priv->query, "page", 0, NULL); // no need in fact
-	
+	val = g_strdup_printf ("%d", pagesize);
+	g_object_set (stage->priv->query, QUERY_PAGESIZE, val, NULL);
+	g_object_set (stage->priv->query, QUERY_PAGE, "0", NULL); // no need in fact
+	g_free (val);
+
 	load_query (stage);
 }
 
 void
 gnome_app_stage_page_change (GnomeAppStage *stage, gint change)
 {
+	gchar *val;
 	gint page;
 
 	if (stage->priv->query) {
-		g_object_get (stage->priv->query, "page", &page, NULL);
-		if (page > 0) {
+		g_object_get (stage->priv->query, QUERY_PAGE, &val, NULL);
+		if (val) {
+			page = atoi (val);
 			page += change;
-			g_object_set (stage->priv->query, "page", page, NULL);
-			load_query (stage);
+			if (page < 0) {
+				/* nothing happen */
+			} else {
+				g_free (val);
+				val = g_strdup_printf ("%d", page);
+				g_object_set (stage->priv->query, QUERY_PAGE, val, NULL);
+				load_query (stage);
+			}
+			g_free (val);
 		}
 		
 	}

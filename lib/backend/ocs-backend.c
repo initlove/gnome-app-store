@@ -363,12 +363,8 @@ get_apps_by_query (AppBackend *backend, GnomeAppQuery *query)
 	OcsBackend *ocs_backend = OCS_BACKEND (backend);
 	OcsBackendPrivate *priv = ocs_backend->priv;
 	GString *request = NULL;
-	gchar *sprop [] = {"categories", "search", "user", "external", 
-			"distribution", "license", "sortmode", NULL};
-	gchar *iprop [] = {"page", "pagesize", NULL};
-	gchar *scontent;
-	gint icontent;
-	gint i;
+	gint prop_id;
+	gchar *prop_value;
 	gboolean begin;
 
 	request = g_string_new ("https://");
@@ -376,25 +372,16 @@ get_apps_by_query (AppBackend *backend, GnomeAppQuery *query)
 
 	/*TODO: if the prop was not exist, solve it ! */
 	begin = TRUE;
-	for (i = 0; *(sprop + i); i++) {
-		g_object_get (query, *(sprop + i), &scontent, NULL);
-		if (scontent) {
+	for (prop_id = PROP_QUERY_GROUP; prop_id < PROP_QUERY_LAST; prop_id ++) {
+		g_object_get (query, query_units [prop_id].name, &prop_value, NULL);
+		if (prop_value) {
 			if (begin)
 				begin = FALSE;
 			else
 				g_string_append_c (request, '&');
-			g_string_append_printf (request, "%s=%s", *(sprop + i), scontent);
-			g_free (scontent);
+			g_string_append_printf (request, "%s=%s", query_units [prop_id].name, prop_value);
+			g_free (prop_value);
 		}
-	}
-
-	for (i = 0; *(iprop + i); i++) {
-		g_object_get (query, *(iprop + i), &icontent, NULL);
-		if (begin)
-			begin = FALSE;
-		else
-			g_string_append_c (request, '&');
-		g_string_append_printf (request, "%s=%d", *(iprop + i), icontent);
 	}
 
 	GList *list = NULL;

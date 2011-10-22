@@ -15,6 +15,7 @@ Author: Liang chenye <liangchenye@gmail.com>
 #include "st.h"
 
 #include <clutter/clutter.h>
+#include "gnome-app-query.h"
 #include "gnome-app-store.h"
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-stage.h"
@@ -39,7 +40,7 @@ on_search_activate (ClutterText *text,
 	search = clutter_text_get_text (text);
 printf ("query %s\n", search);	
 	query = gnome_app_query_new ();
-	g_object_set (query, "search", search, NULL);
+	g_object_set (query, QUERY_SEARCH, search, NULL);
 	frame_ui = gnome_app_frame_ui_get_default ();
 	gnome_app_stage_load_query (frame_ui->stage, query);
 
@@ -76,7 +77,7 @@ gnome_app_frame_load_group (gchar *group)
 
 	store = gnome_app_store_get_default ();
 	query = gnome_app_query_new ();
-	g_object_set (query, "group", group, NULL);
+	g_object_set (query, QUERY_GROUP, group, NULL);
 	frame_ui = gnome_app_frame_ui_get_default ();
 	gnome_app_stage_load_query (frame_ui->stage, query);
 
