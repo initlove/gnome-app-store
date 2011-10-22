@@ -9,12 +9,13 @@ noinst_PROGRAMS =
 AM_CPPFLAGS =                                                   \
 	-I$(top_srcdir)                                         \
 	-I$(top_srcdir)/st                                      \
-	-I$(top_srcdir)/libgnome-app-store                      \
-	-I$(top_srcdir)/libgnome-app-store/common               \
+	-I$(top_srcdir)/common					\
+	-I$(top_srcdir)/lib					\
 	$(GNOME_APP_STORE_CFLAGS)                               \
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"                        \
 	-DGNOMELOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale\""  \
 	-DPNP_IDS=\""$(PNP_IDS)"\"                              \
+	-DG_ENABLE_DEBUG					\
 	$(DISABLE_DEPRECATED_CFLAGS)
 
 noinst_PROGRAMS +=      \
@@ -29,7 +30,8 @@ app_store_SOURCES =        \
 	app_store.c
 
 app_store_LDADD =          \
-	../libgnome-app-store/libgnome-app-store.la \
+	$(top_srcdir)/lib/libgnome-app-store.la \
+	libst-1.0.la	\
 	$(GNOME_APP_STORE_LIBS)
 
 include Makefile-st.am
@@ -41,7 +43,7 @@ app_store_dl_SOURCES =        \
 	app_store_dl.c
 
 app_store_dl_LDADD =          \
-	../libgnome-app-store/libgnome-app-store.la \
+	$(top_srcdir)/lib/libgnome-app-store.la \
 	libst-1.0.la	\
 	$(GNOME_APP_STORE_LIBS)
 
@@ -51,5 +53,6 @@ app_store_kw_SOURCES =        \
 	app_store_kw.c
 
 app_store_kw_LDADD =          \
-	../libgnome-app-store/libgnome-app-store.la \
+	$(top_srcdir)/lib/libgnome-app-store.la \
+	libst-1.0.la	\
 	$(GNOME_APP_STORE_LIBS)

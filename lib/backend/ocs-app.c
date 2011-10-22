@@ -112,7 +112,7 @@ download_file (const gchar *source, const gchar *dest)
 	buf = NULL;
 	sync = TRUE;
 	cafile = NULL;
-	session = ocs_server_get_current_session ();
+	session = ocs_backend_get_current_session ();
 
 	gint retry;
 	for (retry = 0; retry <3; retry ++) {
@@ -199,9 +199,9 @@ get_local_screenshot_url (GnomeAppItem *item)
 
 /*FIXME: it is 'full' content, the summary one could be used at the first glance */
 GnomeAppItem *
-parse_app (OcsServer *ocs_server, xmlNodePtr data_node)
+parse_app (OcsBackend *ocs_backend, xmlNodePtr data_node)
 {
-	OcsServerPrivate *priv = ocs_server->priv;
+	OcsBackendPrivate *priv = ocs_backend->priv;
         xmlNodePtr app_node, node;
         GnomeAppItemClass *class;
 	GnomeAppItem *item = NULL;

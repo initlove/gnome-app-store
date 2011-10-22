@@ -19,8 +19,8 @@ Author: Lance Wang <lzwang@suse.com>
 #include <clutter/clutter.h>
 
 #include "gnome-app-item-ui.h"
-#include "../libgnome-app-store/common/gnome-app-item.h"
-#include "../libgnome-app-store/common/gnome-app-install.h"
+#include "gnome-app-item.h"
+#include "gnome-app-install.h"
 
 struct _GnomeAppItemUIPrivate
 {
@@ -157,7 +157,6 @@ get_icon_from_app (GnomeAppItem *app)
         clutter_container_add_actor (CLUTTER_CONTAINER (box), text);
 
         if (uri) {
-		printf ("we use uri %s\n", uri);
                 icon = clutter_texture_new_from_file (uri, NULL);
 		/*FIXME: if the icon cannot be textureed, should we remove it? */
 		if (icon == NULL) 

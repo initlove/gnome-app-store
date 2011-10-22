@@ -25,7 +25,7 @@
 #include <glib.h>
 #include <clutter/clutter.h>
 
-#include "../libgnome-app-store/common/gnome-app-item.h"
+#include "gnome-app-item.h"
 
 G_BEGIN_DECLS
 

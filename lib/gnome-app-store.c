@@ -22,14 +22,14 @@ Author: David Liang <dliang@novell.com>
 #include <clutter/clutter.h>
 
 #include "gnome-app-store.h"
-#include "server/app-server.h"
+#include "backend/app-backend.h"
 #include "common/gnome-app-item.h"
 #include "common/gnome-app-config.h"
 #include "common/gnome-app-query.h"
 
 struct _GnomeAppStorePrivate
 {
-	AppServer *server;
+	AppBackend *backend;
 	
 	GHashTable *cidlist_group;
 	GHashTable *cname_id;	/*FIXME: better name ? */
@@ -61,7 +61,7 @@ gnome_app_store_init (GnomeAppStore *store)
 	priv->app_id = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 	priv->app_timestamp = -1;	/* FIXME: not implement yet */
 	config = gnome_app_config_new ();
-	priv->server = app_server_new_from_config (config);
+	priv->backend = app_backend_new_from_config (config);
 	g_object_unref (config);
 }
 
@@ -128,7 +128,7 @@ gnome_app_store_get_cid_list_by_group (GnomeAppStore *store, gchar *group)
 		list = g_hash_table_lookup (store->priv->cidlist_group, group);
 
 	if (!list) {
-		list = app_server_get_cid_list_by_group (store->priv->server, group);
+		list = app_backend_get_cid_list_by_group (store->priv->backend, group);
 		if (list) {
 			if (!group)
 				g_hash_table_insert (store->priv->cidlist_group, g_strdup ("All"), list);
@@ -147,7 +147,7 @@ gnome_app_store_get_cname_by_id (GnomeAppStore *store, gchar *cid)
 
 	cname = g_hash_table_lookup (store->priv->cname_id, cid);
 	if (!cname) {
-		cname = app_server_get_cname_by_id (store->priv->server, cid);
+		cname = app_backend_get_cname_by_id (store->priv->backend, cid);
 		if (cname) {
 			/*cname is new allocated, no need to g_strdup it */
 			g_hash_table_insert (store->priv->cname_id, g_strdup (cid), cname);
@@ -162,13 +162,13 @@ gnome_app_store_get_appid_list_by_cid_list (GnomeAppStore *store, GList *cid_lis
 {
 #if 0
 	if (!store->priv->appid_list)
-		store->priv->appid_list = app_server_get_appid_list_by_cid_list (store->priv->server, cid_list);
+		store->priv->appid_list = app_backend_get_appid_list_by_cid_list (store->priv->backend, cid_list);
 
 	return store->priv->appid_list;
 #else
 	GList *appid_list;
 
-	appid_list = app_server_get_appid_list_by_cid_list (store->priv->server, cid_list);
+	appid_list = app_backend_get_appid_list_by_cid_list (store->priv->backend, cid_list);
 
 	return appid_list;
 #endif
@@ -195,11 +195,11 @@ gnome_app_store_get_app_by_id (GnomeAppStore *store, gchar *app_id)
 
 	item = g_hash_table_lookup (store->priv->app_id, app_id);
 	if (!item) {
-		item = app_server_get_app_by_id (store->priv->server, app_id);
+		item = app_backend_get_app_by_id (store->priv->backend, app_id);
 		app_timestamp_mark (store, item);
 		g_hash_table_insert (store->priv->app_id, g_strdup (app_id), item);
 	} else if (app_need_reload (store, app_id)){
-		item = app_server_get_app_by_id (store->priv->server, app_id);
+		item = app_backend_get_app_by_id (store->priv->backend, app_id);
 		g_hash_table_replace (store->priv->app_id, g_strdup (app_id), item);
 	}
 
@@ -223,6 +223,6 @@ gnome_app_store_get_apps_by_query (GnomeAppStore *store, GnomeAppQuery *query)
 {
 	GList *list;
 
-	list = app_server_get_apps_by_query (store->priv->server, query);
+	list = app_backend_get_apps_by_query (store->priv->backend, query);
 }
 

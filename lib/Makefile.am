@@ -1,19 +1,19 @@
 CLEANFILES =
 
-SUBDIRS = common server
+SUBDIRS = backend
 
 lib_LTLIBRARIES = libgnome-app-store.la
 
 AM_CPPFLAGS =							\
 	-I$(top_srcdir)						\
-	-I$(top_srcdir)/libgnome-app-store			\
-	-I$(top_srcdir)/libgnome-app-store/common		\
-	-I$(top_srcdir)/libgnome-app-store/server		\
+	-I$(top_srcdir)/common					\
+	-I$(top_srcdir)/lib/backend				\
 	$(GNOME_APP_STORE_CFLAGS)				\
 	-DCONFIGDIR=\""/etc/gnome-app-store\""                  \
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"			\
 	-DGNOMELOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale\""	\
 	-DPNP_IDS=\""$(PNP_IDS)"\"				\
+	-DG_ENABLE_DEBUG					\
 	$(DISABLE_DEPRECATED_CFLAGS)				\
 	$(NULL)
 
@@ -31,8 +31,8 @@ libgnome_app_store_la_SOURCES = \
 	gnome-app-store.c gnome-app-store.h
 
 libgnome_app_store_la_LIBADD =	\
-	common/libgnome-app-common.la \
-	server/libapp-server.la \
+	$(top_srcdir)/common/libgnome-app-common.la \
+	$(top_srcdir)/lib/backend/libapp-backend.la \
 	$(GNOME_APP_STORE_LIBS)
 
 appconfigdir = /etc/gnome-app-store

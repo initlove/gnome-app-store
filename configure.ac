@@ -72,11 +72,11 @@ GOBJECT_INTROSPECTION_CHECK([0.9.7])
 
 AC_CONFIG_FILES([
 Makefile
-libgnome-app-store/common/Makefile
-libgnome-app-store/server/Makefile
-libgnome-app-store/Makefile
+common/Makefile
+lib/backend/Makefile
+lib/Makefile
 ui/Makefile
-libgnome-app-store/gnome-app-store-0.1.pc
+lib/gnome-app-store-0.1.pc
 po/Makefile.in
 ])
 

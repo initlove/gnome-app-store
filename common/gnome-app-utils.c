@@ -37,7 +37,7 @@
 #include <string.h>
 #include "gnome-app-utils.h"
 
-#if 1
+#if 0
 #define server_debug TRUE
 #else
 #define server_debug FALSE
