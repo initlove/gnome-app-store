@@ -48,9 +48,6 @@ on_drag_end (ClutterDragAction   *action,
 	           ClutterModifierType  modifiers,
 		GnomeAppStage *stage)
 {
-//TODO:
-return ;
-
 	GnomeAppStagePrivate *priv;
 	gfloat viewport_x;
 	gfloat offset_x;
@@ -111,13 +108,14 @@ gnome_app_stage_init (GnomeAppStage *stage)
 	priv->viewport = clutter_box_new (clutter_box_layout_new ());
 	clutter_container_add_actor (CLUTTER_CONTAINER (stage), priv->viewport);
 	clutter_actor_set_anchor_point (CLUTTER_ACTOR (priv->viewport), -60, 20);
+#if 0
 	priv->action = clutter_drag_action_new ();
 	clutter_actor_add_action (priv->viewport, priv->action);
 	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (priv->action),
 	                                   CLUTTER_DRAG_X_AXIS);
 	g_signal_connect (priv->action, "drag-end", G_CALLBACK (on_drag_end), stage);
 	clutter_actor_set_reactive (priv->viewport, TRUE);
-
+#endif
 	priv->layout = clutter_table_layout_new ();
 	clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (priv->layout), priv->icon_width * 0.3);
 	clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (priv->layout), priv->icon_width * 0.3);
@@ -217,15 +215,13 @@ load_query (GnomeAppStage *stage)
         for (l = list; l; l = l->next) {
                	GnomeAppInfo *info;
 		GnomeAppInfoUI *info_ui;
-                ClutterActor *box;
 		info = (GnomeAppInfo *) l->data;
 		info_ui = gnome_app_info_ui_new_with_app (info);
-		box = gnome_app_info_ui_get_icon (info_ui);
-		gnome_app_stage_add_actor (stage, box);
+		gnome_app_stage_add_actor (stage, CLUTTER_ACTOR (info_ui));
 /*FIXME: ref or unref? */
 //		g_object_unref (info_ui);
         }
-	g_list_free (list);
+//	g_list_free (list);
 }
 
 void

@@ -52,8 +52,9 @@ struct _GnomeAppInfoPageClass
         GObjectClass parent_class;
 };
 
-GType  		          gnome_app_info_page_get_type		(void);
-GnomeAppInfoPage *        	  gnome_app_info_page_new			(void);
+GType			gnome_app_info_page_get_type		(void);
+GnomeAppInfoPage *	gnome_app_info_page_new			(void);
+GnomeAppInfoPage *	gnome_app_info_page_new_with_app	(GnomeAppInfo *info);
 
 
 G_END_DECLS

@@ -31,12 +31,12 @@ G_BEGIN_DECLS
 
 #define GNOME_APP_INFO_UI_LOG_DOMAIN = "info ui"
 
-#define GNOME_TYPE_APP_INFO_UI            (gnome_app_info_ui_get_type ())
-#define GNOME_APP_INFO_UI(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GNOME_TYPE_APP_INFO_UI, GnomeAppInfoUI))
-#define GNOME_APP_INFO_UI_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  GNOME_TYPE_APP_INFO_UI, GnomeAppInfoUIClass))
-#define GNOME_IS_APP_INFO_UI(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GNOME_TYPE_APP_INFO_UI))
-#define GNOME_IS_APP_INFO_UI_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  GNOME_TYPE_APP_INFO_UI))
-#define GNOME_APP_INFO_UI_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  GNOME_TYPE_APP_INFO_UI, GnomeAppInfoUIClass))
+#define GNOME_APP_TYPE_INFO_UI            (gnome_app_info_ui_get_type ())
+#define GNOME_APP_INFO_UI(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GNOME_APP_TYPE_INFO_UI, GnomeAppInfoUI))
+#define GNOME_APP_INFO_UI_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  GNOME_APP_TYPE_INFO_UI, GnomeAppInfoUIClass))
+#define GNOME_APP_IS_INFO_UI(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GNOME_APP_TYPE_INFO_UI))
+#define GNOME_APP_IS_INFO_UI_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  GNOME_APP_TYPE_INFO_UI))
+#define GNOME_APP_INFO_UI_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  GNOME_APP_TYPE_INFO_UI, GnomeAppInfoUIClass))
 
 typedef struct _GnomeAppInfoUI GnomeAppInfoUI;
 typedef struct _GnomeAppInfoUIClass GnomeAppInfoUIClass;
@@ -44,21 +44,19 @@ typedef struct _GnomeAppInfoUIPrivate GnomeAppInfoUIPrivate;
 
 struct _GnomeAppInfoUI
 {
-        GObject                 parent_instance;
+        ClutterGroup            parent_instance;
 	
 	GnomeAppInfoUIPrivate	*priv;
 };
 
 struct _GnomeAppInfoUIClass
 {
-        GObjectClass parent_class;
+        ClutterGroupClass parent_class;
 };
 
 GType  		          gnome_app_info_ui_get_type		(void);
 GnomeAppInfoUI *      	  gnome_app_info_ui_new			(void);
 GnomeAppInfoUI *          gnome_app_info_ui_new_with_app 	(GnomeAppInfo *app);
-ClutterActor *		  gnome_app_info_ui_get_icon		(GnomeAppInfoUI *ui);
-gboolean 		  gnome_app_info_ui_set_info 		(GnomeAppInfoUI *ui, GnomeAppInfo *app);
 
 G_END_DECLS
 

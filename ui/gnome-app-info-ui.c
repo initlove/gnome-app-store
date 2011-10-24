@@ -25,11 +25,10 @@ Author: Lance Wang <lzwang@suse.com>
 
 struct _GnomeAppInfoUIPrivate
 {
-	GnomeAppInfo *app;
-	ClutterActor *icon;
+	GnomeAppInfo *info;
 };
 
-G_DEFINE_TYPE (GnomeAppInfoUI, gnome_app_info_ui, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GnomeAppInfoUI, gnome_app_info_ui, CLUTTER_TYPE_GROUP)
 
 static void
 gnome_app_info_ui_init (GnomeAppInfoUI *ui)
@@ -37,10 +36,9 @@ gnome_app_info_ui_init (GnomeAppInfoUI *ui)
 	GnomeAppInfoUIPrivate *priv;
 
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
-							 GNOME_TYPE_APP_INFO_UI,
+							 GNOME_APP_TYPE_INFO_UI,
 							 GnomeAppInfoUIPrivate);
-	priv->app = NULL;
-	priv->icon = NULL;
+	priv->info = NULL;
 }
 
 static void
@@ -52,6 +50,12 @@ gnome_app_info_ui_dispose (GObject *object)
 static void
 gnome_app_info_ui_finalize (GObject *object)
 {
+	GnomeAppInfoUI *ui = GNOME_APP_INFO_UI (object);
+	GnomeAppInfoUIPrivate *priv = ui->priv;
+
+	if (priv->info)
+		g_object_unref (priv->info);
+
 	G_OBJECT_CLASS (gnome_app_info_ui_parent_class)->finalize (object);
 }
 
@@ -69,82 +73,30 @@ gnome_app_info_ui_class_init (GnomeAppInfoUIClass *klass)
 GnomeAppInfoUI *
 gnome_app_info_ui_new (void)
 {
-	return g_object_new (GNOME_APP_TYPE_INFO, NULL);
-}
-
-static void
-free_ui_resources (GnomeAppInfoUI *ui)
-{
-	GnomeAppInfoUIPrivate *priv;
-
-	if (priv->icon != NULL) {
-		g_object_unref (priv->icon);
-		priv->icon = NULL;
-	}
-}
-
-gboolean
-gnome_app_info_ui_set_app (GnomeAppInfoUI *ui,
-			    GnomeAppInfo *app)
-{
-	GnomeAppInfoUIPrivate *priv;
-
-	g_return_val_if_fail (ui != NULL, FALSE);
-	g_return_val_if_fail (app != NULL, FALSE);
-	priv = ui->priv;
-
-	if (priv->app != NULL) {
-		g_object_unref (priv->app);
-	}
-	g_object_ref (app);
-	priv->app = app;
-//	free_ui_resources (ui);
-
-	return TRUE;
-}
-
-GnomeAppInfoUI *
-gnome_app_info_ui_new_with_app (GnomeAppInfo *app)
-{
-	GnomeAppInfoUI *ui;
-
-	g_return_val_if_fail (app != NULL, NULL);
-
-	ui = g_object_new (GNOME_TYPE_APP_INFO_UI, NULL);
-	gnome_app_info_ui_set_app (ui, app);
-
-	return ui;
-}
-
-static inline void
-set_icon (GnomeAppInfoUI *ui, ClutterActor *icon)
-{
-	if (ui->priv->icon != NULL) {
-		g_object_unref (icon);
-	}
-	ui->priv->icon = g_object_ref (icon);
-}
-
-static inline ClutterActor *
-get_icon (GnomeAppInfoUI *ui)
-{
-	return ui->priv->icon;
+	return g_object_new (GNOME_APP_TYPE_INFO_UI, NULL);
 }
 
 static gboolean
-app_fullview_cb (ClutterActor *actor,
-                  ClutterButtonEvent *event,
-                  gpointer            data)
+app_fullview_cb (GnomeAppInfo *info)
 {
-	GnomeAppInfo *info;
-
-	info = (GnomeAppInfo *)data;
 	gnome_app_info_debug (info);
 }
 
-static ClutterActor *
-get_icon_from_app (GnomeAppInfo *info)
+static void
+generate_app_ui (GnomeAppInfoUI *ui, GnomeAppInfo *info)
 {
+}
+
+GnomeAppInfoUI *
+gnome_app_info_ui_new_with_app (GnomeAppInfo *info)
+{
+	GnomeAppInfoUI *ui;
+
+	g_return_val_if_fail (info != NULL, NULL);
+
+	ui = g_object_new (GNOME_APP_TYPE_INFO_UI, NULL);
+	ui->priv->info = g_object_ref (info);
+
 	const gchar *icon_name;
 	const gchar *app_name;
 	const gchar *uri;
@@ -169,14 +121,10 @@ get_icon_from_app (GnomeAppInfo *info)
 
 	uri = gnome_app_info_get (info, "smallpreviewpic1");
         if (uri) {
-/*TODO: we should make a strong png widget, to load web icon, local icon, theme icon */
 		gchar *local_uri;
 		local_uri = gnome_app_get_local_icon (uri);
                 icon = clutter_texture_new_from_file (local_uri, NULL);
 		g_free (local_uri);
-		/*FIXME: if the icon cannot be textureed, should we remove it? */
-		if (icon == NULL) 
-			printf ("but the icon is NULL\n");
         }
 
         if (icon) {
@@ -187,32 +135,10 @@ get_icon_from_app (GnomeAppInfo *info)
 	} else {
 	/* what to do? */
 	}
+
+	clutter_container_add_actor (CLUTTER_CONTAINER (ui), box);
         g_signal_connect_swapped (box, "button-press-event",
-                            G_CALLBACK (app_fullview_cb), info);
+                            G_CALLBACK (app_fullview_cb), g_object_ref (info));
 
-	return box;
-}
-
-ClutterActor *
-gnome_app_info_ui_get_icon (GnomeAppInfoUI *ui)
-{
-	ClutterActor *icon;
-
-	g_return_val_if_fail (GNOME_IS_APP_INFO_UI(ui), NULL);
-
-	if (ui->priv->app == NULL) {
-		return NULL;
-	}
-
-	icon = get_icon (ui);
-	if (icon) {
-		return icon;
-	}
-
-	icon = get_icon_from_app (ui->priv->app);
-	if (icon != NULL) {
-		set_icon (ui, icon);
-	}
-
-	return icon;
+	return ui;
 }
