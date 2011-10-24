@@ -207,7 +207,7 @@ load_query (GnomeAppStage *stage)
         const GnomeAppStore *store;
 
 	store = gnome_app_store_get_default (); 
-	list = gnome_app_store_get_apps_by_query (store, stage->priv->query);
+	list = gnome_app_store_get_apps_by_query ((GnomeAppStore *)store, stage->priv->query);
 
 	if (list)
 		gnome_app_stage_clean (stage);
@@ -223,8 +223,9 @@ load_query (GnomeAppStage *stage)
 		box = gnome_app_info_ui_get_icon (info_ui);
 		gnome_app_stage_add_actor (stage, box);
 /*FIXME: ref or unref? */
-		g_object_unref (info_ui);
+//		g_object_unref (info_ui);
         }
+	g_list_free (list);
 }
 
 void

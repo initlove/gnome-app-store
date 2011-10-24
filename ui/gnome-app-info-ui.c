@@ -112,6 +112,7 @@ gnome_app_info_ui_new_with_app (GnomeAppInfo *app)
 
 	ui = g_object_new (GNOME_TYPE_APP_INFO_UI, NULL);
 	gnome_app_info_ui_set_app (ui, app);
+
 	return ui;
 }
 
@@ -130,8 +131,19 @@ get_icon (GnomeAppInfoUI *ui)
 	return ui->priv->icon;
 }
 
+static gboolean
+app_fullview_cb (ClutterActor *actor,
+                  ClutterButtonEvent *event,
+                  gpointer            data)
+{
+	GnomeAppInfo *info;
+
+	info = (GnomeAppInfo *)data;
+	gnome_app_info_debug (info);
+}
+
 static ClutterActor *
-get_icon_from_app (GnomeAppInfo *app)
+get_icon_from_app (GnomeAppInfo *info)
 {
 	const gchar *icon_name;
 	const gchar *app_name;
@@ -147,7 +159,7 @@ get_icon_from_app (GnomeAppInfo *app)
         clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (layout), TRUE);
         clutter_box_layout_set_spacing (CLUTTER_BOX_LAYOUT (layout), 6);
 
-	app_name = gnome_app_info_get (app, "name");
+	app_name = gnome_app_info_get (info, "name");
         box = clutter_box_new (layout);
         text = clutter_text_new ();
         clutter_text_set_ellipsize (CLUTTER_TEXT (text), PANGO_ELLIPSIZE_END);
@@ -155,7 +167,7 @@ get_icon_from_app (GnomeAppInfo *app)
         clutter_actor_set_width (text, 64);
         clutter_container_add_actor (CLUTTER_CONTAINER (box), text);
 
-	uri = gnome_app_info_get (app, "smallpreviewpic1");
+	uri = gnome_app_info_get (info, "smallpreviewpic1");
         if (uri) {
 /*TODO: we should make a strong png widget, to load web icon, local icon, theme icon */
 		gchar *local_uri;
@@ -176,7 +188,7 @@ get_icon_from_app (GnomeAppInfo *app)
 	/* what to do? */
 	}
         g_signal_connect_swapped (box, "button-press-event",
-                            G_CALLBACK (gnome_app_install), NULL);
+                            G_CALLBACK (app_fullview_cb), info);
 
 	return box;
 }

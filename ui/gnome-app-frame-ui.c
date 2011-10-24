@@ -37,7 +37,7 @@ on_search_activate (ClutterText *text,
 	gchar *search;
 	GnomeAppQuery *query;
 
-	search = clutter_text_get_text (text);
+	search = (gchar *)clutter_text_get_text (text);
 printf ("query %s\n", search);	
 	query = gnome_app_query_new ();
 	g_object_set (query, QUERY_SEARCH, search, NULL);
@@ -90,7 +90,7 @@ category_click_cb (StButton *button, gpointer userdata)
 {
 	const gchar *label_new;
 	label_new = st_button_get_label (button);
-	gnome_app_frame_load_group (label_new);
+	gnome_app_frame_load_group ((gchar *)label_new);
 }
 
 static void
@@ -131,21 +131,21 @@ create_category_list (GnomeAppFrameUI *frame_ui)
 	list = (const GList *)gnome_app_get_local_categories ();
 	for (l = (GList *)list; l; l = l->next) {
 		name = (gchar *)l->data;
-		actor = st_button_new_with_label (name);
+		actor = (ClutterActor *)st_button_new_with_label (name);
 		g_signal_connect (ST_BUTTON (actor), "clicked", G_CALLBACK (category_click_cb), NULL);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
 		row ++;
 	}
 
 		
-	actor = st_button_new_with_label ("---------");
+	actor = (ClutterActor *)st_button_new_with_label ("---------");
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
 	row ++;
-	actor = st_button_new_with_label ("Prev");
+	actor = (ClutterActor *)st_button_new_with_label ("Prev");
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
 	row ++;
 	g_signal_connect (ST_BUTTON (actor), "clicked", G_CALLBACK (prev_cb), NULL);
-	actor = st_button_new_with_label ("Next");
+	actor = (ClutterActor *)st_button_new_with_label ("Next");
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
 	row ++;
 	g_signal_connect (ST_BUTTON (actor), "clicked", G_CALLBACK (next_cb), NULL);
@@ -177,7 +177,7 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *frame_ui)
 
 	clutter_actor_set_width (frame_ui->search_entry, 180);
 	clutter_actor_set_width (frame_ui->category_list, 180);
-	clutter_actor_set_width (frame_ui->stage, 720);
+	clutter_actor_set_width ((ClutterActor *)frame_ui->stage, 720);
 	
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), frame_ui->search_entry, 1, 0);
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->stage), 0, 1);
