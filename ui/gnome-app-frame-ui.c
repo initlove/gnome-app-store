@@ -22,7 +22,7 @@ Author: Liang chenye <liangchenye@gmail.com>
 
 struct _GnomeAppFrameUIPrivate
 {
-	ClutterActor *box;
+	ClutterActor *frame_box;
 	ClutterLayoutManager *layout;
 	ClutterActor *layout_box;
 };
@@ -162,12 +162,12 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *frame_ui)
 	                                                 GNOME_APP_TYPE_FRAME_UI,
 	                                                 GnomeAppFrameUIPrivate);
 
-	priv->box = clutter_box_new (clutter_box_layout_new ());
-	clutter_container_add_actor (CLUTTER_CONTAINER (frame_ui), priv->box);
+	priv->frame_box = clutter_box_new (clutter_box_layout_new ());
+	clutter_container_add_actor (CLUTTER_CONTAINER (frame_ui), priv->frame_box);
 
 	priv->layout = clutter_table_layout_new ();
 	priv->layout_box = clutter_box_new (priv->layout);
-	clutter_container_add_actor (CLUTTER_CONTAINER (priv->box), priv->layout_box);
+	clutter_container_add_actor (CLUTTER_CONTAINER (priv->frame_box), priv->layout_box);
 	clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (priv->layout), 10);
 	clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (priv->layout), 10);
 
@@ -230,4 +230,15 @@ gnome_app_frame_ui_get_default (void)
 	}
 
 	return ui;
+}
+
+void
+gnome_app_frame_ui_set_full_info_mode   (GnomeAppFrameUI *ui, GnomeAppInfoPage *page)
+{
+	ui->full = page;
+
+	clutter_actor_hide (ui->priv->frame_box);
+	clutter_container_add_actor (CLUTTER_CONTAINER (ui), page);
+
+	clutter_actor_show (ui->priv->frame_box);
 }

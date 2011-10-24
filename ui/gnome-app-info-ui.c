@@ -19,9 +19,10 @@ Author: Lance Wang <lzwang@suse.com>
 #include <clutter/clutter.h>
 
 #include "gnome-app-utils.h"
-#include "gnome-app-info-ui.h"
 #include "gnome-app-info.h"
-#include "gnome-app-install.h"
+#include "gnome-app-info-ui.h"
+#include "gnome-app-info-page.h"
+#include "gnome-app-frame-ui.h"
 
 struct _GnomeAppInfoUIPrivate
 {
@@ -80,11 +81,16 @@ static gboolean
 app_fullview_cb (GnomeAppInfo *info)
 {
 	gnome_app_info_debug (info);
-}
 
-static void
-generate_app_ui (GnomeAppInfoUI *ui, GnomeAppInfo *info)
-{
+	ClutterActor *stage, *page;
+
+	page = gnome_app_info_page_new_with_app (info);
+
+	GnomeAppFrameUI *ui;
+	ui = gnome_app_frame_ui_get_default ();
+	gnome_app_frame_ui_set_full_info_mode (ui, page);
+
+	return TRUE;
 }
 
 GnomeAppInfoUI *
