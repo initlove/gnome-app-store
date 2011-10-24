@@ -24,7 +24,11 @@
 #define __GNOME_APP_UTILS_H__
 
 #include <glib.h>
-#include <libsoup/soup-session.h>
+#ifdef HAVE_GNOME
+#include <libsoup/soup-gnome.h>
+#else
+#include <libsoup/soup.h>
+#endif
 
 G_BEGIN_DECLS
 
