@@ -18,6 +18,7 @@ Author: Lance Wang <lzwang@suse.com>
 
 #include <clutter/clutter.h>
 
+#include "gnome-app-utils.h"
 #include "gnome-app-info-ui.h"
 #include "gnome-app-info.h"
 #include "gnome-app-install.h"
@@ -137,18 +138,16 @@ get_icon_from_app (GnomeAppInfo *app)
 	const gchar *uri;
 	GError *err = NULL;
 
-	uri = gnome_app_info_get_local_icon_url (app);
-
-        ClutterActor *box, *text;
-        ClutterActor *icon = NULL; //*FIXME we have icon, but can not be recognized by clutter
         ClutterLayoutManager *layout;
+        ClutterActor *box, *text;
         ClutterAction *action;
+        ClutterActor *icon = NULL;
 
         layout = clutter_box_layout_new ();
         clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (layout), TRUE);
         clutter_box_layout_set_spacing (CLUTTER_BOX_LAYOUT (layout), 6);
 
-	app_name = gnome_app_info_get_name (app);
+	app_name = gnome_app_info_get (app, "name");
         box = clutter_box_new (layout);
         text = clutter_text_new ();
         clutter_text_set_ellipsize (CLUTTER_TEXT (text), PANGO_ELLIPSIZE_END);
@@ -156,8 +155,13 @@ get_icon_from_app (GnomeAppInfo *app)
         clutter_actor_set_width (text, 64);
         clutter_container_add_actor (CLUTTER_CONTAINER (box), text);
 
+	uri = gnome_app_info_get (app, "smallpreviewpic1");
         if (uri) {
-                icon = clutter_texture_new_from_file (uri, NULL);
+/*TODO: we should make a strong png widget, to load web icon, local icon, theme icon */
+		gchar *local_uri;
+		local_uri = gnome_app_get_local_icon (uri);
+                icon = clutter_texture_new_from_file (local_uri, NULL);
+		g_free (local_uri);
 		/*FIXME: if the icon cannot be textureed, should we remove it? */
 		if (icon == NULL) 
 			printf ("but the icon is NULL\n");
@@ -172,7 +176,7 @@ get_icon_from_app (GnomeAppInfo *app)
 	/* what to do? */
 	}
         g_signal_connect_swapped (box, "button-press-event",
-                            G_CALLBACK (gnome_app_install), gnome_app_info_get_pkgname (app));
+                            G_CALLBACK (gnome_app_install), NULL);
 
 	return box;
 }

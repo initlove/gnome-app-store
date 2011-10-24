@@ -218,10 +218,11 @@ load_query (GnomeAppStage *stage)
                	GnomeAppInfo *info;
 		GnomeAppInfoUI *info_ui;
                 ClutterActor *box;
-		info = gnome_app_store_get_app_by_id (store, (gchar *)l->data);
+		info = (GnomeAppInfo *) l->data;
 		info_ui = gnome_app_info_ui_new_with_app (info);
 		box = gnome_app_info_ui_get_icon (info_ui);
 		gnome_app_stage_add_actor (stage, box);
+/*FIXME: ref or unref? */
 		g_object_unref (info_ui);
         }
 }
