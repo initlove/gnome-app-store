@@ -122,8 +122,9 @@ make_request_by_query (OcsBackend *backend, GnomeAppQuery *query)
                                 list = ocs_get_cid_list_by_group (backend, prop_value);
                                 prop_value = get_ids_by_list (list, 'x');
                                 g_list_free (list);
-                        }
-                        g_string_append_printf (request, "%s=%s", query_units [prop_id].name, prop_value);
+                        	g_string_append_printf (request, "%s=%s", "categories", prop_value);
+                        } else
+ 	                       g_string_append_printf (request, "%s=%s", query_units [prop_id].name, prop_value);
                         g_free (prop_value);
                 }
         }
@@ -208,6 +209,7 @@ ocs_get_request_doc (OcsBackend *backend, gchar *request)
         if (refresh) {
 		SoupSession *session;
                 SoupBuffer *buf;
+
 		session = (SoupSession *) ocs_backend_get_session (backend);
                 buf = gnome_app_get_data_by_request (session, request);
                 doc_ptr = xmlParseMemory (buf->data, buf->length);

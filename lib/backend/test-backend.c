@@ -27,7 +27,7 @@ int main ()
 	for (l = list; l; l = l->next) {
 		GnomeAppInfo *info;
 		info = l->data;
-		gnome_app_info_debug (info);
+	//	gnome_app_info_debug (info);
 	}
 	g_object_unref (query);	
 	g_object_unref (config);
