@@ -19,9 +19,9 @@ AM_CFLAGS = $(WARN_CFLAGS)
 
 libapp_backend_la_SOURCES = 	\
 	app-backend.c app-backend.h \
-	ocs-app.c ocs-app.h \
+	ocs-app-info.c ocs-app-info.h \
+	ocs-request.c ocs-request.h \
 	ocs-backend.c ocs-backend.h	\
-	app-stream-backend.c app-stream-backend.h	\
 	$(NULL)
 
 libapp_backend_la_LIBADD =	\

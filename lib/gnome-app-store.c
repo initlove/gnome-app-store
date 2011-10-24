@@ -114,6 +114,8 @@ app_timestamp_mark (GnomeAppStore *store, GnomeAppInfo *info)
 GnomeAppInfo *
 gnome_app_store_get_app_by_id (GnomeAppStore *store, gchar *app_id)
 {
+/*FIXME: make a cache? */
+#if 0
 	GnomeAppInfo *info;
 
 	info = g_hash_table_lookup (store->priv->app_id, app_id);
@@ -127,6 +129,7 @@ gnome_app_store_get_app_by_id (GnomeAppStore *store, gchar *app_id)
 	}
 
 	return g_object_ref (info);
+#endif
 }
 
 GList *

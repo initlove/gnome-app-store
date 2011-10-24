@@ -20,17 +20,23 @@
  * Author: Liang chenye <liangchenye@gmail.com>
  */
 
-/*The reason of create this file is: the function is too long */
-
-#ifndef _OCS_APP_H
-#define _OCS_APP_H
+#ifndef __OCS_REQUEST_H__
+#define __OCS_REQUEST_H__
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-
-#include "gnome-app-info.h"
+#include "gnome-app-query.h"
 #include "ocs-backend.h"
 
-GnomeAppInfo *parse_app (OcsBackend *ocs_backend, xmlNodePtr data_node);
+G_BEGIN_DECLS
 
-#endif
+/*FIXME: make request a gobject ? */
+/* make the cache better */
+
+gchar 		*make_request_by_query 	(OcsBackend *backend, GnomeAppQuery *query);
+xmlNodePtr	find_node		(xmlDocPtr doc_ptr, gchar *node_name);
+xmlDocPtr	ocs_get_request_doc	(OcsBackend *backend, gchar *request);
+
+G_END_DECLS
+
+#endif /* __OCS_REQUEST_H__ */

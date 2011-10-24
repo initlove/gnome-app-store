@@ -1,0 +1,14 @@
+*.deps
+*.jpg
+*.la
+*.lo
+*.o
+*.pc
+*.so
+*.swp
+*~
+.libs
+st*.h
+st*.c
+Makefile
+Makefile.in

@@ -35,6 +35,8 @@
 #include <libsoup/soup-server.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "gnome-app-config.h"
 #include "gnome-app-utils.h"
 
 #if 0
@@ -60,16 +62,16 @@ gather_entries_recurse (GMenuTreeDirectory *trunk)
 
 		switch (gmenu_tree_item_get_type (item)) {
 			case GMENU_TREE_ITEM_DIRECTORY:
-			        dir = GMENU_TREE_DIRECTORY (item);
+				dir = GMENU_TREE_DIRECTORY (item);
 				name = gmenu_tree_directory_get_name (dir);
 				local_categories = g_list_prepend (local_categories, g_strdup (name));
 				/*FIXME: if the return value of get_local_categories change to a tree on day.
 				  we should enable this ...
-			        gather_entries_recurse (dir);
+				gather_entries_recurse (dir);
 				*/
-			        break;
+				break;
 			default:
-			        break;
+				break;
 		}
 		gmenu_tree_item_unref (item);
 	}
@@ -150,7 +152,7 @@ gnome_app_soup_session_new (gboolean sync, gchar *cafile)
 }
 
 gchar *
-gnome_app_get_md5 (gchar *str)
+gnome_app_get_md5 (const gchar *str)
 {
 	gchar *checksum;
 
@@ -162,28 +164,28 @@ gnome_app_get_md5 (gchar *str)
 }
 
 SoupBuffer *
-gnome_app_get_data_from_url (SoupSession *session, const char *url)
+gnome_app_get_data_by_request (SoupSession *session, const gchar *request)
 {
-	const char *name;
 	SoupMessage *msg;
-	const char *header;
-	const char *method;
-	SoupBuffer *buf = NULL;
+	SoupBuffer *buf;
+	const gchar *name;
+	const gchar *header;
+	const gchar *method;
 
-	printf ("Resolve: %s\n", url);
+	printf ("Resolve: %s\n", request);
 
+	buf = NULL;
 	method = SOUP_METHOD_GET;
-	msg = soup_message_new (method, url);
+	msg = soup_message_new (method, request);
 	soup_message_set_flags (msg, SOUP_MESSAGE_NO_REDIRECT);
-
 	soup_session_send_message (session, msg);
 
 	name = soup_message_get_uri (msg)->path;
 
 	if (server_debug) {
 		SoupMessageHeadersIter iter;
-		const char *hname, *value;
-		char *path = soup_uri_to_string (soup_message_get_uri (msg), TRUE);
+		const gchar *hname, *value;
+		gchar *path = soup_uri_to_string (soup_message_get_uri (msg), TRUE);
 
 		printf ("%s %s HTTP/1.%d\n", method, path,
 			soup_message_get_http_version (msg));
@@ -205,19 +207,19 @@ gnome_app_get_data_from_url (SoupSession *session, const char *url)
 
 	if (SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
 		header = soup_message_headers_get_one (msg->response_headers,
-			                               "Location");
+						       "Location");
 		if (header) {
-			SoupURI *uri;
-			char *uri_string;
+			SoupURI *request;
+			gchar *request_string;
 
 			if (!server_debug)
-			        printf ("  -> %s\n", header);
+				printf ("  -> %s\n", header);
 
-			uri = soup_uri_new_with_base (soup_message_get_uri (msg), header);
-			uri_string = soup_uri_to_string (uri, FALSE);
-			buf = gnome_app_get_data_from_url (session, uri_string);
-			g_free (uri_string);
-			soup_uri_free (uri);
+			request = soup_uri_new_with_base (soup_message_get_uri (msg), header);
+			request_string = soup_uri_to_string (request, FALSE);
+			buf = gnome_app_get_data_by_request (session, request_string);
+			g_free (request_string);
+			soup_uri_free (request);
 		}
 	} else if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
 		buf = soup_message_body_flatten (msg->response_body);
@@ -226,5 +228,75 @@ gnome_app_get_data_from_url (SoupSession *session, const char *url)
 	g_object_unref (msg);
 
 	return buf;
+}
+
+static gboolean
+download_file (const gchar *source, const gchar *dest)
+{
+	SoupSession *session;
+	SoupBuffer *buf;
+	gchar *cafile;
+	gboolean sync;
+	FILE *fp;
+
+	buf = NULL;
+	sync = TRUE;
+	cafile = NULL;
+/*TODO: should we have the static session? */
+	session = gnome_app_soup_session_new (sync, cafile);
+
+	gint retry;
+	for (retry = 0; retry <3; retry ++) {
+		buf = gnome_app_get_data_by_request (session, source);
+		if (buf)
+			break;
+		printf ("retry %d\n", retry);
+	}
+	g_object_unref (session);
+	if (!buf)
+		return FALSE;
+
+	fp = fopen (dest, "w");
+	if (fp) {
+		fwrite (buf->data, 1, buf->length, fp);
+		fclose (fp);
+	}
+
+	soup_buffer_free (buf);
+
+	return TRUE;
+}
+
+gchar *
+gnome_app_get_local_icon (const gchar *uri)
+{
+	GnomeAppConfig *config;
+	gchar *md5;
+	gchar *cache_dir;
+	gchar *img_dir;
+	gchar *local_uri;
+
+	config = gnome_app_config_new ();
+	cache_dir = gnome_app_config_get_cache_dir (config);
+	md5 = gnome_app_get_md5 (uri);
+	img_dir = g_build_filename (cache_dir, "img", NULL);
+	local_uri = g_build_filename (img_dir, md5, NULL);
+
+	if (!g_file_test (img_dir, G_FILE_TEST_EXISTS))
+		g_mkdir_with_parents (img_dir, 0755);
+
+	if (!g_file_test (local_uri, G_FILE_TEST_EXISTS)) {
+		if (!download_file (uri, (const gchar *)local_uri)) {
+			g_free (local_uri);
+			local_uri = NULL;	
+		}
+	}
+
+	g_object_unref (config);
+	g_free (md5);
+	g_free (cache_dir);
+	g_free (img_dir);
+
+	return local_uri;
 }
 

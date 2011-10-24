@@ -50,30 +50,17 @@ struct _GnomeAppInfoClass
 {
         GObjectClass parent_class;
 
-	glong	(*get_comment_counts)		(GnomeAppInfo *info);
-	glong	(*get_download_counts)		(GnomeAppInfo *info);
-	gint	(*get_score)			(GnomeAppInfo *info);
-	gchar 	*(*get_local_icon_url) 		(GnomeAppInfo *info);
-	gchar 	*(*get_local_screenshot_url) 	(GnomeAppInfo *info);
+	/* virtual */
+	const gchar	*(*get)			(GnomeAppInfo *info, const gchar *prop);
+	const gchar 	*(*get_backend_type)	(GnomeAppInfo *info);
+	const gchar	**(*get_props)		(GnomeAppInfo *info);
 };
 
 GType			gnome_app_info_get_type			(void);
 GnomeAppInfo *		gnome_app_info_new			(void);
-
-const gchar *		gnome_app_info_get_id			(GnomeAppInfo *info);
-const gchar *		gnome_app_info_get_name			(GnomeAppInfo *info);
-const gchar *		gnome_app_info_get_pkgname		(GnomeAppInfo *info);
-const gchar *		gnome_app_info_get_summary		(GnomeAppInfo *info);
-const gchar *		gnome_app_info_get_description		(GnomeAppInfo *info);
-const gchar *		gnome_app_info_get_icon_name		(GnomeAppInfo *info);
-const gchar *		gnome_app_info_get_screenshot		(GnomeAppInfo *info);
-const gchar *		gnome_app_info_get_categories		(GnomeAppInfo *info);
-const gchar *		gnome_app_info_get_license		(GnomeAppInfo *info);
-glong			gnome_app_info_get_comment_counts	(GnomeAppInfo *info);
-glong			gnome_app_info_get_download_counts	(GnomeAppInfo *info);
-gint			gnome_app_info_get_score		(GnomeAppInfo *info);
-const gchar *		gnome_app_info_get_local_icon_url	(GnomeAppInfo *info);
-const gchar *		gnome_app_info_get_local_screenshot_url	(GnomeAppInfo *info);
+const gchar *		gnome_app_info_get			(GnomeAppInfo *info, const gchar *prop);
+const gchar *		gnome_app_info_get_backend_type		(GnomeAppInfo *info);
+const gchar **		gnome_app_info_get_props		(GnomeAppInfo *info);
 void			gnome_app_info_debug			(GnomeAppInfo *info);
 
 G_END_DECLS

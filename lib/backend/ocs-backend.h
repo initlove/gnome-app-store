@@ -62,8 +62,14 @@ struct _OcsBackendClass
 	AppBackendClass parent_class;
 };
 
-GType		ocs_backend_get_type	(void) G_GNUC_CONST;
-SoupSession	*ocs_backend_get_current_session ();	/*FIXME: tmp*/
+GType			ocs_backend_get_type		(void) G_GNUC_CONST;
+const char * 		ocs_backend_get_server_uri	(OcsBackend *backend);
+const char *		ocs_backend_get_username	(OcsBackend *backend);
+const char *		ocs_backend_get_password	(OcsBackend *backend);
+const SoupSession * 	ocs_backend_get_session	(OcsBackend *backend);
+const char *		ocs_backend_get_cache_dir	(OcsBackend *backend);
+
+GList *			ocs_get_cid_list_by_group (OcsBackend *ocs_backend, gchar *group);
 
 G_END_DECLS
 

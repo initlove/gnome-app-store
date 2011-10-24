@@ -23,7 +23,8 @@
 #include "gnome-app-config.h"
 #include "app-backend.h"
 #include "ocs-backend.h"
-#include "app-stream-backend.h"
+/* FIXME: mask the app stream, also remove it from Makefile.am */
+//#include "app-stream-backend.h"
 
 G_DEFINE_ABSTRACT_TYPE (AppBackend, app_backend, G_TYPE_OBJECT);
 
@@ -63,43 +64,11 @@ app_backend_get_backend_icon_name (AppBackend *backend)
 }
 
 GList *
-app_backend_get_cid_list_by_group (AppBackend *backend, gchar *group)
-{
-	g_return_val_if_fail (APP_IS_BACKEND (backend), NULL);
-
-	return APP_BACKEND_GET_CLASS (backend)->get_cid_list_by_group (backend, group);
-}
-
-gchar *
-app_backend_get_cname_by_id (AppBackend *backend, gchar *category_id)
-{
-	g_return_val_if_fail (APP_IS_BACKEND (backend), NULL);
-
-	return APP_BACKEND_GET_CLASS (backend)->get_cname_by_id (backend, category_id);
-}
-
-GList *
-app_backend_get_appid_list_by_cid_list (AppBackend *backend, GList *categories)
-{
-	g_return_val_if_fail (APP_IS_BACKEND (backend), NULL);
-
-	return APP_BACKEND_GET_CLASS (backend)->get_appid_list_by_cid_list (backend, categories);
-}
-
-GList *
 app_backend_get_apps_by_query (AppBackend *backend, GnomeAppQuery *query)
 {
 	g_return_val_if_fail (APP_IS_BACKEND (backend), NULL);
 
 	return APP_BACKEND_GET_CLASS (backend)->get_apps_by_query (backend, query);
-}
-
-GnomeAppInfo *
-app_backend_get_app_by_id (AppBackend *backend, gchar *app_id)
-{
-	g_return_val_if_fail (APP_IS_BACKEND (backend), NULL);
-
-	return APP_BACKEND_GET_CLASS (backend)->get_app_by_id (backend, app_id);
 }
 
 gboolean
@@ -122,19 +91,16 @@ app_backend_new_from_config (GnomeAppConfig *config)
 	
 	if (strcmp (type, "ocs") == 0)
 		backend = g_object_new (TYPE_OCS_BACKEND, NULL);
+#if 0
+// MASK THE APP_STREAM 
 	else if (strcmp (type, "app_stream") == 0)
 		backend = g_object_new (TYPE_APP_STREAM_BACKEND, NULL);
+#endif
 	else
 		return NULL;
 
 	app_backend_set_config (backend, config);
 
 	return backend;
-}
-
-GList *
-app_backend_get_all (void)
-{
-	return NULL;
 }
 
