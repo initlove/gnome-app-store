@@ -1,0 +1,158 @@
+{
+  "My Scene" : {
+    "id" : "main-stage",
+    "type" : "ClutterStage",
+    "title" : "ClutterScript test",
+    "color" : "white",
+    "width" : 900,
+    "height" : 700,
+    "signals" : [
+      { "name" : "key-press-event", "handler" : "clutter_main_quit" },
+      { "name" : "destroy", "handler" : "clutter_main_quit" }
+    ],
+    "children" : [
+      {
+        "id" : "smallpreviewpic1",
+        "type" : "ClutterTexture",
+        "filename" : "redhand.png",
+        "x" : 20,
+        "y" : 20,
+        "width" : 80,
+        "height" : 80,
+        "keep-aspect-ratio" : true,
+        "anchor-x" : "5 em",
+        "anchor-y" : "5 pt",
+        "opacity" : 100,
+        "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
+      },
+      {
+	"id" : "container", 
+	"type" : "ClutterGroup",
+	"children" : [
+	  {
+        	"id" : "score-1",
+	        "type" : "ClutterTexture",
+        	"filename" : "redhand.png",
+	        "x" : 20,
+        	"y" : 110,
+        	"width" : 15,
+	        "height" : 15
+          },
+	  {
+        	"id" : "score-2",
+	        "type" : "ClutterTexture",
+	        "x" : 35,
+        	"y" : 110,
+        	"width" : 15,
+	        "height" : 15
+          },
+	  {
+        	"id" : "score-3",
+	        "type" : "ClutterTexture",
+	        "x" : 50,
+        	"y" : 110,
+        	"width" : 15,
+	        "height" : 15
+          },
+	  {
+        	"id" : "score-4",
+	        "type" : "ClutterTexture",
+	        "x" : 65,
+        	"y" : 110,
+        	"width" : 15,
+	        "height" : 15
+          },
+	  {
+        	"id" : "score-5",
+	        "type" : "ClutterTexture",
+	        "x" : 80,
+        	"y" : 110,
+        	"width" : 15,
+	        "height" : 15
+          }
+    	]
+      },
+      {
+        "id" : "name",
+        "type" : "ClutterText",
+        "x" : 150,
+        "y" : 30,
+        "text" : "app name",
+        "font-name" : "Sans 18px",
+        "color" : "black",
+        "line-alignment" : "center",
+        "line-wrap" : false,
+        "ellipsize" : "none",
+        "rotation" : [
+          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
+          { "z-axis" : [ 45.0, [  75,  75 ] ] }
+        ]
+      },
+      {
+        "id" : "personid",
+        "type" : "ClutterText",
+        "x" : 180,
+        "y" : 50,
+        "text" : "Author name",
+        "font-name" : "Sans 15px",
+        "color" : "black",
+        "line-alignment" : "center",
+        "line-wrap" : false,
+        "ellipsize" : "none",
+        "rotation" : [
+          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
+          { "z-axis" : [ 45.0, [  75,  75 ] ] }
+        ]
+      },
+      {
+        "id" : "description",
+        "type" : "ClutterText",
+        "x" : 160,
+        "y" : 80,
+	"width": 600, 
+	"height": 600,
+        "text" : "app descriptioin",
+        "font-name" : "Sans 12px",
+        "color" : "black",
+        "line-alignment" : "begin",
+	"line-wrap-mode" : "word",
+        "line-wrap" : true,
+        "ellipsize" : "none",
+        "rotation" : [
+          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
+          { "z-axis" : [ 45.0, [  75,  75 ] ] }
+        ]
+      },
+      {
+        "id" : "license",
+        "type" : "ClutterText",
+        "x" : 20,
+        "y" : 130,
+        "text" : "license",
+        "font-name" : "Sans 16px",
+        "color" : "black",
+        "line-alignment" : "center",
+        "line-wrap" : false,
+        "ellipsize" : "none",
+        "rotation" : [
+          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
+          { "z-axis" : [ 45.0, [  75,  75 ] ] }
+        ]
+      },
+      {
+        "id" : "previewpic1",
+        "type" : "ClutterTexture",
+        "filename" : "redhand.png",
+        "x" : 160,
+        "y" : 80,
+        "width" : 600,
+        "height" : 600,
+        "keep-aspect-ratio" : true,
+        "anchor-x" : "5 em",
+        "anchor-y" : "5 pt",
+        "opacity" : 100,
+        "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
+      }
+    ]
+  }
+}

@@ -27,6 +27,7 @@ noinst_PROGRAMS +=      \
 
 app_store_SOURCES =        \
 	gnome-app-frame-ui.c gnome-app-frame-ui.h \
+	gnome-app-ui-score.c gnome-app-ui-score.h \
 	gnome-app-stage.c gnome-app-stage.h \
 	gnome-app-info-page.c gnome-app-info-page.h \
 	gnome-app-info-ui.c gnome-app-info-ui.h \
