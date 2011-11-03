@@ -6,9 +6,8 @@
 
 #include "gnome-app-config.h"
 #include "gnome-app-store.h"
-#include "gnome-app-ui-score.h"
 #include "gnome-app-stage.h"
-#include "gnome-app-info-ui.h"
+#include "gnome-app-info-icon.h"
 
 #define TEST_SERVER FALSE
 #define TEST_GAME FALSE
@@ -80,52 +79,14 @@ main (int argc, char *argv[])
 	l = l->next;
 	info = l->data;
 
-	script = clutter_script_new ();
-	clutter_script_load_from_file (script, filename, NULL);
-	clutter_script_get_objects (script, "main-stage", &stage, NULL);
+	ClutterActor *real_stage = clutter_stage_new ();
+        clutter_stage_set_title (CLUTTER_STAGE (real_stage), _("AppStore"));
+        clutter_actor_set_size (real_stage, 900, 600);
+        g_signal_connect (real_stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
-	gchar *prop [] = {
-		"name", "personid", "description", 
-		"score",
-		"smallpreviewpic1", "previewpic1", 
-		"license", NULL};
-
-	const gchar *val;
-	gchar *local_uri;
-
-//	gnome_app_info_debug (info);
-	for (i = 0; prop [i]; i++) {
-		clutter_script_get_objects (script, prop [i], &actor, NULL);
-		if (!actor)
-			continue;
-		val = gnome_app_info_get (info, prop [i]);
-		if (CLUTTER_IS_TEXTURE (actor)) {
-			local_uri = gnome_app_get_local_icon (val);
-			clutter_texture_set_from_file (actor, local_uri, NULL);
-			g_free (local_uri);
-		} else if (CLUTTER_IS_TEXT (actor)) {
-			clutter_text_set_text (actor, val);
-		} 
-#if 0
-/*FIXME: cannot use the user defined object? */
-			else if (GNOME_APP_IS_UI_SCORE (actor)) {
-			gnome_app_ui_score_set_score (actor, val);
-		}
-#endif
-	}
-
-	gchar *scores [] = { "score-1", "score-2", "score-3", "score-4", "score-5", NULL};
-	gint app_score = atoi (gnome_app_info_get (info, "score")) / 20;
-	for (i = 0; scores [i]; i++) {
-		clutter_script_get_objects (script, scores [i], &actor, NULL);
-		if (!actor)
-			continue;
-		if (i < app_score)
-			clutter_texture_set_from_file (actor, "/home/novell/gnome-app-store/pixmaps/starred.png", NULL);
-		else
-			clutter_texture_set_from_file (actor, "/home/novell/gnome-app-store/pixmaps/non-starred.png", NULL);
-	}
-        clutter_actor_show (stage);
+	ClutterActor *page = gnome_app_info_page_new_with_app (info);
+	
+        clutter_actor_show (real_stage);
 	clutter_main ();
 
 	return EXIT_SUCCESS;

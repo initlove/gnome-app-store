@@ -6,7 +6,7 @@ Library General Public License for more details.
 
 You should have received a copy of the GNU Library General Public
 License along with this program; if not, write to the
-Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Free Software Foundation, Inc., 59 Temple Place - Sinfo_iconte 330,
 Boston, MA 02111-1307, USA.
 
 Author: Lance Wang <lzwang@suse.com>
@@ -20,61 +20,61 @@ Author: Lance Wang <lzwang@suse.com>
 
 #include "gnome-app-utils.h"
 #include "gnome-app-info.h"
-#include "gnome-app-info-ui.h"
+#include "gnome-app-info-icon.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-frame-ui.h"
 
-struct _GnomeAppInfoUIPrivate
+struct _GnomeAppInfoIconPrivate
 {
 	GnomeAppInfo *info;
 };
 
-G_DEFINE_TYPE (GnomeAppInfoUI, gnome_app_info_ui, CLUTTER_TYPE_GROUP)
+G_DEFINE_TYPE (GnomeAppInfoIcon, gnome_app_info_icon, CLUTTER_TYPE_GROUP)
 
 static void
-gnome_app_info_ui_init (GnomeAppInfoUI *ui)
+gnome_app_info_icon_init (GnomeAppInfoIcon *info_icon)
 {
-	GnomeAppInfoUIPrivate *priv;
+	GnomeAppInfoIconPrivate *priv;
 
-	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
-							 GNOME_APP_TYPE_INFO_UI,
-							 GnomeAppInfoUIPrivate);
+	info_icon->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (info_icon,
+							 GNOME_APP_TYPE_INFO_ICON,
+							 GnomeAppInfoIconPrivate);
 	priv->info = NULL;
 }
 
 static void
-gnome_app_info_ui_dispose (GObject *object)
+gnome_app_info_icon_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (gnome_app_info_ui_parent_class)->dispose (object);
+	G_OBJECT_CLASS (gnome_app_info_icon_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_info_ui_finalize (GObject *object)
+gnome_app_info_icon_finalize (GObject *object)
 {
-	GnomeAppInfoUI *ui = GNOME_APP_INFO_UI (object);
-	GnomeAppInfoUIPrivate *priv = ui->priv;
+	GnomeAppInfoIcon *info_icon = GNOME_APP_INFO_ICON (object);
+	GnomeAppInfoIconPrivate *priv = info_icon->priv;
 
 	if (priv->info)
 		g_object_unref (priv->info);
 
-	G_OBJECT_CLASS (gnome_app_info_ui_parent_class)->finalize (object);
+	G_OBJECT_CLASS (gnome_app_info_icon_parent_class)->finalize (object);
 }
 
 static void
-gnome_app_info_ui_class_init (GnomeAppInfoUIClass *klass)
+gnome_app_info_icon_class_init (GnomeAppInfoIconClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = gnome_app_info_ui_dispose;
-	object_class->finalize = gnome_app_info_ui_finalize;
+	object_class->dispose = gnome_app_info_icon_dispose;
+	object_class->finalize = gnome_app_info_icon_finalize;
 	 
-	g_type_class_add_private (object_class, sizeof (GnomeAppInfoUIPrivate));
+	g_type_class_add_private (object_class, sizeof (GnomeAppInfoIconPrivate));
 }
 
-GnomeAppInfoUI *
-gnome_app_info_ui_new (void)
+GnomeAppInfoIcon *
+gnome_app_info_icon_new (void)
 {
-	return g_object_new (GNOME_APP_TYPE_INFO_UI, NULL);
+	return g_object_new (GNOME_APP_TYPE_INFO_ICON, NULL);
 }
 
 static gboolean
@@ -86,22 +86,22 @@ app_fullview_cb (GnomeAppInfo *info)
 
 	page = gnome_app_info_page_new_with_app (info);
 
-	GnomeAppFrameUI *ui;
-	ui = gnome_app_frame_ui_get_default ();
-	gnome_app_frame_ui_set_full_info_mode (ui, page);
+	GnomeAppFrameUI *info_icon;
+	info_icon = gnome_app_frame_ui_get_default ();
+	gnome_app_frame_ui_set_full_info_mode (info_icon, page);
 
 	return TRUE;
 }
 
-GnomeAppInfoUI *
-gnome_app_info_ui_new_with_app (GnomeAppInfo *info)
+GnomeAppInfoIcon *
+gnome_app_info_icon_new_with_app (GnomeAppInfo *info)
 {
-	GnomeAppInfoUI *ui;
+	GnomeAppInfoIcon *info_icon;
 
 	g_return_val_if_fail (info != NULL, NULL);
 
-	ui = g_object_new (GNOME_APP_TYPE_INFO_UI, NULL);
-	ui->priv->info = g_object_ref (info);
+	info_icon = g_object_new (GNOME_APP_TYPE_INFO_ICON, NULL);
+	info_icon->priv->info = g_object_ref (info);
 
 	const gchar *icon_name;
 	const gchar *app_name;
@@ -142,9 +142,9 @@ gnome_app_info_ui_new_with_app (GnomeAppInfo *info)
 	/* what to do? */
 	}
 
-	clutter_container_add_actor (CLUTTER_CONTAINER (ui), box);
+	clutter_container_add_actor (CLUTTER_CONTAINER (info_icon), box);
         g_signal_connect_swapped (box, "button-press-event",
                             G_CALLBACK (app_fullview_cb), g_object_ref (info));
 
-	return ui;
+	return info_icon;
 }

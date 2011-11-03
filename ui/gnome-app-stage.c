@@ -18,7 +18,7 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-query.h"
 #include "gnome-app-store.h"
 #include "gnome-app-info.h"
-#include "gnome-app-info-ui.h"
+#include "gnome-app-info-icon.h"
 #include "gnome-app-stage.h"
 
 struct _GnomeAppStagePrivate
@@ -214,12 +214,12 @@ load_query (GnomeAppStage *stage)
 
         for (l = list; l; l = l->next) {
                	GnomeAppInfo *info;
-		GnomeAppInfoUI *info_ui;
+		GnomeAppInfoIcon *info_icon;
 		info = (GnomeAppInfo *) l->data;
-		info_ui = gnome_app_info_ui_new_with_app (info);
-		gnome_app_stage_add_actor (stage, CLUTTER_ACTOR (info_ui));
+		info_icon = gnome_app_info_icon_new_with_app (info);
+		gnome_app_stage_add_actor (stage, CLUTTER_ACTOR (info_icon));
 /*FIXME: ref or unref? */
-//		g_object_unref (info_ui);
+//		g_object_unref (info_icon);
         }
 //	g_list_free (list);
 }

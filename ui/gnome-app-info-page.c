@@ -71,12 +71,6 @@ gnome_app_info_page_class_init (GnomeAppInfoPageClass *klass)
 }
 
 GnomeAppInfoPage *
-gnome_app_info_page_new (void)
-{
-	return g_object_new (GNOME_APP_TYPE_INFO_PAGE, NULL);
-}
-
-GnomeAppInfoPage *
 gnome_app_info_page_new_with_app (GnomeAppInfo *info)
 {
 	GnomeAppInfoPage *page;
@@ -86,47 +80,57 @@ gnome_app_info_page_new_with_app (GnomeAppInfo *info)
 	page = g_object_new (GNOME_APP_TYPE_INFO_PAGE, NULL);
 	page->priv->info = g_object_ref (info);
 
-	gchar *local_uri;
+	const gchar *filename;
+	ClutterScript *script;
+	ClutterActor *stage, *actor;
+	gint i;
+
+	filename = "/home/novell/gnome-app-store/ui/scripts/app-info-page.json";
+
+	script = clutter_script_new ();
+	clutter_script_load_from_file (script, filename, NULL);
+	clutter_script_get_objects (script, "page-info", &page, NULL);
+        
+	gchar *prop [] = {
+		"name", "personid", "description", 
+		"score", "downloads", "comments",
+		"smallpreviewpic1", "previewpic1", 
+		"license", NULL};
+
 	const gchar *val;
-	GError *err = NULL;
+	gchar *local_uri;
 
-        ClutterLayoutManager *layout;
-	ClutterActor *layout_box, *box;
-        ClutterActor *name, *personid, *smallpreview, *preview;
-
-	box = clutter_box_new (clutter_box_layout_new ());
-	clutter_container_add_actor (CLUTTER_CONTAINER (page), box);
-	layout = clutter_table_layout_new ();
-	layout_box = clutter_box_new (layout);
-        clutter_container_add_actor (CLUTTER_CONTAINER (box), layout_box);
-#if 1
-	val = gnome_app_info_get (info, "name");
-        name = clutter_text_new ();
-        clutter_text_set_ellipsize (CLUTTER_TEXT (name), PANGO_ELLIPSIZE_END);
-        clutter_text_set_text (CLUTTER_TEXT (name), val);
-        clutter_actor_set_width (name, 64);
-
-	val = gnome_app_info_get (info, "personid");
-	personid = clutter_text_new ();
-        clutter_text_set_ellipsize (CLUTTER_TEXT (personid), PANGO_ELLIPSIZE_END);
-        clutter_text_set_text (CLUTTER_TEXT (personid), val);
-        clutter_actor_set_width (personid, 64);
-
-        val = gnome_app_info_get (info, "smallpreviewpic1");
- 	local_uri= gnome_app_get_local_icon (val);
-        smallpreview =  clutter_texture_new_from_file (local_uri, NULL);
-	g_free (local_uri);
-
-        val = gnome_app_info_get (info, "previewpic1");
- 	local_uri= gnome_app_get_local_icon (val);
-        preview =  clutter_texture_new_from_file (local_uri, NULL);
-	g_free (local_uri);
-
-	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), name, 0, 0);
-	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), personid, 0, 1);
-	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), smallpreview, 1, 0);
-	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), preview, 1, 1);
+	for (i = 0; prop [i]; i++) {
+		clutter_script_get_objects (script, prop [i], &actor, NULL);
+		if (!actor)
+			continue;
+		val = gnome_app_info_get (info, prop [i]);
+		if (CLUTTER_IS_TEXTURE (actor)) {
+			local_uri = gnome_app_get_local_icon (val);
+			clutter_texture_set_from_file (actor, local_uri, NULL);
+			g_free (local_uri);
+		} else if (CLUTTER_IS_TEXT (actor)) {
+			clutter_text_set_text (actor, val);
+		} 
+#if 0
+/*FIXME: cannot use the user defined object? */
+			else if (GNOME_APP_IS_UI_SCORE (actor)) {
+			gnome_app_ui_score_set_score (actor, val);
+		}
 #endif
+	}
+
+	gchar *scores [] = { "score-1", "score-2", "score-3", "score-4", "score-5", NULL};
+	gint app_score = atoi (gnome_app_info_get (info, "score")) / 20;
+	for (i = 0; scores [i]; i++) {
+		clutter_script_get_objects (script, scores [i], &actor, NULL);
+		if (!actor)
+			continue;
+		if (i < app_score)
+			clutter_texture_set_from_file (actor, "/home/novell/gnome-app-store/pixmaps/starred.png", NULL);
+		else
+			clutter_texture_set_from_file (actor, "/home/novell/gnome-app-store/pixmaps/non-starred.png", NULL);
+	}
 
 	return page;
 }

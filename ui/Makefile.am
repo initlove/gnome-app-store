@@ -30,7 +30,7 @@ app_store_SOURCES =        \
 	gnome-app-ui-score.c gnome-app-ui-score.h \
 	gnome-app-stage.c gnome-app-stage.h \
 	gnome-app-info-page.c gnome-app-info-page.h \
-	gnome-app-info-ui.c gnome-app-info-ui.h \
+	gnome-app-info-icon.c gnome-app-info-icon.h \
 	app_store.c
 
 app_store_LDADD =          \
@@ -45,7 +45,7 @@ app_store_dl_SOURCES =        \
 	gnome-app-frame-ui.c gnome-app-frame-ui.h \
 	gnome-app-stage.c gnome-app-stage.h \
 	gnome-app-info-page.c gnome-app-info-page.h \
-	gnome-app-info-ui.c gnome-app-info-ui.h \
+	gnome-app-info-icon.c gnome-app-info-icon.h \
 	app_store_dl.c
 
 app_store_dl_LDADD =          \
@@ -58,7 +58,7 @@ app_store_kw_SOURCES =        \
 	gnome-app-frame-ui.c gnome-app-frame-ui.h \
 	gnome-app-stage.c gnome-app-stage.h \
 	gnome-app-info-page.c gnome-app-info-page.h \
-	gnome-app-info-ui.c gnome-app-info-ui.h \
+	gnome-app-info-icon.c gnome-app-info-icon.h \
 	app_store_kw.c
 
 app_store_kw_LDADD =          \

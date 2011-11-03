@@ -8,7 +8,7 @@
 #include "gnome-app-store.h"
 
 #include "gnome-app-stage.h"
-#include "gnome-app-info-ui.h"
+#include "gnome-app-info-icon.h"
 
 #define TEST_SERVER FALSE
 #define TEST_GAME FALSE
@@ -40,7 +40,7 @@ main (int argc, char *argv[])
 	      
 	GnomeAppStore *store;
 	GnomeAppInfo *info;
-	GnomeAppInfoUI *info_ui;
+	GnomeAppInfoIcon *info_ui;
 /*TODO
 	remove all the content 
 */
