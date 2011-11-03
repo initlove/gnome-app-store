@@ -23,7 +23,7 @@ main (int argc, char *argv[])
 	clutter_actor_set_size (stage, 900, 600);
 	g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
-#if 0
+#if 1
 	frame_ui = gnome_app_frame_ui_get_default ();
 	clutter_container_add_actor (CLUTTER_CONTAINER (stage), CLUTTER_ACTOR (frame_ui));
 	clutter_stage_set_key_focus (CLUTTER_STAGE (stage), frame_ui->search_entry);

@@ -6,47 +6,11 @@
 
 #include "gnome-app-config.h"
 #include "gnome-app-store.h"
-#include "gnome-app-stage.h"
+#include "gnome-app-infos-stage.h"
 #include "gnome-app-info-icon.h"
 
 #define TEST_SERVER FALSE
 #define TEST_GAME FALSE
-
-static ClutterScript *script = NULL;
-static guint merge_id = 0;
-
-static gboolean
-blue_button_press (ClutterActor       *actor,
-                   ClutterButtonEvent *event,
-                   gpointer            data)
-{
-  g_print ("[*] Pressed '%s'\n", clutter_get_script_id (G_OBJECT (actor)));
-  g_print ("[*] Unmerging objects with merge id: %d\n", merge_id);
-
-  clutter_script_unmerge_objects (script, merge_id);
-
-  return TRUE;
-}
-
-static gboolean
-red_button_press (ClutterActor *actor,
-                  ClutterButtonEvent *event,
-                  gpointer            data)
-{
-  GObject *timeline;
-
-  g_print ("[*] Pressed '%s'\n", clutter_get_script_id (G_OBJECT (actor)));
-
-  timeline = clutter_script_get_object (script, "main-timeline");
-  g_assert (CLUTTER_IS_TIMELINE (timeline));
-
-  if (!clutter_timeline_is_playing (CLUTTER_TIMELINE (timeline)))
-    clutter_timeline_start (CLUTTER_TIMELINE (timeline));
-  else
-    clutter_timeline_pause (CLUTTER_TIMELINE (timeline));
-
-  return TRUE;
-}
 
 /* remove all the contents . */
 int

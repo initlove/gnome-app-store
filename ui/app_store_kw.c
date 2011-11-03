@@ -7,7 +7,7 @@
 #include "gnome-app-config.h"
 #include "gnome-app-store.h"
 
-#include "gnome-app-stage.h"
+#include "gnome-app-infos-stage.h"
 #include "gnome-app-info-icon.h"
 
 #define TEST_SERVER FALSE
@@ -34,7 +34,7 @@ main (int argc, char *argv[])
 	 * size to be the same as one rectangle, position it in the middle of
 	 * the stage and set it to clip its contents to the allocated size
 	 */
-	scroll = (ClutterActor *)gnome_app_stage_new ();
+	scroll = (ClutterActor *)gnome_app_infos_stage_new ();
 
 	clutter_container_add_actor (CLUTTER_CONTAINER (stage), scroll);
 	      

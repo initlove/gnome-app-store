@@ -82,7 +82,7 @@ gnome_app_info_page_new_with_app (GnomeAppInfo *info)
 
 	const gchar *filename;
 	ClutterScript *script;
-	ClutterActor *stage, *actor;
+	ClutterActor *actor;
 	gint i;
 
 	filename = "/home/novell/gnome-app-store/ui/scripts/app-info-page.json";

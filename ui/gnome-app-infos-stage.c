@@ -19,9 +19,9 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-store.h"
 #include "gnome-app-info.h"
 #include "gnome-app-info-icon.h"
-#include "gnome-app-stage.h"
+#include "gnome-app-infos-stage.h"
 
-struct _GnomeAppStagePrivate
+struct _GnomeAppInfosStagePrivate
 {
 	ClutterActor *viewport;
 	ClutterAction *action;
@@ -38,7 +38,7 @@ struct _GnomeAppStagePrivate
 	GnomeAppQuery *query;
 };
 
-G_DEFINE_TYPE (GnomeAppStage, gnome_app_stage, CLUTTER_TYPE_GROUP)
+G_DEFINE_TYPE (GnomeAppInfosStage, gnome_app_infos_stage, CLUTTER_TYPE_GROUP)
 
 static void
 on_drag_end (ClutterDragAction   *action,
@@ -46,14 +46,14 @@ on_drag_end (ClutterDragAction   *action,
 	           gfloat               event_x,
 	           gfloat               event_y,
 	           ClutterModifierType  modifiers,
-		GnomeAppStage *stage)
+		GnomeAppInfosStage *infos_stage)
 {
-	GnomeAppStagePrivate *priv;
+	GnomeAppInfosStagePrivate *priv;
 	gfloat viewport_x;
 	gfloat offset_x;
 	gint child_visible;
 
-	priv = stage->priv;
+	priv = infos_stage->priv;
 	viewport_x = clutter_actor_get_x (priv->viewport);
 	/* check if we're at the viewport edges */
 	if (viewport_x > 0) {
@@ -89,13 +89,13 @@ on_drag_end (ClutterDragAction   *action,
 }
 
 static void
-gnome_app_stage_init (GnomeAppStage *stage)
+gnome_app_infos_stage_init (GnomeAppInfosStage *infos_stage)
 {
-	GnomeAppStagePrivate *priv;
+	GnomeAppInfosStagePrivate *priv;
 
-	stage->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (stage,
-	                                                 GNOME_APP_TYPE_STAGE,
-	                                                 GnomeAppStagePrivate);
+	infos_stage->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (infos_stage,
+	                                                 GNOME_APP_TYPE_INFOS_STAGE,
+	                                                 GnomeAppInfosStagePrivate);
 
 	priv->app_actors = NULL;
 	priv->count = 0;
@@ -106,14 +106,14 @@ gnome_app_stage_init (GnomeAppStage *stage)
 	priv->query = NULL;
 
 	priv->viewport = clutter_box_new (clutter_box_layout_new ());
-	clutter_container_add_actor (CLUTTER_CONTAINER (stage), priv->viewport);
+	clutter_container_add_actor (CLUTTER_CONTAINER (infos_stage), priv->viewport);
 	clutter_actor_set_anchor_point (CLUTTER_ACTOR (priv->viewport), -60, 20);
 #if 0
 	priv->action = clutter_drag_action_new ();
 	clutter_actor_add_action (priv->viewport, priv->action);
 	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (priv->action),
 	                                   CLUTTER_DRAG_X_AXIS);
-	g_signal_connect (priv->action, "drag-end", G_CALLBACK (on_drag_end), stage);
+	g_signal_connect (priv->action, "drag-end", G_CALLBACK (on_drag_end), infos_stage);
 	clutter_actor_set_reactive (priv->viewport, TRUE);
 #endif
 	priv->layout = clutter_table_layout_new ();
@@ -126,45 +126,45 @@ gnome_app_stage_init (GnomeAppStage *stage)
 }
 
 static void
-gnome_app_stage_dispose (GObject *object)
+gnome_app_infos_stage_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (gnome_app_stage_parent_class)->dispose (object);
+	G_OBJECT_CLASS (gnome_app_infos_stage_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_stage_finalize (GObject *object)
+gnome_app_infos_stage_finalize (GObject *object)
 {
-	GnomeAppStage *stage = GNOME_APP_STAGE (object);
-	GnomeAppStagePrivate *priv = stage->priv;
+	GnomeAppInfosStage *infos_stage = GNOME_APP_INFOS_STAGE (object);
+	GnomeAppInfosStagePrivate *priv = infos_stage->priv;
 
 	if (priv->query)
 		g_object_unref (priv->query);
 //TODO: any other thing to finalize ?
 	
-	G_OBJECT_CLASS (gnome_app_stage_parent_class)->finalize (object);
+	G_OBJECT_CLASS (gnome_app_infos_stage_parent_class)->finalize (object);
 }
 
 static void
-gnome_app_stage_class_init (GnomeAppStageClass *klass)
+gnome_app_infos_stage_class_init (GnomeAppInfosStageClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = gnome_app_stage_dispose;
-	object_class->finalize = gnome_app_stage_finalize;
+	object_class->dispose = gnome_app_infos_stage_dispose;
+	object_class->finalize = gnome_app_infos_stage_finalize;
 	 
-	g_type_class_add_private (object_class, sizeof (GnomeAppStagePrivate));
+	g_type_class_add_private (object_class, sizeof (GnomeAppInfosStagePrivate));
 }
 
-GnomeAppStage *
-gnome_app_stage_new (void)
+GnomeAppInfosStage *
+gnome_app_infos_stage_new (void)
 {
-	return g_object_new (GNOME_APP_TYPE_STAGE, NULL);
+	return g_object_new (GNOME_APP_TYPE_INFOS_STAGE, NULL);
 }
 
 void
-gnome_app_stage_clean (GnomeAppStage *stage)
+gnome_app_infos_stage_clean (GnomeAppInfosStage *infos_stage)
 {
-	GnomeAppStagePrivate *priv = stage->priv;
+	GnomeAppInfosStagePrivate *priv = infos_stage->priv;
 
 	if (priv->count) {
 		GList *l;
@@ -175,9 +175,9 @@ gnome_app_stage_clean (GnomeAppStage *stage)
 }
 
 void
-gnome_app_stage_add_actor (GnomeAppStage *stage, ClutterActor *actor)
+gnome_app_infos_stage_add_actor (GnomeAppInfosStage *infos_stage, ClutterActor *actor)
 {
-	GnomeAppStagePrivate *priv = stage->priv;
+	GnomeAppInfosStagePrivate *priv = infos_stage->priv;
 	int col, row;
 
 	priv->app_actors = g_list_prepend (priv->app_actors, actor);
@@ -189,26 +189,26 @@ gnome_app_stage_add_actor (GnomeAppStage *stage, ClutterActor *actor)
 }
 
 void
-gnome_app_stage_add_actors (GnomeAppStage *stage, GList *actors)
+gnome_app_infos_stage_add_actors (GnomeAppInfosStage *infos_stage, GList *actors)
 {
 	GList *l;
 
 	for (l = actors; l; l = l->next) {
-		gnome_app_stage_add_actor (stage, CLUTTER_ACTOR (l->data));
+		gnome_app_infos_stage_add_actor (infos_stage, CLUTTER_ACTOR (l->data));
 	}
 }
 
 static void
-load_query (GnomeAppStage *stage)
+load_query (GnomeAppInfosStage *infos_stage)
 {
         GList *list, *l;
         const GnomeAppStore *store;
 
 	store = gnome_app_store_get_default (); 
-	list = gnome_app_store_get_apps_by_query ((GnomeAppStore *)store, stage->priv->query);
+	list = gnome_app_store_get_apps_by_query ((GnomeAppStore *)store, infos_stage->priv->query);
 
 	if (list)
-		gnome_app_stage_clean (stage);
+		gnome_app_infos_stage_clean (infos_stage);
 	else
 		return;
 
@@ -217,7 +217,7 @@ load_query (GnomeAppStage *stage)
 		GnomeAppInfoIcon *info_icon;
 		info = (GnomeAppInfo *) l->data;
 		info_icon = gnome_app_info_icon_new_with_app (info);
-		gnome_app_stage_add_actor (stage, CLUTTER_ACTOR (info_icon));
+		gnome_app_infos_stage_add_actor (infos_stage, CLUTTER_ACTOR (info_icon));
 /*FIXME: ref or unref? */
 //		g_object_unref (info_icon);
         }
@@ -225,36 +225,36 @@ load_query (GnomeAppStage *stage)
 }
 
 void
-gnome_app_stage_load_query (GnomeAppStage *stage, GnomeAppQuery *query)
+gnome_app_infos_stage_load_query (GnomeAppInfosStage *infos_stage, GnomeAppQuery *query)
 {
 	gint pagesize;
 	gchar *val;
 
-	if (stage->priv->query)
-		g_object_unref (stage->priv->query);
-	stage->priv->query = g_object_ref (query);
+	if (infos_stage->priv->query)
+		g_object_unref (infos_stage->priv->query);
+	infos_stage->priv->query = g_object_ref (query);
 
-	pagesize = stage->priv->rows * stage->priv->cols;
+	pagesize = infos_stage->priv->rows * infos_stage->priv->cols;
 	if (pagesize < 1) {
 		printf ("fatal issus: rows and cols error!\n");
 		pagesize = 1;
 	}
 	val = g_strdup_printf ("%d", pagesize);
-	g_object_set (stage->priv->query, QUERY_PAGESIZE, val, NULL);
-	g_object_set (stage->priv->query, QUERY_PAGE, "0", NULL); // no need in fact
+	g_object_set (infos_stage->priv->query, QUERY_PAGESIZE, val, NULL);
+	g_object_set (infos_stage->priv->query, QUERY_PAGE, "0", NULL); // no need in fact
 	g_free (val);
 
-	load_query (stage);
+	load_query (infos_stage);
 }
 
 void
-gnome_app_stage_page_change (GnomeAppStage *stage, gint change)
+gnome_app_infos_stage_page_change (GnomeAppInfosStage *infos_stage, gint change)
 {
 	gchar *val;
 	gint page;
 
-	if (stage->priv->query) {
-		g_object_get (stage->priv->query, QUERY_PAGE, &val, NULL);
+	if (infos_stage->priv->query) {
+		g_object_get (infos_stage->priv->query, QUERY_PAGE, &val, NULL);
 		if (val) {
 			page = atoi (val);
 			page += change;
@@ -263,8 +263,8 @@ gnome_app_stage_page_change (GnomeAppStage *stage, gint change)
 			} else {
 				g_free (val);
 				val = g_strdup_printf ("%d", page);
-				g_object_set (stage->priv->query, QUERY_PAGE, val, NULL);
-				load_query (stage);
+				g_object_set (infos_stage->priv->query, QUERY_PAGE, val, NULL);
+				load_query (infos_stage);
 			}
 			g_free (val);
 		}

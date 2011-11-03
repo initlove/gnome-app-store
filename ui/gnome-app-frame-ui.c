@@ -18,7 +18,7 @@ Author: Liang chenye <liangchenye@gmail.com>
 #include "gnome-app-query.h"
 #include "gnome-app-store.h"
 #include "gnome-app-frame-ui.h"
-#include "gnome-app-stage.h"
+#include "gnome-app-infos-stage.h"
 
 struct _GnomeAppFrameUIPrivate
 {
@@ -42,7 +42,7 @@ printf ("query %s\n", search);
 	query = gnome_app_query_new ();
 	g_object_set (query, QUERY_SEARCH, search, NULL);
 	frame_ui = gnome_app_frame_ui_get_default ();
-	gnome_app_stage_load_query (frame_ui->stage, query);
+	gnome_app_infos_stage_load_query (frame_ui->infos_stage, query);
 
 	g_object_unref (query);
 }
@@ -79,7 +79,7 @@ gnome_app_frame_load_group (gchar *group)
 	query = gnome_app_query_new ();
 	g_object_set (query, QUERY_GROUP, group, NULL);
 	frame_ui = gnome_app_frame_ui_get_default ();
-	gnome_app_stage_load_query (frame_ui->stage, query);
+	gnome_app_infos_stage_load_query (frame_ui->infos_stage, query);
 
 	g_object_unref (query);
 }
@@ -100,7 +100,7 @@ prev_cb (StButton *button, gpointer userdata)
 	GnomeAppFrameUI *frame_ui;
 
 	frame_ui = gnome_app_frame_ui_get_default ();
-	gnome_app_stage_page_change (frame_ui->stage, -1);
+	gnome_app_infos_stage_page_change (frame_ui->infos_stage, -1);
 }
 
 static void
@@ -110,7 +110,7 @@ next_cb (StButton *button, gpointer userdata)
 	GnomeAppFrameUI *frame_ui;
 
 	frame_ui = gnome_app_frame_ui_get_default ();
-	gnome_app_stage_page_change (frame_ui->stage, 1);
+	gnome_app_infos_stage_page_change (frame_ui->infos_stage, 1);
 }
 
 static ClutterActor *
@@ -171,20 +171,20 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *frame_ui)
 	clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (priv->layout), 10);
 	clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (priv->layout), 10);
 
-	frame_ui->stage = gnome_app_stage_new ();
+	frame_ui->infos_stage = gnome_app_infos_stage_new ();
 	frame_ui->search_entry = create_search_entry (frame_ui);
 	frame_ui->category_list = create_category_list (frame_ui);
 
 	clutter_actor_set_width (frame_ui->search_entry, 180);
 	clutter_actor_set_width (frame_ui->category_list, 180);
-	clutter_actor_set_width ((ClutterActor *)frame_ui->stage, 720);
+	clutter_actor_set_width ((ClutterActor *)frame_ui->infos_stage, 720);
 	
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), frame_ui->search_entry, 1, 0);
-	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->stage), 0, 1);
+	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->infos_stage), 0, 1);
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->category_list), 1, 1);
 
-	clutter_table_layout_set_expand (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->stage), FALSE, FALSE);
-	clutter_table_layout_set_fill (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->stage), FALSE, FALSE);
+	clutter_table_layout_set_expand (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->infos_stage), FALSE, FALSE);
+	clutter_table_layout_set_fill (CLUTTER_TABLE_LAYOUT (priv->layout), CLUTTER_ACTOR (frame_ui->infos_stage), FALSE, FALSE);
 }
 
 static void

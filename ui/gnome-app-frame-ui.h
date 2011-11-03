@@ -24,7 +24,7 @@
 #define __GNOME_APP_FRAME_UI_H__
 
 #include <clutter/clutter.h>
-#include "gnome-app-stage.h"
+#include "gnome-app-infos-stage.h"
 #include "gnome-app-info-page.h"
 
 G_BEGIN_DECLS
@@ -46,7 +46,7 @@ struct _GnomeAppFrameUI
 
 	ClutterActor *search_entry;
 	ClutterActor *category_list;
-	GnomeAppStage *stage;
+	GnomeAppInfosStage *infos_stage;
 	ClutterActor *full;
 	GnomeAppFrameUIPrivate	*priv;
 };
