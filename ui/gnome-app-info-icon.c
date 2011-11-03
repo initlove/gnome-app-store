@@ -71,12 +71,6 @@ gnome_app_info_icon_class_init (GnomeAppInfoIconClass *klass)
 	g_type_class_add_private (object_class, sizeof (GnomeAppInfoIconPrivate));
 }
 
-GnomeAppInfoIcon *
-gnome_app_info_icon_new (void)
-{
-	return g_object_new (GNOME_APP_TYPE_INFO_ICON, NULL);
-}
-
 static gboolean
 app_fullview_cb (GnomeAppInfo *info)
 {
@@ -103,48 +97,51 @@ gnome_app_info_icon_new_with_app (GnomeAppInfo *info)
 	info_icon = g_object_new (GNOME_APP_TYPE_INFO_ICON, NULL);
 	info_icon->priv->info = g_object_ref (info);
 
-	const gchar *icon_name;
-	const gchar *app_name;
-	const gchar *uri;
-	GError *err = NULL;
+        const gchar *filename;
+	GError *error;
+        ClutterScript *script;
+        ClutterActor *actor;
+        gint i;
 
-        ClutterLayoutManager *layout;
-        ClutterActor *box, *text;
-        ClutterAction *action;
-        ClutterActor *icon = NULL;
+	error = NULL;
+        filename = "/home/novell/gnome-app-store/ui/scripts/app-info-icon.json";
 
-        layout = clutter_box_layout_new ();
-        clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (layout), TRUE);
-        clutter_box_layout_set_spacing (CLUTTER_BOX_LAYOUT (layout), 6);
-
-	app_name = gnome_app_info_get (info, "name");
-        box = clutter_box_new (layout);
-        text = clutter_text_new ();
-        clutter_text_set_ellipsize (CLUTTER_TEXT (text), PANGO_ELLIPSIZE_END);
-        clutter_text_set_text (CLUTTER_TEXT (text), app_name);
-        clutter_actor_set_width (text, 64);
-        clutter_container_add_actor (CLUTTER_CONTAINER (box), text);
-
-	uri = gnome_app_info_get (info, "smallpreviewpic1");
-        if (uri) {
-		gchar *local_uri;
-		local_uri = gnome_app_get_local_icon (uri);
-                icon = clutter_texture_new_from_file (local_uri, NULL);
-		g_free (local_uri);
-        }
-
-        if (icon) {
-        	clutter_actor_set_width (icon, 64);
-	        clutter_actor_set_height (icon, 64);
-        	clutter_container_add_actor (CLUTTER_CONTAINER (box), icon);
-	        clutter_actor_set_reactive (box, TRUE);
-	} else {
-	/* what to do? */
+        script = clutter_script_new ();
+        clutter_script_load_from_file (script, filename, &error);
+	if (error) {
+		printf ("error in load script %s!\n", error->message);
+		g_error_free (error);
 	}
+        clutter_script_get_objects (script, "info-icon", &info_icon, NULL);
 
-	clutter_container_add_actor (CLUTTER_CONTAINER (info_icon), box);
-        g_signal_connect_swapped (box, "button-press-event",
-                            G_CALLBACK (app_fullview_cb), g_object_ref (info));
+        gchar *prop [] = {
+                "name", "personid", "description",
+                "score", "downloads", "comments",
+                "smallpreviewpic1", "previewpic1",
+                "license", NULL};
+
+        const gchar *val;
+        gchar *local_uri;
+
+        for (i = 0; prop [i]; i++) {
+                clutter_script_get_objects (script, prop [i], &actor, NULL);
+                if (!actor)
+                        continue;
+                val = gnome_app_info_get (info, prop [i]);
+                if (CLUTTER_IS_TEXTURE (actor)) {
+                        local_uri = gnome_app_get_local_icon (val);
+                        clutter_texture_set_from_file (actor, local_uri, NULL);
+                        g_free (local_uri);
+                } else if (CLUTTER_IS_TEXT (actor)) {
+                        clutter_text_set_text (actor, val);
+                }
+#if 0
+/*FIXME: cannot use the user defined object? */
+                        else if (GNOME_APP_IS_UI_SCORE (actor)) {
+                        gnome_app_ui_score_set_score (actor, val);
+                }
+#endif
+        }
 
 	return info_icon;
 }
