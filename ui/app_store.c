@@ -4,53 +4,47 @@
 #include <clutter/clutter.h>
 #include <glib/gi18n.h>
 
-#include "gnome-app-config.h"
 #include "gnome-app-store.h"
-#include "gnome-app-infos-stage.h"
-#include "gnome-app-info-icon.h"
+#include "gnome-app-info.h"
+#include "gnome-app-info-page.h"
+#include "gnome-app-frame-ui.h"
 
-#define TEST_SERVER FALSE
-#define TEST_GAME FALSE
-
-/* remove all the contents . */
 int
 main (int argc, char *argv[])
 {
-	gchar *filename;
+	ClutterActor *stage;
+	GnomeAppFrameUI *frame_ui;
 
 	if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-		return 1;
+	  return 1;
 
-	if (argc > 1)
-		filename = argv [1];
-	else
-		filename = "/home/novell/gnome-app-store/ui/scripts/page-info.json";
+	stage = clutter_stage_new ();
+	clutter_stage_set_title (CLUTTER_STAGE (stage), _("AppStore"));
+	clutter_actor_set_size (stage, 900, 660);
+	g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
-	ClutterActor *stage, *actor;
+#if 1
+	frame_ui = gnome_app_frame_ui_get_default ();
+	clutter_container_add_actor (CLUTTER_CONTAINER (stage), CLUTTER_ACTOR (frame_ui));
+#else
+        const GnomeAppStore *store;
+	ClutterActor *page;
 	GnomeAppInfo *info;
-        GnomeAppQuery *query;
-	GnomeAppStore *store;
-        GList *l, *list;
-	gint i;
+	GnomeAppQuery *query;
+	GList *list, *l;
 
-        g_type_init ();
+        store = gnome_app_store_get_default ();
+	query = gnome_app_query_new ();
+	g_object_set (query, "page", "0", "pagesize", "5", NULL);
+        list = gnome_app_store_get_apps_by_query ((GnomeAppStore *)store, query);
 
-	store = gnome_app_store_get_default ();
-        query = gnome_app_query_new ();
-        g_object_set (query, QUERY_PAGESIZE, "35", QUERY_PAGE, "0", NULL);
-        list = gnome_app_store_get_apps_by_query (store, query);
 	l = list;
-	l = l->next;
 	info = l->data;
-
-	ClutterActor *real_stage = clutter_stage_new ();
-        clutter_stage_set_title (CLUTTER_STAGE (real_stage), _("AppStore"));
-        clutter_actor_set_size (real_stage, 900, 600);
-        g_signal_connect (real_stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
-
-	ClutterActor *page = gnome_app_info_page_new_with_app (info);
-	
-        clutter_actor_show (real_stage);
+	gnome_app_info_debug (info);
+	page = gnome_app_info_page_new_with_app (info);
+	clutter_container_add_actor (CLUTTER_CONTAINER (stage), CLUTTER_ACTOR (page));
+#endif
+	clutter_actor_show_all (stage);
 	clutter_main ();
 
 	return EXIT_SUCCESS;

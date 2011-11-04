@@ -1,6 +1,6 @@
 {
-  "My Scene" : {
-    "id" : "page-info",
+  "Details Page" : {
+    "id" : "info-page",
     "type" : "ClutterGroup",
     "color" : "white",
     "width" : 850,
@@ -9,7 +9,6 @@
       {
         "id" : "smallpreviewpic1",
         "type" : "ClutterTexture",
-        "filename" : "redhand.png",
         "x" : 20,
         "y" : 20,
         "width" : 80,
@@ -27,7 +26,6 @@
 	  {
         	"id" : "score-1",
 	        "type" : "ClutterTexture",
-        	"filename" : "redhand.png",
 	        "x" : 20,
         	"y" : 110,
         	"width" : 15,
@@ -201,7 +199,6 @@
       {
         "id" : "previewpic1",
         "type" : "ClutterTexture",
-        "filename" : "redhand.png",
         "x" : 160,
         "y" : 80,
         "width" : 600,

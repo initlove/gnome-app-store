@@ -51,7 +51,7 @@ struct _GnomeAppInfosStageClass
 };
 
 GType			gnome_app_infos_stage_get_type              	(void);
-GnomeAppInfosStage *        	gnome_app_infos_stage_new                   	(void);
+GnomeAppInfosStage *    gnome_app_infos_stage_new                   	(void);
 void			gnome_app_infos_stage_clean			(GnomeAppInfosStage *infos_stage);
 void			gnome_app_infos_stage_add_actor		(GnomeAppInfosStage *infos_stage, ClutterActor *actor);
 //FIXME: add_actors seems useless 

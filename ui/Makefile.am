@@ -8,7 +8,6 @@ noinst_PROGRAMS =
 
 AM_CPPFLAGS =                                                   \
 	-I$(top_srcdir)                                         \
-	-I$(top_srcdir)/st                                      \
 	-I$(top_srcdir)/common					\
 	-I$(top_srcdir)/lib					\
 	$(LIBSOUP_CFLAGS)					\
@@ -16,7 +15,7 @@ AM_CPPFLAGS =                                                   \
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"                        \
 	-DGNOMELOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale\""  \
 	-DPNP_IDS=\""$(PNP_IDS)"\"                              \
-	-DG_ENABLE_DEBUG					\
+	$(DEBUG_CFLAGS) 					\
 	$(DISABLE_DEPRECATED_CFLAGS)
 
 noinst_PROGRAMS +=      \

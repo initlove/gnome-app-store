@@ -7,6 +7,37 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
+#
+# Enable Debug
+#
+AC_ARG_ENABLE(debug,
+              AS_HELP_STRING([--enable-debug],
+                             [turn on debugging]),,
+              enable_debug=yes)
+
+if test "$enable_debug" = "yes"; then
+        DEBUG_CFLAGS="-DG_ENABLE_DEBUG"
+else
+        if test "x$enable_debug" = "xno"; then
+                DEBUG_CFLAGS="-DG_DISABLE_ASSERT -DG_DISABLE_CHECKS"
+        else
+                DEBUG_CFLAGS=""
+        fi
+fi
+AC_SUBST(DEBUG_CFLAGS)
+
+#
+# Enable Profiling
+#
+AC_ARG_ENABLE(profiling,
+              AS_HELP_STRING([--enable-profiling],
+                             [turn on profiling]),,
+              enable_profiling=yes)
+
+if test "$enable_profiling" = "yes"; then
+    AC_DEFINE(ENABLE_PROFILING,1,[enable profiling])
+fi
+
 # Sets GLIB_GENMARSHAL and GLIB_MKENUMS
 AM_PATH_GLIB_2_0()
 G_IR_SCANNER=`$PKG_CONFIG --variable=g_ir_scanner gobject-introspection-1.0`

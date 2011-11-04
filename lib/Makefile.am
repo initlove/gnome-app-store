@@ -13,7 +13,7 @@ AM_CPPFLAGS =							\
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"			\
 	-DGNOMELOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale\""	\
 	-DPNP_IDS=\""$(PNP_IDS)"\"				\
-	-DG_ENABLE_DEBUG					\
+	$(DEBUG_CFLAGS) 					\
 	$(DISABLE_DEPRECATED_CFLAGS)				\
 	$(NULL)
 

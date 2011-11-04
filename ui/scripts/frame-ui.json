@@ -1,0 +1,62 @@
+{
+  "Frame UI" : {
+    "id" : "frame-ui",
+    "type" : "ClutterGroup",
+    "width" : 900,
+    "height" : 660,
+    "children" : [
+      {
+        "id" : "search-entry",
+        "type" : "ClutterText",
+	"text" : "Search",
+        "x" : 600,
+	"y" : 10,
+        "width" : 180,
+	"editable" : true,
+	"activatable" : true,
+	"single_line_mode" : true,
+	"selectable" : true,
+	"reactive" : true
+      },
+      {
+	"id" : "infos-stage", 
+	"type" : "ClutterGroup",
+	"x" : 10,
+	"y" : 80
+      },
+      {
+        "id" : "categories",
+        "type" : "ClutterGroup",
+        "x" : 720,
+        "y" : 80
+      },
+      {
+        "id" : "temp-line",
+        "type" : "ClutterText",
+        "x" : 720,
+        "y" : 420,
+        "text" : "---------------------",
+        "font-name" : "Sans 15px",
+        "color" : "black",
+        "line-alignment" : "center",
+        "ellipsize" : "none",
+        "rotation" : [
+          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
+          { "z-axis" : [ 45.0, [  75,  75 ] ] }
+        ]
+      },
+      {
+        "id" : "prev",
+        "type" : "ClutterGroup",
+        "x" : 720,
+        "y" : 480
+      },
+      {
+        "id" : "next",
+        "type" : "ClutterGroup",
+        "x" : 720,
+        "y" : 500
+      }
+    ]
+  }
+}

@@ -44,10 +44,6 @@ struct _GnomeAppFrameUI
 {
 	ClutterGroup parent_instance;
 
-	ClutterActor *search_entry;
-	ClutterActor *category_list;
-	GnomeAppInfosStage *infos_stage;
-	ClutterActor *full;
 	GnomeAppFrameUIPrivate	*priv;
 };
 
@@ -57,9 +53,7 @@ struct _GnomeAppFrameUIClass
 };
 
 GType  		        gnome_app_frame_ui_get_type		(void);
-GnomeAppFrameUI *      	gnome_app_frame_ui_new			(void);
 GnomeAppFrameUI *      	gnome_app_frame_ui_get_default		(void);
-void			gnome_app_frame_ui_set_full_info_mode	(GnomeAppFrameUI *ui, GnomeAppInfoPage *page);
 
 G_END_DECLS
 

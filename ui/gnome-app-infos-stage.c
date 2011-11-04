@@ -206,7 +206,6 @@ load_query (GnomeAppInfosStage *infos_stage)
 
 	store = gnome_app_store_get_default (); 
 	list = gnome_app_store_get_apps_by_query ((GnomeAppStore *)store, infos_stage->priv->query);
-
 	if (list)
 		gnome_app_infos_stage_clean (infos_stage);
 	else
@@ -229,7 +228,7 @@ gnome_app_infos_stage_load_query (GnomeAppInfosStage *infos_stage, GnomeAppQuery
 {
 	gint pagesize;
 	gchar *val;
-
+printf ("gnome_app_infos_stage_load_query\n");
 	if (infos_stage->priv->query)
 		g_object_unref (infos_stage->priv->query);
 	infos_stage->priv->query = g_object_ref (query);
