@@ -75,7 +75,7 @@ static gboolean
 app_fullview_cb (GnomeAppInfo *info)
 {
 	gnome_app_info_debug (info);
-
+#if 0
 	ClutterActor *stage, *page;
 
 	page = gnome_app_info_page_new_with_app (info);
@@ -83,7 +83,25 @@ app_fullview_cb (GnomeAppInfo *info)
 	GnomeAppFrameUI *info_icon;
 	info_icon = gnome_app_frame_ui_get_default ();
 	gnome_app_frame_ui_set_full_info_mode (info_icon, page);
+#endif
+	return TRUE;
+}
 
+static gboolean
+on_info_icon_press (ClutterActor *actor,
+                ClutterEvent *event,
+                gpointer      data)
+{
+	GnomeAppInfo *info;
+
+	info = GNOME_APP_INFO (data);
+	switch (event->type)
+	{
+	case CLUTTER_BUTTON_PRESS:
+printf ("debug event %s\n", gnome_app_info_get (info, "name"));
+		break;
+		
+	}
 	return TRUE;
 }
 
@@ -123,25 +141,18 @@ gnome_app_info_icon_new_with_app (GnomeAppInfo *info)
         const gchar *val;
         gchar *local_uri;
 
-        for (i = 0; prop [i]; i++) {
-                clutter_script_get_objects (script, prop [i], &actor, NULL);
-                if (!actor)
-                        continue;
-                val = gnome_app_info_get (info, prop [i]);
-                if (CLUTTER_IS_TEXTURE (actor)) {
-                        local_uri = gnome_app_get_local_icon (val);
-                        clutter_texture_set_from_file (actor, local_uri, NULL);
-                        g_free (local_uri);
-                } else if (CLUTTER_IS_TEXT (actor)) {
-                        clutter_text_set_text (actor, val);
-                }
-#if 0
-/*FIXME: cannot use the user defined object? */
-                        else if (GNOME_APP_IS_UI_SCORE (actor)) {
-                        gnome_app_ui_score_set_score (actor, val);
-                }
-#endif
-        }
+	clutter_script_get_objects (script, "name", &actor, NULL);
+	val = gnome_app_info_get (info, "name");
+	clutter_text_set_text (CLUTTER_TEXT (actor), val);
+
+	clutter_script_get_objects (script, "smallpreviewpic1", &actor, NULL);
+	val = gnome_app_info_get (info, "smallpreviewpic1");
+	local_uri = gnome_app_get_local_icon (val);
+	clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), local_uri, NULL);
+	g_free (local_uri);
+
+	g_signal_connect (actor, "event", G_CALLBACK (on_info_icon_press), info);
+
 
 	return info_icon;
 }
