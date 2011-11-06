@@ -53,7 +53,8 @@ struct _GnomeAppFrameUIClass
 };
 
 GType  		        gnome_app_frame_ui_get_type		(void);
-GnomeAppFrameUI *      	gnome_app_frame_ui_get_default		(void);
+GnomeAppFrameUI *      	gnome_app_frame_ui_new			(void);
+void			gnome_app_frame_ui_load_query		(GnomeAppFrameUI *ui, GnomeAppQuery *query);
 
 G_END_DECLS
 

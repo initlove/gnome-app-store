@@ -24,6 +24,7 @@ noinst_PROGRAMS +=      \
 	$(NULL)
 
 app_store_SOURCES =        \
+	gnome-app-store-ui.c gnome-app-store-ui.h \
 	gnome-app-frame-ui.c gnome-app-frame-ui.h \
 	gnome-app-ui-score.c gnome-app-ui-score.h \
 	gnome-app-infos-stage.c gnome-app-infos-stage.h \
@@ -40,6 +41,7 @@ app_store_LDADD =          \
 include Makefile-st.am
 
 app_store_kw_SOURCES =        \
+	gnome-app-store-ui.c gnome-app-store-ui.h \
 	gnome-app-frame-ui.c gnome-app-frame-ui.h \
 	gnome-app-infos-stage.c gnome-app-infos-stage.h \
 	gnome-app-info-page.c gnome-app-info-page.h \

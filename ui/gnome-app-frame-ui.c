@@ -21,15 +21,28 @@ Author: Liang chenye <liangchenye@gmail.com>
 
 struct _GnomeAppFrameUIPrivate
 {
+	ClutterGroup *ui_group;
 	ClutterText *search_entry;
 	ClutterGroup *infos_stage_group;
 	ClutterGroup *categories_group;
 	ClutterActor *categories;
         GnomeAppInfosStage *infos_stage;
+        ClutterScript *script;
 };
 
 G_DEFINE_TYPE (GnomeAppFrameUI, gnome_app_frame_ui, CLUTTER_TYPE_GROUP)
 
+static GnomeAppFrameUI *
+gnome_app_frame_ui_get_default (void)
+{
+	static GnomeAppFrameUI *ui = NULL;
+
+	if (!ui) {
+		ui = g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
+	}
+
+	return ui;
+}
 static void
 on_search_activate (ClutterText *text,
                    gpointer     data)
@@ -67,26 +80,19 @@ create_search_entry (GnomeAppFrameUI *frame_ui)
 	return entry;
 }
 
-static void
-gnome_app_frame_load_group (GnomeAppFrameUI *frame_ui, gchar *group)
-{
-	GnomeAppQuery *query;
-printf ("gnome_app_frame_load_group\n");
-printf ("%d\n", GNOME_APP_IS_FRAME_UI (frame_ui));
-	query = gnome_app_query_new ();
-	g_object_set (query, QUERY_GROUP, group, NULL);
-printf ("load grop %d\n", GNOME_APP_IS_INFOS_STAGE (frame_ui->priv->infos_stage));
-	gnome_app_infos_stage_load_query (frame_ui->priv->infos_stage, query);
-	g_object_unref (query);
-}
-
 /*FIXME: the second args seems broken!!! */
 static void
 category_click_cb (StButton *button, gpointer userdata)
 {
 	const gchar *label_new;
 	label_new = st_button_get_label (button);
-	gnome_app_frame_load_group (NULL, (gchar *)label_new);	//FIXME
+
+
+	GnomeAppQuery *query;
+	query = gnome_app_query_new ();
+	g_object_set (query, QUERY_GROUP, label_new, NULL);
+//	gnome_app_infos_stage_load_query (frame_ui->priv->infos_stage, query);
+	g_object_unref (query);
 }
 
 static void
@@ -110,7 +116,7 @@ next_cb (StButton *button, gpointer userdata)
 }
 
 static ClutterActor *
-create_category_list ()
+create_category_list (ClutterScript *script)
 {
 	ClutterLayoutManager *layout;
 	ClutterActor *layout_box, *actor;
@@ -129,10 +135,9 @@ create_category_list ()
 		name = (gchar *)l->data;
 		actor = (ClutterActor *)st_button_new_with_label (name);
 		g_signal_connect (ST_BUTTON (actor), "clicked", G_CALLBACK (category_click_cb), NULL);
-		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
+		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), col, row);
 		row ++;
 	}
-
 #if 0
 	actor = (ClutterActor *)st_button_new_with_label ("---------");
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
@@ -150,14 +155,37 @@ create_category_list ()
 }
 
 static void
-gnome_app_frame_ui_init (GnomeAppFrameUI *frame_ui)
+gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 {
 	GnomeAppFrameUIPrivate *priv;
 
-	frame_ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (frame_ui,
+	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
 	                                                 GNOME_APP_TYPE_FRAME_UI,
 	                                                 GnomeAppFrameUIPrivate);
+        const gchar *filename;
+	GError *error;
+        gint i;
 
+        filename = "/home/novell/gnome-app-store/ui/scripts/frame-ui.json";
+
+        priv->script = clutter_script_new ();
+	error = NULL;
+        clutter_script_load_from_file (priv->script, filename, &error);
+        if (error) {
+                printf ("error in load script %s!\n", error->message);
+                g_error_free (error);
+        }
+
+	clutter_script_get_objects (priv->script, "frame-ui", &priv->ui_group,
+					"search-entry", &priv->search_entry, 
+					"infos-stage", &priv->infos_stage_group,
+					"categories", &priv->categories_group,
+					NULL);
+	clutter_container_add_actor (CLUTTER_CONTAINER (ui), priv->ui_group);
+	priv->categories = create_category_list (priv->script);
+	clutter_container_add_actor (CLUTTER_CONTAINER (priv->categories_group), priv->categories);
+	priv->infos_stage = gnome_app_infos_stage_new ();
+	clutter_container_add_actor (CLUTTER_CONTAINER (priv->infos_stage_group), CLUTTER_ACTOR (priv->infos_stage));
 }
 
 static void
@@ -186,54 +214,16 @@ gnome_app_frame_ui_class_init (GnomeAppFrameUIClass *klass)
 	g_type_class_add_private (object_class, sizeof (GnomeAppFrameUIPrivate));
 }
 
-static void
-gnome_app_frame_ui_set_default (GnomeAppFrameUI *ui)
+void
+gnome_app_frame_ui_load_query (GnomeAppFrameUI *frame_ui, GnomeAppQuery *query)
 {
-        const gchar *filename;
-        ClutterScript *script;
-        ClutterActor *frame_ui;
-	GError *error;
-        gint i;
-
-	GnomeAppFrameUIPrivate *priv = ui->priv;
-
-        filename = "/home/novell/gnome-app-store/ui/scripts/frame-ui.json";
-
-        script = clutter_script_new ();
-	error = NULL;
-        clutter_script_load_from_file (script, filename, &error);
-        if (error) {
-                printf ("error in load script %s!\n", error->message);
-                g_error_free (error);
-        }
-
-	clutter_script_get_objects (script, "frame-ui", &frame_ui,
-					"search-entry", &priv->search_entry, 
-					"infos-stage", &priv->infos_stage_group,
-					"categories", &priv->categories_group,
-					NULL);
-	clutter_container_add_actor (CLUTTER_CONTAINER (ui), frame_ui);
-	priv->categories = create_category_list ();
-	clutter_container_add_actor (CLUTTER_CONTAINER (priv->categories_group), priv->categories);
-	priv->infos_stage = gnome_app_infos_stage_new ();
-	clutter_container_add_actor (CLUTTER_CONTAINER (priv->infos_stage_group), priv->infos_stage);
-
-	GnomeAppQuery *query;
-	query = gnome_app_query_new ();
-	g_object_set (query, QUERY_GROUP, NULL, NULL);
-	gnome_app_infos_stage_load_query (priv->infos_stage, query);
-	g_object_unref (query);
+	gnome_app_infos_stage_load_query (frame_ui->priv->infos_stage, query);
 }
 
 GnomeAppFrameUI *
-gnome_app_frame_ui_get_default (void)
+gnome_app_frame_ui_new (void)
 {
-	static GnomeAppFrameUI *ui = NULL;
-
-	if (!ui) {
-		ui = g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
-		gnome_app_frame_ui_set_default (ui);
-	}
-
-	return ui;
+	return g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
 }
+
+

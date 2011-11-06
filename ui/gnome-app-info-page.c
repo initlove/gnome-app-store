@@ -19,6 +19,7 @@ Author: Lance Wang <lzwang@suse.com>
 #include <clutter/clutter.h>
 
 #include "gnome-app-utils.h"
+#include "gnome-app-store-ui.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-info.h"
 #include "gnome-app-install.h"
@@ -70,6 +71,25 @@ gnome_app_info_page_class_init (GnomeAppInfoPageClass *klass)
 	g_type_class_add_private (object_class, sizeof (GnomeAppInfoPagePrivate));
 }
 
+static gboolean
+on_info_page_event (ClutterActor *actor,
+                ClutterEvent *event,
+                gpointer      data)
+{
+        GnomeAppStoreUI *store_ui;
+
+        switch (event->type)
+        {
+        case CLUTTER_BUTTON_PRESS:
+                store_ui = gnome_app_store_ui_get_default ();
+                gnome_app_store_ui_load_frame_ui (store_ui);
+
+                break;
+
+        }
+        return TRUE;
+}
+
 GnomeAppInfoPage *
 gnome_app_info_page_new_with_app (GnomeAppInfo *info)
 {
@@ -81,15 +101,21 @@ gnome_app_info_page_new_with_app (GnomeAppInfo *info)
 	page->priv->info = g_object_ref (info);
 
 	const gchar *filename;
+	GError *error;
 	ClutterScript *script;
 	ClutterActor *actor;
 	gint i;
 
 	filename = "/home/novell/gnome-app-store/ui/scripts/app-info-page.json";
+	error = NULL;
 
 	script = clutter_script_new ();
-	clutter_script_load_from_file (script, filename, NULL);
-	clutter_script_get_objects (script, "page-info", &page, NULL);
+	clutter_script_load_from_file (script, filename, &error);
+	if (error) {
+		printf ("error in load script %s\n", error->message);
+		g_error_free (error);
+	}
+	clutter_script_get_objects (script, "info-page", &page, NULL);
         
 	gchar *prop [] = {
 		"name", "personid", "description", 
@@ -107,6 +133,9 @@ gnome_app_info_page_new_with_app (GnomeAppInfo *info)
 		val = gnome_app_info_get (info, prop [i]);
 		if (CLUTTER_IS_TEXTURE (actor)) {
 			local_uri = gnome_app_get_local_icon (val);
+/*FIXME: tmp for no network debug */
+if (!local_uri)
+local_uri = g_strdup ("/home/novell/.gnome-app-store/cache/ocs/img/fe6835c189e4331dd6bce5b07537d44a");
 			clutter_texture_set_from_file (actor, local_uri, NULL);
 			g_free (local_uri);
 		} else if (CLUTTER_IS_TEXT (actor)) {
@@ -131,6 +160,8 @@ gnome_app_info_page_new_with_app (GnomeAppInfo *info)
 		else
 			clutter_texture_set_from_file (actor, "/home/novell/gnome-app-store/pixmaps/non-starred.png", NULL);
 	}
+
+        g_signal_connect (page, "event", G_CALLBACK (on_info_page_event), NULL);
 
 	return page;
 }

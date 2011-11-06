@@ -5,6 +5,7 @@
 #include <glib/gi18n.h>
 
 #include "gnome-app-store.h"
+#include "gnome-app-store-ui.h"
 #include "gnome-app-info.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-frame-ui.h"
@@ -13,20 +14,19 @@ int
 main (int argc, char *argv[])
 {
 	ClutterActor *stage;
-	GnomeAppFrameUI *frame_ui;
+	GnomeAppStoreUI *store_ui;
 
 	if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
 	  return 1;
 
+
+#if 1
+	stage = gnome_app_store_ui_get_default ();
+#else
 	stage = clutter_stage_new ();
 	clutter_stage_set_title (CLUTTER_STAGE (stage), _("AppStore"));
 	clutter_actor_set_size (stage, 900, 660);
 	g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
-
-#if 1
-	frame_ui = gnome_app_frame_ui_get_default ();
-	clutter_container_add_actor (CLUTTER_CONTAINER (stage), CLUTTER_ACTOR (frame_ui));
-#else
         const GnomeAppStore *store;
 	ClutterActor *page;
 	GnomeAppInfo *info;

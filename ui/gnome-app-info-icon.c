@@ -22,7 +22,7 @@ Author: Lance Wang <lzwang@suse.com>
 #include "gnome-app-info.h"
 #include "gnome-app-info-icon.h"
 #include "gnome-app-info-page.h"
-#include "gnome-app-frame-ui.h"
+#include "gnome-app-store-ui.h"
 
 struct _GnomeAppInfoIconPrivate
 {
@@ -88,17 +88,22 @@ app_fullview_cb (GnomeAppInfo *info)
 }
 
 static gboolean
-on_info_icon_press (ClutterActor *actor,
+on_info_icon_event (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
 	GnomeAppInfo *info;
+	GnomeAppStoreUI *store_ui;
+	ClutterActor *page, *stage;
 
 	info = GNOME_APP_INFO (data);
 	switch (event->type)
 	{
 	case CLUTTER_BUTTON_PRESS:
+		store_ui = gnome_app_store_ui_get_default ();
+		gnome_app_store_ui_load_app_info (store_ui, info);
 printf ("debug event %s\n", gnome_app_info_get (info, "name"));
+
 		break;
 		
 	}
@@ -151,8 +156,7 @@ gnome_app_info_icon_new_with_app (GnomeAppInfo *info)
 	clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), local_uri, NULL);
 	g_free (local_uri);
 
-	g_signal_connect (actor, "event", G_CALLBACK (on_info_icon_press), info);
-
+	g_signal_connect (actor, "event", G_CALLBACK (on_info_icon_event), info);
 
 	return info_icon;
 }
