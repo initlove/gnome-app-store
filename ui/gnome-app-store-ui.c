@@ -107,6 +107,7 @@ gnome_app_store_ui_load_app_info (GnomeAppStoreUI *ui, GnomeAppInfo *info)
 		g_object_unref (priv->info_page);
 	priv->info_page = gnome_app_info_page_new_with_app (info);
 
+#if 0
 	ClutterAnimation *animation;
 
 	animation =
@@ -120,7 +121,7 @@ gnome_app_store_ui_load_app_info (GnomeAppStoreUI *ui, GnomeAppInfo *info)
                            "fixed::rotation-center-z", &vertex,
                            "fixed::reactive", FALSE,
                            NULL);
-
+#endif
 	clutter_actor_hide (priv->frame_ui);
 //TODO: i want to know, why the remove actor delete the object!?
 //	clutter_container_remove_actor (CLUTTER_CONTAINER (ui), priv->frame_ui);

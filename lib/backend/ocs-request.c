@@ -238,7 +238,6 @@ ocs_get_request_doc (OcsBackend *backend, gchar *request)
                 }
                 soup_buffer_free (buf);
         }
-                                   
         g_free (md5);
         g_free (local_url);
 

@@ -25,6 +25,8 @@ struct _GnomeAppFrameUIPrivate
 	ClutterText *search_entry;
 	ClutterGroup *infos_stage_group;
 	ClutterGroup *categories_group;
+	ClutterGroup *prev;
+	ClutterGroup *next;
 	ClutterActor *categories;
         GnomeAppInfosStage *infos_stage;
         ClutterScript *script;
@@ -43,6 +45,7 @@ gnome_app_frame_ui_get_default (void)
 
 	return ui;
 }
+
 static void
 on_search_activate (ClutterText *text,
                    gpointer     data)
@@ -52,71 +55,77 @@ on_search_activate (ClutterText *text,
 	GnomeAppQuery *query;
 
 	search = (gchar *)clutter_text_get_text (text);
-printf ("query %s\n", search);	
+	frame_ui = GNOME_APP_FRAME_UI (data);	
 	query = gnome_app_query_new ();
 	g_object_set (query, QUERY_SEARCH, search, NULL);
-	frame_ui = gnome_app_frame_ui_get_default ();
 	gnome_app_infos_stage_load_query (frame_ui->priv->infos_stage, query);
 
 	g_object_unref (query);
 }
 
-static ClutterActor *
-create_search_entry (GnomeAppFrameUI *frame_ui)
-{
-	ClutterActor *entry;
-	gchar *text = "Search";
-
-	entry = clutter_text_new_full (NULL, text, CLUTTER_COLOR_LightGray);
-	clutter_text_set_editable (CLUTTER_TEXT (entry), TRUE);
-	clutter_text_set_selectable (CLUTTER_TEXT (entry), TRUE);
-	clutter_text_set_activatable (CLUTTER_TEXT (entry), TRUE);
-	clutter_text_set_single_line_mode (CLUTTER_TEXT (entry), TRUE);
-	clutter_actor_set_reactive (entry, TRUE);
-	clutter_actor_grab_key_focus (entry);
-	g_signal_connect (entry, "activate",
-                    G_CALLBACK (on_search_activate),
-                    NULL);
-	return entry;
-}
-
 /*FIXME: the second args seems broken!!! */
-static void
-category_click_cb (StButton *button, gpointer userdata)
+static gboolean
+on_category_event (ClutterActor *actor,
+                ClutterEvent *event,
+                gpointer      data)
 {
 	const gchar *label_new;
-	label_new = st_button_get_label (button);
-
-
+	GnomeAppFrameUI *frame_ui;
 	GnomeAppQuery *query;
-	query = gnome_app_query_new ();
-	g_object_set (query, QUERY_GROUP, label_new, NULL);
-//	gnome_app_infos_stage_load_query (frame_ui->priv->infos_stage, query);
-	g_object_unref (query);
+
+        switch (event->type)
+        {
+        case CLUTTER_BUTTON_PRESS:
+		label_new = st_button_get_label (ST_BUTTON (actor));
+		frame_ui = GNOME_APP_FRAME_UI (data);
+		query = gnome_app_query_new ();
+		g_object_set (query, QUERY_GROUP, label_new, NULL);
+		gnome_app_infos_stage_load_query (frame_ui->priv->infos_stage, query);
+		g_object_unref (query);
+		break;
+	}
+
+	return TRUE;
 }
 
-static void
-prev_cb (StButton *button, gpointer userdata)
+static gboolean
+on_prev_event (ClutterActor *actor,
+                ClutterEvent *event,
+                gpointer      data)
 {
-//FIXME: should add time gap
 	GnomeAppFrameUI *frame_ui;
 
-	frame_ui = gnome_app_frame_ui_get_default ();
-	gnome_app_infos_stage_page_change (frame_ui->priv->infos_stage, -1);
+	frame_ui = GNOME_APP_FRAME_UI (data);
+        switch (event->type)
+        {
+        case CLUTTER_BUTTON_PRESS:
+		gnome_app_infos_stage_page_change (frame_ui->priv->infos_stage, -1);
+		break;
+	}
+
+	return TRUE;
 }
 
-static void
-next_cb (StButton *button, gpointer userdata)
+static gboolean
+on_next_event (ClutterActor *actor,
+                ClutterEvent *event,
+                gpointer      data)
 {
-//FIXME: should add time gap
 	GnomeAppFrameUI *frame_ui;
 
-	frame_ui = gnome_app_frame_ui_get_default ();
-	gnome_app_infos_stage_page_change (frame_ui->priv->infos_stage, 1);
+	frame_ui = GNOME_APP_FRAME_UI (data);
+        switch (event->type)
+        {
+        case CLUTTER_BUTTON_PRESS:
+		gnome_app_infos_stage_page_change (frame_ui->priv->infos_stage, 1);
+		break;
+	}
+
+	return TRUE;
 }
 
 static ClutterActor *
-create_category_list (ClutterScript *script)
+create_category_list (GnomeAppFrameUI *ui)
 {
 	ClutterLayoutManager *layout;
 	ClutterActor *layout_box, *actor;
@@ -134,9 +143,10 @@ create_category_list (ClutterScript *script)
 	for (l = (GList *)list; l; l = l->next) {
 		name = (gchar *)l->data;
 		actor = (ClutterActor *)st_button_new_with_label (name);
-		g_signal_connect (ST_BUTTON (actor), "clicked", G_CALLBACK (category_click_cb), NULL);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), col, row);
 		row ++;
+
+		g_signal_connect (actor, "event", G_CALLBACK (on_category_event), ui);
 	}
 #if 0
 	actor = (ClutterActor *)st_button_new_with_label ("---------");
@@ -180,12 +190,28 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 					"search-entry", &priv->search_entry, 
 					"infos-stage", &priv->infos_stage_group,
 					"categories", &priv->categories_group,
+					"prev", &priv->prev,
+					"next", &priv->next,
 					NULL);
 	clutter_container_add_actor (CLUTTER_CONTAINER (ui), priv->ui_group);
-	priv->categories = create_category_list (priv->script);
+	priv->categories = create_category_list (ui);
 	clutter_container_add_actor (CLUTTER_CONTAINER (priv->categories_group), priv->categories);
 	priv->infos_stage = gnome_app_infos_stage_new ();
 	clutter_container_add_actor (CLUTTER_CONTAINER (priv->infos_stage_group), CLUTTER_ACTOR (priv->infos_stage));
+
+//script connect did not work?
+        g_signal_connect (priv->search_entry, "activate",
+                    G_CALLBACK (on_search_activate),
+                    ui);
+		
+	ClutterActor *actor;
+	actor = (ClutterActor *)st_button_new_with_label ("Previous");
+	clutter_container_add_actor (CLUTTER_CONTAINER (priv->prev), actor);
+	g_signal_connect (actor, "event", G_CALLBACK (on_prev_event), ui);
+
+	actor = (ClutterActor *)st_button_new_with_label ("Next");
+	clutter_container_add_actor (CLUTTER_CONTAINER (priv->next), actor);
+	g_signal_connect (actor, "event", G_CALLBACK (on_next_event), ui);
 }
 
 static void
