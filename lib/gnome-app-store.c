@@ -135,6 +135,9 @@ gnome_app_store_get_app_by_id (GnomeAppStore *store, gchar *app_id)
 GList *
 gnome_app_store_get_apps_by_query (GnomeAppStore *store, GnomeAppQuery *query)
 {
+	g_return_val_if_fail (store && GNOME_APP_IS_STORE (store), NULL);
+	g_return_val_if_fail (query && GNOME_APP_IS_QUERY (query), NULL);
+
 	GList *list;
 
 	list = app_backend_get_apps_by_query (store->priv->backend, query);
