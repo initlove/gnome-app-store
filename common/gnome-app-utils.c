@@ -40,9 +40,7 @@
 #include "gnome-app-utils.h"
 
 #if 0
-#define server_debug TRUE
-#else
-#define server_debug FALSE
+#define SERVER_DEBUG
 #endif
 
 
@@ -172,7 +170,9 @@ gnome_app_get_data_by_request (SoupSession *session, const gchar *request)
 	const gchar *header;
 	const gchar *method;
 
-	printf ("Resolve: %s\n", request);
+	g_return_val_if_fail (request != NULL, NULL);
+
+	g_debug ("gnome_app_get_data_by_request: %s\n", request);
 
 	buf = NULL;
 	method = SOUP_METHOD_GET;
@@ -182,28 +182,32 @@ gnome_app_get_data_by_request (SoupSession *session, const gchar *request)
 
 	name = soup_message_get_uri (msg)->path;
 
-	if (server_debug) {
+	
+	if (SOUP_STATUS_IS_TRANSPORT_ERROR (msg->status_code)) {
+		g_debug ("%s: %d %s\n", name, msg->status_code, msg->reason_phrase);
+	} else {
+#ifdef SERVER_DEBUG
 		SoupMessageHeadersIter iter;
 		const gchar *hname, *value;
 		gchar *path = soup_uri_to_string (soup_message_get_uri (msg), TRUE);
 
-		printf ("%s %s HTTP/1.%d\n", method, path,
+		g_debug ("%s %s HTTP/1.%d\n", method, path,
 			soup_message_get_http_version (msg));
 		g_free (path);
 		soup_message_headers_iter_init (&iter, msg->request_headers);
 		while (soup_message_headers_iter_next (&iter, &hname, &value))
-			printf ("%s: %s\r\n", hname, value);
-		printf ("\n");
+			g_debug ("%s: %s\r\n", hname, value);
+		g_debug ("\n");
 
-		printf ("HTTP/1.%d %d %s\n",
+		g_debug ("HTTP/1.%d %d %s\n",
 			soup_message_get_http_version (msg),
 			msg->status_code, msg->reason_phrase);
 		soup_message_headers_iter_init (&iter, msg->response_headers);
 		while (soup_message_headers_iter_next (&iter, &hname, &value))
-			printf ("%s: %s\r\n", hname, value);
-		printf ("\n");
-	} else if (SOUP_STATUS_IS_TRANSPORT_ERROR (msg->status_code))
-		printf ("%s: %d %s\n", name, msg->status_code, msg->reason_phrase);
+			g_debug ("%s: %s\r\n", hname, value);
+		g_debug ("\n");
+#endif
+	}
 
 	if (SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
 		header = soup_message_headers_get_one (msg->response_headers,
@@ -212,8 +216,7 @@ gnome_app_get_data_by_request (SoupSession *session, const gchar *request)
 			SoupURI *request;
 			gchar *request_string;
 
-			if (!server_debug)
-				printf ("  -> %s\n", header);
+			g_debug ("   -> %s\n", header);
 
 			request = soup_uri_new_with_base (soup_message_get_uri (msg), header);
 			request_string = soup_uri_to_string (request, FALSE);
@@ -233,6 +236,10 @@ gnome_app_get_data_by_request (SoupSession *session, const gchar *request)
 static gboolean
 download_file (const gchar *source, const gchar *dest)
 {
+	g_return_val_if_fail (source && dest, FALSE);
+
+	g_debug ("download_file %s to %s\n", source, dest);
+
 	SoupSession *session;
 	SoupBuffer *buf;
 	gchar *cafile;
@@ -250,7 +257,7 @@ download_file (const gchar *source, const gchar *dest)
 		buf = gnome_app_get_data_by_request (session, source);
 		if (buf)
 			break;
-		printf ("retry %d\n", retry);
+		g_debug ("retry %d\n", retry);
 	}
 	g_object_unref (session);
 	if (!buf)
@@ -270,12 +277,15 @@ download_file (const gchar *source, const gchar *dest)
 gchar *
 gnome_app_get_local_icon (const gchar *uri)
 {
+	g_return_val_if_fail (uri != NULL, NULL);
+
+	g_debug ("gnome_app_get_local_icon %s\n", uri);
+
 	GnomeAppConfig *config;
 	gchar *md5;
 	gchar *cache_dir;
 	gchar *img_dir;
 	gchar *local_uri;
-
 	config = gnome_app_config_new ();
 	cache_dir = gnome_app_config_get_cache_dir (config);
 	md5 = gnome_app_get_md5 (uri);

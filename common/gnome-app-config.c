@@ -25,6 +25,8 @@ G_DEFINE_TYPE (GnomeAppConfig, gnome_app_config, G_TYPE_OBJECT)
 static GKeyFile *
 create_default_key_file (gchar *file_url)
 {
+	g_return_val_if_fail (file_url != NULL, NULL);
+
 	GKeyFile *key_file;
 	const gchar *default_url;
 	const gchar *default_type;
@@ -134,6 +136,8 @@ gnome_app_config_new (void)
 gchar *
 gnome_app_config_get_cache_dir (GnomeAppConfig *config)
 {
+	g_return_val_if_fail (config && GNOME_APP_IS_CONFIG (config), NULL);
+
         GError  *error = NULL;
 	gchar *val;
 	gchar *type;
