@@ -6,33 +6,59 @@ Library General Public License for more details.
 
 You should have received a copy of the GNU Library General Public
 License along with this program; if not, write to the
-Free Software Foundation, Inc., 59 Temple Place - Sframe_uite 330,
+Free Software Foundation, Inc., 59 Temple Place - 330,
 Boston, MA 02111-1307, USA.
 
 Author: Liang chenye <liangchenye@gmail.com>
 
 */
 #include "st.h"
-
+#include <stdio.h>
+#include <string.h>
 #include <clutter/clutter.h>
 #include "gnome-app-query.h"
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-infos-stage.h"
 
+#define CLEAR_ICON "/home/novell/gnome-app-store/ui/scripts/clear.png"
+#define SEARCH_ICON "/home/novell/gnome-app-store/ui/scripts/search.png"
+
 struct _GnomeAppFrameUIPrivate
 {
-	ClutterGroup *ui_group;
-	ClutterText *search_entry;
-	ClutterGroup *infos_stage_group;
-	ClutterGroup *categories_group;
-	ClutterActor *prev;
-	ClutterActor *next;
-	ClutterActor *categories;
+	ClutterGroup	*ui_group;
+	ClutterActor	*search_icon;
+	ClutterActor	*search_entry;
+	ClutterActor 	*search_hint;
+	/* search icon and search hint is a little different */
+	gboolean	is_clear_mode_enabled;
+	gboolean 	is_search_hint_enabled;
+	ClutterGroup 	*infos_stage_group;
+	ClutterGroup	*categories_group;
+	ClutterActor	*prev;
+	ClutterActor	*next;
+	ClutterActor	*categories;
         GnomeAppInfosStage *infos_stage;
-        ClutterScript *script;
+        ClutterScript	*script;
 };
 
 G_DEFINE_TYPE (GnomeAppFrameUI, gnome_app_frame_ui, CLUTTER_TYPE_GROUP)
+
+static gboolean
+is_blank_text (const gchar *text)
+{
+	if (!text)
+		return TRUE;
+
+	int i, len;
+	len = strlen (text);
+	for (i = 0; i < len; i++) {
+		if (*(text + i) == '\t' || *(text + i) == ' ') {
+			continue;
+		} else
+			return FALSE;
+	}
+	return TRUE;
+}
 
 static GnomeAppFrameUI *
 gnome_app_frame_ui_get_default (void)
@@ -47,40 +73,116 @@ gnome_app_frame_ui_get_default (void)
 }
 
 static void
-on_search_activate (ClutterText *text,
-                   gpointer     data)
+on_search_entry_text_changed (ClutterActor *actor,
+		GnomeAppFrameUI *ui)
 {
-	GnomeAppFrameUI *frame_ui;
-	gchar *search;
+	const gchar *search;
+
+	search = clutter_text_get_text (CLUTTER_TEXT (actor));
+	if (is_blank_text (search)) {
+		if (ui->priv->is_clear_mode_enabled) {
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (ui->priv->search_icon), SEARCH_ICON, NULL);
+			ui->priv->is_clear_mode_enabled = FALSE;
+		}
+		return;
+	} else {
+		if (!ui->priv->is_clear_mode_enabled) {
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (ui->priv->search_icon), CLEAR_ICON, NULL);
+			ui->priv->is_clear_mode_enabled = TRUE;
+		}
+		if (ui->priv->is_search_hint_enabled) {
+			ui->priv->is_search_hint_enabled = FALSE;
+			clutter_actor_hide (ui->priv->search_hint);
+		}
+	}
+}
+
+static void
+on_search_entry_activate (ClutterActor *actor,
+		GnomeAppFrameUI *ui)
+{
+	const gchar *search;
 	GnomeAppQuery *query;
 
-	search = (gchar *)clutter_text_get_text (text);
-	frame_ui = GNOME_APP_FRAME_UI (data);	
+	search = clutter_text_get_text (CLUTTER_TEXT (actor));
+	if (is_blank_text (search))
+		return;
+				
 	query = gnome_app_query_new ();
-	g_object_set (query, QUERY_SEARCH, search, NULL);
-	gnome_app_infos_stage_load_query (frame_ui->priv->infos_stage, query);
-
+	g_object_set (query, QUERY_GROUP, search, NULL);
+	gnome_app_infos_stage_load_query (ui->priv->infos_stage, query);
 	g_object_unref (query);
 }
 
-/*FIXME: the second args seems broken!!! */
+static gboolean
+on_search_entry_event (ClutterActor *actor,
+                ClutterEvent *event,
+                gpointer      data)
+{
+	gchar *search;
+	GnomeAppFrameUI *ui;
+	GnomeAppQuery *query;
+
+	ui = GNOME_APP_FRAME_UI (data);
+        switch (event->type)
+        {
+        case CLUTTER_BUTTON_PRESS:
+		if (ui->priv->is_search_hint_enabled) {
+			clutter_actor_hide (ui->priv->search_hint);
+			ui->priv->is_search_hint_enabled = FALSE;
+		}
+		break;
+	}
+
+	return FALSE;
+}
+
+static gboolean
+on_search_icon_event (ClutterActor *actor,
+                ClutterEvent *event,
+                gpointer      data)
+{
+	GnomeAppFrameUI *ui;
+	gchar *search;
+
+	ui = GNOME_APP_FRAME_UI (data);
+        switch (event->type)
+        {
+        case CLUTTER_BUTTON_PRESS:
+		if (ui->priv->is_clear_mode_enabled) {
+			if (!ui->priv->is_search_hint_enabled) {
+				clutter_text_set_text (CLUTTER_TEXT (ui->priv->search_entry), NULL);
+				clutter_actor_show (ui->priv->search_hint);
+				ui->priv->is_search_hint_enabled = TRUE;
+			}
+			ui->priv->is_clear_mode_enabled = FALSE;
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (ui->priv->search_icon), SEARCH_ICON, NULL);
+		} else {
+		/*FIXME: search img icon would never be used, it just a sign */
+		}
+		break;
+	}
+
+	return TRUE;
+}
+
 static gboolean
 on_category_event (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
 	const gchar *label_new;
-	GnomeAppFrameUI *frame_ui;
+	GnomeAppFrameUI *ui;
 	GnomeAppQuery *query;
 
         switch (event->type)
         {
         case CLUTTER_BUTTON_PRESS:
 		label_new = st_button_get_label (ST_BUTTON (actor));
-		frame_ui = GNOME_APP_FRAME_UI (data);
+		ui = GNOME_APP_FRAME_UI (data);
 		query = gnome_app_query_new ();
 		g_object_set (query, QUERY_GROUP, label_new, NULL);
-		gnome_app_infos_stage_load_query (frame_ui->priv->infos_stage, query);
+		gnome_app_infos_stage_load_query (ui->priv->infos_stage, query);
 		g_object_unref (query);
 		break;
 	}
@@ -93,13 +195,13 @@ on_prev_event (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
-	GnomeAppFrameUI *frame_ui;
+	GnomeAppFrameUI *ui;
 
-	frame_ui = GNOME_APP_FRAME_UI (data);
+	ui = GNOME_APP_FRAME_UI (data);
         switch (event->type)
         {
         case CLUTTER_BUTTON_PRESS:
-		gnome_app_infos_stage_page_change (frame_ui->priv->infos_stage, -1);
+		gnome_app_infos_stage_page_change (ui->priv->infos_stage, -1);
 		break;
 	}
 
@@ -111,13 +213,13 @@ on_next_event (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
-	GnomeAppFrameUI *frame_ui;
+	GnomeAppFrameUI *ui;
 
-	frame_ui = GNOME_APP_FRAME_UI (data);
+	ui = GNOME_APP_FRAME_UI (data);
         switch (event->type)
         {
         case CLUTTER_BUTTON_PRESS:
-		gnome_app_infos_stage_page_change (frame_ui->priv->infos_stage, 1);
+		gnome_app_infos_stage_page_change (ui->priv->infos_stage, 1);
 		break;
 	}
 
@@ -159,6 +261,9 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
 	                                                 GNOME_APP_TYPE_FRAME_UI,
 	                                                 GnomeAppFrameUIPrivate);
+	ui->priv->is_search_hint_enabled = TRUE;
+	ui->priv->is_clear_mode_enabled = FALSE;
+
         const gchar *filename;
 	GError *error;
         gint i;
@@ -174,23 +279,25 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
         }
 
 	clutter_script_get_objects (priv->script, "frame-ui", &priv->ui_group,
+					"search-icon", &priv->search_icon,
+					"search-hint", &priv->search_hint,
 					"search-entry", &priv->search_entry, 
 					"infos-stage", &priv->infos_stage_group,
 					"categories", &priv->categories_group,
 					"prev-icon", &priv->prev,
 					"next-icon", &priv->next,
 					NULL);
-	clutter_container_add_actor (CLUTTER_CONTAINER (ui), priv->ui_group);
+	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (priv->ui_group));
 	priv->categories = create_category_list (ui);
 	clutter_container_add_actor (CLUTTER_CONTAINER (priv->categories_group), priv->categories);
 	priv->infos_stage = gnome_app_infos_stage_new ();
 	clutter_container_add_actor (CLUTTER_CONTAINER (priv->infos_stage_group), CLUTTER_ACTOR (priv->infos_stage));
 
 //script connect did not work?
-        g_signal_connect (priv->search_entry, "activate",
-                    G_CALLBACK (on_search_activate),
-                    ui);
-		
+        g_signal_connect (priv->search_entry, "event", G_CALLBACK (on_search_entry_event), ui);
+	g_signal_connect (priv->search_entry, "activate", G_CALLBACK (on_search_entry_activate), ui);
+	g_signal_connect (priv->search_entry, "text_changed", G_CALLBACK (on_search_entry_text_changed), ui);
+	g_signal_connect (priv->search_icon, "event", G_CALLBACK (on_search_icon_event), ui);
 	g_signal_connect (priv->prev, "event", G_CALLBACK (on_prev_event), ui);
 	g_signal_connect (priv->next, "event", G_CALLBACK (on_next_event), ui);
 }
@@ -204,8 +311,8 @@ gnome_app_frame_ui_dispose (GObject *object)
 static void
 gnome_app_frame_ui_finalize (GObject *object)
 {
-	GnomeAppFrameUI *frame_ui = GNOME_APP_FRAME_UI (object);
-	GnomeAppFrameUIPrivate *priv = frame_ui->priv;
+	GnomeAppFrameUI *ui = GNOME_APP_FRAME_UI (object);
+	GnomeAppFrameUIPrivate *priv = ui->priv;
 
 	G_OBJECT_CLASS (gnome_app_frame_ui_parent_class)->finalize (object);
 }
@@ -222,9 +329,9 @@ gnome_app_frame_ui_class_init (GnomeAppFrameUIClass *klass)
 }
 
 void
-gnome_app_frame_ui_load_query (GnomeAppFrameUI *frame_ui, GnomeAppQuery *query)
+gnome_app_frame_ui_load_query (GnomeAppFrameUI *ui, GnomeAppQuery *query)
 {
-	gnome_app_infos_stage_load_query (frame_ui->priv->infos_stage, query);
+	gnome_app_infos_stage_load_query (ui->priv->infos_stage, query);
 }
 
 GnomeAppFrameUI *
