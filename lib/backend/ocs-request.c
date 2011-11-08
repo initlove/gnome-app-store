@@ -102,6 +102,8 @@ make_request_by_query (OcsBackend *backend, GnomeAppQuery *query)
         gboolean begin;
 	gchar *val;
 
+	g_return_val_if_fail (gnome_app_query_is_valid (query), NULL);
+
         request = g_string_new ("https://");
         g_string_append_printf (request, "%s:%s@%s/v1/content/data?",
 				ocs_backend_get_username (backend),
@@ -183,6 +185,8 @@ ocs_get_request_doc (OcsBackend *backend, gchar *request)
         gchar *local_url;
         xmlDocPtr doc_ptr;
         gboolean refresh = TRUE;
+
+	g_return_val_if_fail (request != NULL, NULL);
 
         md5 = gnome_app_get_md5 ((const gchar *)request);
         cache_dir = ocs_backend_get_cache_dir (backend);

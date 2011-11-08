@@ -103,6 +103,7 @@ static QueryUnit query_units [] =
 
 GType                   gnome_app_query_get_type		(void);
 GnomeAppQuery *         gnome_app_query_new			(void);
+gboolean		gnome_app_query_is_valid		(GnomeAppQuery *query);
 
 G_END_DECLS
 

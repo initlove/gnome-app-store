@@ -122,3 +122,22 @@ gnome_app_query_new (void)
 {
 	return g_object_new (GNOME_APP_TYPE_QUERY, NULL);
 }
+
+gboolean
+gnome_app_query_is_valid (GnomeAppQuery *query)
+{
+	g_return_val_if_fail (query && GNOME_APP_IS_QUERY (query), FALSE);
+
+        GnomeAppQueryPrivate *priv = query->priv;
+	gint prop_id;
+	gchar *prop_value;
+
+	for (prop_id = PROP_QUERY_GROUP; prop_id < PROP_QUERY_LAST; prop_id ++) {
+		prop_value = g_hash_table_lookup (priv->query_request, query_units [prop_id].name);
+		if (prop_value && prop_value [0])
+			return TRUE;
+	}
+
+	return FALSE;
+}
+

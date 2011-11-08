@@ -215,7 +215,6 @@ get_apps_by_query (AppBackend *backend, GnomeAppQuery *query)
 	GList *list;
 
 	request = make_request_by_query (ocs_backend, query);
-printf ("request %s\n", request);
 	doc_ptr = ocs_get_request_doc (ocs_backend, request);
 
 	if (doc_ptr) {
