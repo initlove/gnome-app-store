@@ -25,8 +25,8 @@ struct _GnomeAppFrameUIPrivate
 	ClutterText *search_entry;
 	ClutterGroup *infos_stage_group;
 	ClutterGroup *categories_group;
-	ClutterGroup *prev;
-	ClutterGroup *next;
+	ClutterActor *prev;
+	ClutterActor *next;
 	ClutterActor *categories;
         GnomeAppInfosStage *infos_stage;
         ClutterScript *script;
@@ -148,19 +148,6 @@ create_category_list (GnomeAppFrameUI *ui)
 
 		g_signal_connect (actor, "event", G_CALLBACK (on_category_event), ui);
 	}
-#if 0
-	actor = (ClutterActor *)st_button_new_with_label ("---------");
-	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
-	row ++;
-	actor = (ClutterActor *)st_button_new_with_label ("Prev");
-	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
-	row ++;
-	g_signal_connect (ST_BUTTON (actor), "clicked", G_CALLBACK (prev_cb), NULL);
-	actor = (ClutterActor *)st_button_new_with_label ("Next");
-	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), actor, col, row);
-	row ++;
-	g_signal_connect (ST_BUTTON (actor), "clicked", G_CALLBACK (next_cb), NULL);
-#endif
 	return layout_box;
 }
 
@@ -190,8 +177,8 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 					"search-entry", &priv->search_entry, 
 					"infos-stage", &priv->infos_stage_group,
 					"categories", &priv->categories_group,
-					"prev", &priv->prev,
-					"next", &priv->next,
+					"prev-icon", &priv->prev,
+					"next-icon", &priv->next,
 					NULL);
 	clutter_container_add_actor (CLUTTER_CONTAINER (ui), priv->ui_group);
 	priv->categories = create_category_list (ui);
@@ -204,14 +191,8 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
                     G_CALLBACK (on_search_activate),
                     ui);
 		
-	ClutterActor *actor;
-	actor = (ClutterActor *)st_button_new_with_label ("Previous");
-	clutter_container_add_actor (CLUTTER_CONTAINER (priv->prev), actor);
-	g_signal_connect (actor, "event", G_CALLBACK (on_prev_event), ui);
-
-	actor = (ClutterActor *)st_button_new_with_label ("Next");
-	clutter_container_add_actor (CLUTTER_CONTAINER (priv->next), actor);
-	g_signal_connect (actor, "event", G_CALLBACK (on_next_event), ui);
+	g_signal_connect (priv->prev, "event", G_CALLBACK (on_prev_event), ui);
+	g_signal_connect (priv->next, "event", G_CALLBACK (on_next_event), ui);
 }
 
 static void

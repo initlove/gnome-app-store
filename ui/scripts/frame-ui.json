@@ -37,13 +37,13 @@
       {
         "id" : "categories",
         "type" : "ClutterGroup",
-        "x" : 720,
+        "x" : 760,
         "y" : 80
       },
       {
         "id" : "temp-line",
         "type" : "ClutterText",
-        "x" : 720,
+        "x" : 760,
         "y" : 420,
         "text" : "---------------------",
         "font-name" : "Sans 15px",
@@ -56,16 +56,24 @@
         ]
       },
       {
-        "id" : "prev",
-        "type" : "ClutterGroup",
-        "x" : 720,
-        "y" : 480
+        "id" : "prev-icon",
+        "type" : "ClutterTexture",
+        "x" : 10,
+	"y" : 300,
+	"width" : 32,
+	"height" : 32,
+	"filename" : "go-previous.png", 
+	"reactive" : true
       },
       {
-        "id" : "next",
-        "type" : "ClutterGroup",
-        "x" : 720,
-        "y" : 500
+        "id" : "next-icon",
+        "type" : "ClutterTexture",
+        "x" : 700,
+	"y" : 300,
+	"width" : 32,
+	"height" : 32,
+	"filename" : "go-next.png", 
+	"reactive" : true
       }
     ]
   }
