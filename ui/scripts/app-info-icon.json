@@ -11,6 +11,7 @@
         "keep-aspect-ratio" : true,
         "anchor-x" : "5 em",
         "anchor-y" : "5 pt",
+        "reactive" : true,
         "opacity" : 200,
         "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
       },
@@ -24,11 +25,7 @@
         "color" : "black",
         "line-alignment" : "center",
         "line-wrap" : false,
-        "ellipsize" : "end",
-        "rotation" : [
-          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
-          { "z-axis" : [ 45.0, [  75,  75 ] ] }
-        ]
+        "ellipsize" : "end"
       }
     ]
   }

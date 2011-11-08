@@ -2,9 +2,9 @@
   "Details Page" : {
     "id" : "info-page",
     "type" : "ClutterGroup",
-    "color" : "white",
     "width" : 850,
     "height" : 700,
+    "reactive" : true,
     "children" : [
       {
         "id" : "smallpreviewpic1",
