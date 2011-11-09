@@ -177,36 +177,47 @@ on_category_event (ClutterActor *actor,
 }
 
 static gboolean
-on_prev_event (ClutterActor *actor,
+on_icon_enter (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
 	GnomeAppFrameUI *ui;
 
 	ui = GNOME_APP_FRAME_UI (data);
-        switch (event->type)
-        {
-        case CLUTTER_BUTTON_PRESS:
-		gnome_app_infos_stage_page_change (ui->priv->infos_stage, -1);
-		break;
-	}
+	clutter_actor_set_scale (actor, 1.5, 1.5);
+	clutter_actor_move_by (actor, -8, -8);
+	return TRUE;
+}
+
+static gboolean
+on_icon_leave (ClutterActor *actor,
+                ClutterEvent *event,
+                gpointer      data)
+{
+	GnomeAppFrameUI *ui;
+
+	ui = GNOME_APP_FRAME_UI (data);
+/*TODO: bad numbers, should have better animation */
+	clutter_actor_set_scale (actor, 1, 1);
+	clutter_actor_move_by (actor, 8, 8);
 
 	return TRUE;
 }
 
 static gboolean
-on_next_event (ClutterActor *actor,
+on_icon_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
 	GnomeAppFrameUI *ui;
 
 	ui = GNOME_APP_FRAME_UI (data);
-        switch (event->type)
-        {
-        case CLUTTER_BUTTON_PRESS:
+	if (actor == ui->priv->prev) {
+		gnome_app_infos_stage_page_change (ui->priv->infos_stage, -1);
+	} else if (actor == ui->priv->next) {
 		gnome_app_infos_stage_page_change (ui->priv->infos_stage, 1);
-		break;
+	} else if (actor == ui->priv->search_icon) {
+		on_search_entry_activate (ui->priv->search_entry, ui);
 	}
 
 	return TRUE;
@@ -283,9 +294,18 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
         g_signal_connect (priv->search_entry, "event", G_CALLBACK (on_search_entry_event), ui);
 	g_signal_connect (priv->search_entry, "activate", G_CALLBACK (on_search_entry_activate), ui);
 	g_signal_connect (priv->search_entry, "text_changed", G_CALLBACK (on_search_entry_text_changed), ui);
-	g_signal_connect (priv->search_icon, "event", G_CALLBACK (on_search_icon_event), ui);
-	g_signal_connect (priv->prev, "event", G_CALLBACK (on_prev_event), ui);
-	g_signal_connect (priv->next, "event", G_CALLBACK (on_next_event), ui);
+
+	g_signal_connect (priv->search_icon, "button-press-event", G_CALLBACK (on_icon_press), ui);
+	g_signal_connect (priv->search_icon, "enter-event", G_CALLBACK (on_icon_enter), ui);
+	g_signal_connect (priv->search_icon, "leave-event", G_CALLBACK (on_icon_leave), ui);
+
+	g_signal_connect (priv->prev, "button-press-event", G_CALLBACK (on_icon_press), ui);
+	g_signal_connect (priv->prev, "enter-event", G_CALLBACK (on_icon_enter), ui);
+	g_signal_connect (priv->prev, "leave-event", G_CALLBACK (on_icon_leave), ui);
+
+	g_signal_connect (priv->next, "button-press-event", G_CALLBACK (on_icon_press), ui);
+	g_signal_connect (priv->next, "enter-event", G_CALLBACK (on_icon_enter), ui);
+	g_signal_connect (priv->next, "leave-event", G_CALLBACK (on_icon_leave), ui);
 }
 
 static void
