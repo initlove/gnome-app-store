@@ -34,6 +34,7 @@
       {
         "id" : "search-icon",
         "type" : "ClutterTexture",
+	"opacity" : 100,
         "x" : 720,
 	"y" : 10,
 	"width" : 32,

@@ -20,18 +20,14 @@ Author: Liang chenye <liangchenye@gmail.com>
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-infos-stage.h"
 
-#define CLEAR_ICON "/home/novell/gnome-app-store/ui/scripts/clear.png"
-#define SEARCH_ICON "/home/novell/gnome-app-store/ui/scripts/search.png"
-
 struct _GnomeAppFrameUIPrivate
 {
 	ClutterGroup	*ui_group;
 	ClutterActor	*search_icon;
 	ClutterActor	*search_entry;
 	ClutterActor 	*search_hint;
-	/* search icon and search hint is a little different */
-	gboolean	is_clear_mode_enabled;
-	gboolean 	is_search_hint_enabled;
+	gboolean	is_search_enabled;
+	gboolean	is_search_hint_enabled;
 	ClutterGroup 	*infos_stage_group;
 	ClutterGroup	*categories_group;
 	ClutterActor	*prev;
@@ -80,20 +76,20 @@ on_search_entry_text_changed (ClutterActor *actor,
 
 	search = clutter_text_get_text (CLUTTER_TEXT (actor));
 	if (is_blank_text (search)) {
-		if (ui->priv->is_clear_mode_enabled) {
-			clutter_texture_set_from_file (CLUTTER_TEXTURE (ui->priv->search_icon), SEARCH_ICON, NULL);
-			ui->priv->is_clear_mode_enabled = FALSE;
+		if (clutter_actor_get_reactive (ui->priv->search_icon) == TRUE) {
+			clutter_actor_set_opacity (ui->priv->search_icon, 100);
+			clutter_actor_set_reactive (ui->priv->search_icon, FALSE);
 		}
-		return;
 	} else {
-		if (!ui->priv->is_clear_mode_enabled) {
-			clutter_texture_set_from_file (CLUTTER_TEXTURE (ui->priv->search_icon), CLEAR_ICON, NULL);
-			ui->priv->is_clear_mode_enabled = TRUE;
+		if (clutter_actor_get_reactive (ui->priv->search_icon) == FALSE) {
+			clutter_actor_set_opacity (ui->priv->search_icon, 255);
+			clutter_actor_set_reactive (ui->priv->search_icon, TRUE);
 		}
-		if (ui->priv->is_search_hint_enabled) {
-			ui->priv->is_search_hint_enabled = FALSE;
-			clutter_actor_hide (ui->priv->search_hint);
-		}
+	}
+		
+	if (ui->priv->is_search_hint_enabled) {
+		ui->priv->is_search_hint_enabled = FALSE;
+		clutter_actor_hide (ui->priv->search_hint);
 	}
 }
 
@@ -149,17 +145,7 @@ on_search_icon_event (ClutterActor *actor,
         switch (event->type)
         {
         case CLUTTER_BUTTON_PRESS:
-		if (ui->priv->is_clear_mode_enabled) {
-			if (!ui->priv->is_search_hint_enabled) {
-				clutter_text_set_text (CLUTTER_TEXT (ui->priv->search_entry), NULL);
-				clutter_actor_show (ui->priv->search_hint);
-				ui->priv->is_search_hint_enabled = TRUE;
-			}
-			ui->priv->is_clear_mode_enabled = FALSE;
-			clutter_texture_set_from_file (CLUTTER_TEXTURE (ui->priv->search_icon), SEARCH_ICON, NULL);
-		} else {
-		/*FIXME: search img icon would never be used, it just a sign */
-		}
+		on_search_entry_activate (ui->priv->search_entry, ui);
 		break;
 	}
 
@@ -261,8 +247,8 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
 	                                                 GNOME_APP_TYPE_FRAME_UI,
 	                                                 GnomeAppFrameUIPrivate);
+	ui->priv->is_search_enabled = FALSE;
 	ui->priv->is_search_hint_enabled = TRUE;
-	ui->priv->is_clear_mode_enabled = FALSE;
 
         const gchar *filename;
 	GError *error;
