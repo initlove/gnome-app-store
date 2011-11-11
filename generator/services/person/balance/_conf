@@ -1,0 +1,6 @@
+Description = Get the account balance of a user. 
+Syntax = /v1/person/balance
+Method = GET
+
+[Statuscodes]
+100 = successfull

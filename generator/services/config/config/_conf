@@ -1,0 +1,7 @@
+Description = get some basic API configuration information
+
+Syntax=/v1/config
+Method=GET
+
+[Statuscodes]
+100 = successful

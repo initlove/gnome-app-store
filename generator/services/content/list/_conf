@@ -1,0 +1,18 @@
+Description = Gets a list of a specific set of contents. 
+Syntax = /v1/content/data
+Method = GET
+
+[URL Args]
+categories = 
+search =
+user =
+external =
+distribution =
+license =
+sortmode =
+page =
+pagesize =
+
+[Statuscodes]
+100 = successfull
+200 = too many API requests in the last 15 minutes from your IP address. please try again later. 

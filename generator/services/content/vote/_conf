@@ -1,0 +1,15 @@
+Description = Vote for one specific content: 0-100
+
+Syntax = /v1/content/vote/"contentid"
+Method = POST
+
+[Args]
+contentid =
+
+[POST Args]
+vote =
+
+[Statuscodes]
+100 = successfull
+101 = content not found
+200 = too many API requests in the last 15 minutes from your IP address. please try again later. 

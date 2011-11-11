@@ -1,0 +1,26 @@
+http://www.freedesktop.org/wiki/Specifications/open-collaboration-services
+
+Mandatory: check the validation
+
+Args:		+ propvalue + '/'
+URL Args:	+ 'X' + propname + '=' + propvalue	
+		if have prior args, 'X' = '&', else 'X' = ''
+		at the beginning of the first arg, we should add '?'
+POST Args:	+ 'X' + propname + '=' + '"' + propvalue + '"'
+		if have prior args, 'X' = '&', else 'X' = ''
+
+
+error in the standard:
+1. message --send ,
+   miss one Argu
+2. content --list
+   /data/ should be /data
+3. content --edit
+   miss the contendid
+4. comment example, first '&' should be '?'
+5. comment add
+   fatal error
+
+
+TODO:
+buildserver module not implement

@@ -1,0 +1,15 @@
+Description = Vote for one specific comment. Only authenticated users are allowed to access this method. Authentication is done by sending a Basic HTTP Authorisation header.  vote: 0==100
+
+Syntax = /v1/comments/vote/"commentid"
+Method = POST
+
+[Args]
+commentid =
+
+[POST Args]
+vote =
+
+[Statuscodes]
+100 = successfull
+101 = comment not found
+200 = too many API requests in the last 15 minutes from your IP address. please try again later. 

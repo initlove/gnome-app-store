@@ -1,0 +1,11 @@
+Description = Gets a list of forums. 
+
+Syntax = /v1/forum/list 
+Method = GET
+
+[URL Args]
+page =
+pagesize =
+
+[Statuscodes]
+100 = successfull

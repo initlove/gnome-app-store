@@ -1,0 +1,16 @@
+Description = Download or buy one specific content item. links to the package and links to repositories are supported. You get the dowloadlink or the packagename/packagerepository comination in the XML. 
+
+Syntax = /v1/content/download/"contentid"/"itemid"
+Method = GET
+
+[Args]
+contentid =
+itemid =
+
+[Statuscodes]
+100 = successfull
+101 = content not found
+102 = payment failed
+103 = content item not found
+104 = please login to buy this content
+200 = too many API requests in the last 15 minutes from your IP address. please try again later. 

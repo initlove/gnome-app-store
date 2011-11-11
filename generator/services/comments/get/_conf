@@ -1,0 +1,22 @@
+Description = Gets a list of comments. 
+
+Syntax = /v1/comments/data/"type"/"contentid"/"contentid2"
+Method = GET
+
+[Args]
+type =
+contentid = 
+contentid2 =
+
+[URL Args]
+page =
+pagesize =
+
+[type]
+1 = content
+4 = forum
+7 = knowledgebase
+8 = event 
+
+[Statuscodes]
+100 = successfull

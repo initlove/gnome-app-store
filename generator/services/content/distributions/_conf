@@ -1,0 +1,7 @@
+Description = Get a list of all possible distributions. The IDs can be alphanumeric. 
+Syntax = /v1/content/distributions
+Method = GET
+
+[Statuscodes]
+100 = successfull
+200 = too many API requests in the last 15 minutes from your IP address. please try again later. 
