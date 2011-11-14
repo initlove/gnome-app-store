@@ -6,3 +6,6 @@ Method = GET
 
 [Statuscodes]
 100 = successfull
+
+[Result]
+ListNodeName = person

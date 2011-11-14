@@ -13,3 +13,9 @@ pagesize =
 
 [Statuscodes]
 100 = successfull
+
+[Result]
+ListNodeName = person
+totalitems =
+itemsperpage =
+

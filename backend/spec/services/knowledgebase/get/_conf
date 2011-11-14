@@ -10,3 +10,7 @@ contentid =
 [Statuscodes]
 100 = successfull
 101 = entry not found 
+
+[Result]
+ListNodeName = knowledgebase
+

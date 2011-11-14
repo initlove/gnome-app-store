@@ -161,6 +161,21 @@ local_uri = g_strdup ("/home/novell/.gnome-app-store/cache/ocs/img/fe6835c189e43
 			clutter_texture_set_from_file (actor, "/home/novell/gnome-app-store/pixmaps/non-starred.png", NULL);
 	}
 
+	gchar *id;
+	gchar *comment_count;
+	clutter_script_get_object (script, "comments-details", &actor, NULL)
+	if (actor) {
+		id = gnome_app_info_get (info, "id");
+		GnomeAppQuery *c_query;
+        	query = gnome_app_query_new_with_services ("comments", "get");
+	        gnome_app_query_set (query, "type", "1");
+        	gnome_app_query_set (query, "contentid", id);
+	        gnome_app_query_set (query, "contentid2", "0");
+        	gnome_app_query_set (query, "pagesize", "35");
+	        gnome_app_query_set (query, "page", "0");
+
+	}
+
         g_signal_connect (page, "event", G_CALLBACK (on_info_page_event), NULL);
 
 	return page;

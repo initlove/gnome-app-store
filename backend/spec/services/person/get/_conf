@@ -11,3 +11,6 @@ personid =
 100 = successfull
 101 = person not found
 102 = data is private 
+
+[Result]
+ListNodeName = person

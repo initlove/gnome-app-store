@@ -23,3 +23,9 @@ pagesize =
 
 [Statuscodes]
 100 = successfull
+
+[Result]
+ListNodeName = event
+totalitems =
+itemsperpage =
+

@@ -9,3 +9,6 @@ contentid =
 
 [Statuscodes]
 100 = successfull
+
+[Result]
+ListNodeName = status

@@ -15,3 +15,6 @@ itemid =
 103 = content item not found
 104 = please login to buy this content
 200 = too many API requests in the last 15 minutes from your IP address. please try again later. 
+
+[Result]
+ListNodeName = content

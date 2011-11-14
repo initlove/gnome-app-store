@@ -104,7 +104,7 @@ on_search_entry_activate (ClutterActor *actor,
 	if (is_blank_text (search))
 		return;
 				
-	query = gnome_app_query_new ();
+	query = gnome_app_query_new_with_services ("content", "list");
 	gnome_app_query_set (query, "search", search);
 	gnome_app_infos_stage_load_query (ui->priv->infos_stage, query);
 	g_object_unref (query);

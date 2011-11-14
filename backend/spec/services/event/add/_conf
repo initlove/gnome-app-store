@@ -33,3 +33,7 @@ email =
 100 = successfull
 101 = please specify all mandatory fields
 102 = no permission to add event 
+
+[Result]
+ListNodeName = event
+

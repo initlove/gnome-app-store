@@ -15,3 +15,8 @@ pagesize =
 100 = successfull
 101 = data is private
 102 = user not found 
+
+[Result]
+ListNodeName = user
+totalitems =
+itemsperpage =

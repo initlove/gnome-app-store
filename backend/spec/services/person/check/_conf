@@ -12,3 +12,6 @@ password =
 100 = successfull / valid account
 101 = please specify all mandatory fields
 102 = login not valid 
+
+[Result]
+ListNodeName = person

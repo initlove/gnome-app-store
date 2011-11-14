@@ -8,11 +8,9 @@ Method = GET
 folderid = 
 messageid = 
 
-[Result]
-0 = unread
-1 = read
-2 = answered
-
 [Statuscodes]
 100 = successfull
 101 = message not found 
+
+[Result]
+ListNodeName = message

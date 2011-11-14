@@ -31,3 +31,9 @@ pagesize=
 
 [Statuscodes]
 100 = successfull
+
+[Result]
+ListNodeName = activity
+totalitems =
+itemsperpage =
+

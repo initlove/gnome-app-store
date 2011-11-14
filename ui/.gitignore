@@ -12,3 +12,7 @@ st*.h
 st*.c
 Makefile
 Makefile.in
+appstore
+appstore_kw
+test-theme
+tags

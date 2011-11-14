@@ -16,3 +16,9 @@ pagesize =
 
 [Statuscodes]
 100 = successfull
+
+[Result]
+ListNodeName = topic
+totalitems =
+itemsperpage =
+

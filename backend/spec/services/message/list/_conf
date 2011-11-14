@@ -12,10 +12,11 @@ status=
 page=
 pagesize=
 
-[Result]
-0 = unread
-1 = read
-2 = answered
-
 [Statuscodes]
 100 = successfull
+
+[Result]
+ListNodeName = message
+totalitems =
+itemsperpage =
+

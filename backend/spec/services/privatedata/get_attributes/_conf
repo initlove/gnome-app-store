@@ -10,3 +10,7 @@ key=
 
 [Statuscodes]
 100 = successfull
+
+[Result]
+ListNodeName = attribute
+totalitems =

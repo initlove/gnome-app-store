@@ -24,3 +24,8 @@ pagesize =
 100 = successfull
 102 = more than 1000 people found. it is not allowed to fetch such a big resultset. please specify more search conditions
 200 = too many API requests in the last 15 minutes from your IP address. please try again later.
+
+[Result]
+totalitems =
+itemsperpage =
+ListNodeName = person

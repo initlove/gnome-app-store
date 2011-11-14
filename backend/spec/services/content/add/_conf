@@ -167,3 +167,7 @@ osbspackage =
 100 = successfull
 101 = please specify all mandatory fields
 102 = no permission to change content 
+
+[Result]
+ListNodeName = content
+
