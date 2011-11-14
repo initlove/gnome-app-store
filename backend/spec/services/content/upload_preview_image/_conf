@@ -1,0 +1,18 @@
+[Summary]
+Description = Upload a new preview image for a content
+
+Syntax = /v1/content/uploadpreview/"contentid"/previewid"
+Method = POST
+
+[Args]
+contentid =
+previewid =
+
+[POST_Args]
+localfile =
+
+[Statuscodes]
+100 = successfull
+101 = localfile not found
+102 = no permission to change content
+103 = preview must be 1, 2 or 3 

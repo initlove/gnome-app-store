@@ -82,6 +82,8 @@ AC_SUBST(CLUTTER_REQUIRED)
 
 dnl pkg-config dependency checks
 
+PKG_CHECK_MODULES(LIBXML, libxml-2.0 >= $LIBXML_REQUIRED)
+PKG_CHECK_MODULES(GIO, glib-2.0 >= $GLIB_REQUIRED gio-2.0 >= $GLIB_REQUIRED)
 PKG_CHECK_MODULES(GNOME_APP_STORE, libxml-2.0 >= $LIBXML_REQUIRED gnome-desktop-3.0 >= $GNOME_DESKTOP_REQUIRED gdk-pixbuf-2.0 >= $GDK_PIXBUF_REQUIRED gtk+-3.0 >= $GTK_REQUIRED glib-2.0 >= $GLIB_REQUIRED gio-2.0 >= $GLIB_REQUIRED gsettings-desktop-schemas >= $GSETTINGS_DESKTOP_SCHEMAS_REQUIRED clutter-1.0 >= $CLUTTER_REQUIRED libgnome-menu)
 PKG_CHECK_MODULES(ST, clutter-1.0 gtk+-3.0 libcroco-0.6 >= 0.6.2 gnome-desktop-3.0 >= 2.90.0 x11)
 PKG_CHECK_MODULES(LIBSOUP, libsoup-2.4)
@@ -104,7 +106,8 @@ GOBJECT_INTROSPECTION_CHECK([0.9.7])
 AC_CONFIG_FILES([
 Makefile
 common/Makefile
-lib/backend/Makefile
+backend/Makefile
+backend/spec/Makefile
 lib/Makefile
 ui/Makefile
 lib/gnome-app-store-0.1.pc

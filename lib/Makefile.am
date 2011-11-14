@@ -1,13 +1,11 @@
 CLEANFILES =
 
-SUBDIRS = backend
-
 lib_LTLIBRARIES = libgnome-app-store.la
 
 AM_CPPFLAGS =							\
 	-I$(top_srcdir)						\
 	-I$(top_srcdir)/common					\
-	-I$(top_srcdir)/lib/backend				\
+	-I$(top_srcdir)/backend				\
 	$(GNOME_APP_STORE_CFLAGS)				\
 	-DCONFIGDIR=\""/etc/gnome-app-store\""                  \
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"			\
@@ -32,7 +30,7 @@ libgnome_app_store_la_SOURCES = \
 
 libgnome_app_store_la_LIBADD =	\
 	$(top_srcdir)/common/libgnome-app-common.la \
-	$(top_srcdir)/lib/backend/libapp-backend.la \
+	$(top_srcdir)/backend/libapp-backend.la \
 	$(GNOME_APP_STORE_LIBS)
 
 appconfigdir = /etc/gnome-app-store

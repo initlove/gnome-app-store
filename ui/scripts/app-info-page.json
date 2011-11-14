@@ -2,9 +2,9 @@
   "Details Page" : {
     "id" : "info-page",
     "type" : "ClutterGroup",
-    "color" : "white",
     "width" : 850,
     "height" : 700,
+    "reactive" : true,
     "children" : [
       {
         "id" : "smallpreviewpic1",
@@ -100,9 +100,9 @@
       {
         "id" : "description",
         "type" : "ClutterText",
-        "x" : 160,
+        "x" : 250,
         "y" : 80,
-	"width": 600, 
+	"width": 500, 
 	"height": 600,
         "text" : "app descriptioin",
         "font-name" : "Sans 12px",
@@ -197,11 +197,27 @@
         ]
       },
       {
+        "id" : "comments-details",
+        "type" : "ClutterText",
+        "x" : 50,
+        "y" : 200,
+        "text" : "comments-details",
+        "font-name" : "Sans 13px",
+        "color" : "black",
+        "line-alignment" : "center",
+        "line-wrap" : false,
+        "ellipsize" : "none",
+        "rotation" : [
+          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
+          { "z-axis" : [ 45.0, [  75,  75 ] ] }
+        ]
+      },
+      {
         "id" : "previewpic1",
         "type" : "ClutterTexture",
-        "x" : 160,
+        "x" : 250,
         "y" : 80,
-        "width" : 600,
+        "width" : 500,
         "height" : 600,
         "keep-aspect-ratio" : true,
         "anchor-x" : "5 em",

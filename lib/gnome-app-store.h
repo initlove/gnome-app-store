@@ -26,7 +26,7 @@
 #include <glib.h>
 #include <glib-object.h>
 #include "common/gnome-app-info.h"
-#include "common/gnome-app-query.h"
+#include "common/open-query.h"
 
 G_BEGIN_DECLS
 
@@ -56,7 +56,7 @@ struct _GnomeAppStoreClass
 GType			gnome_app_store_get_type			(void);
 GnomeAppStore *		gnome_app_store_new				(void);
 const GnomeAppStore *	gnome_app_store_get_default			(void);
-GList *			gnome_app_store_get_apps_by_query		(GnomeAppStore *store, GnomeAppQuery *query);
+GList *			gnome_app_store_get_apps_by_query		(GnomeAppStore *store, OpenQuery *query);
 /*FIXME. still in use? */
 GnomeAppInfo *		gnome_app_store_get_app_by_id			(GnomeAppStore *store, gchar *app_id);
 

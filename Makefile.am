@@ -1,4 +1,4 @@
-SUBDIRS = common lib ui po
+SUBDIRS = common backend lib ui po
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 

@@ -1,0 +1,17 @@
+[Summary]
+Description = Upload a new download file to a content
+
+Syntax = /v1/content/uploaddownload/"contentid"
+Method = POST
+
+[Args]
+contentid =
+
+[POST_Args]
+localfile = 
+
+[Statuscodes]
+100 = successfull
+101 = upload error
+102 = localfile not found
+103 = no permission to change content

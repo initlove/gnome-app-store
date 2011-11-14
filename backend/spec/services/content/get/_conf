@@ -1,0 +1,16 @@
+[Summary]
+Description = Read content data of one specific content. 
+
+Syntax = /v1/content/data/"contentid"
+Method = GET
+
+[Args]
+contentid =
+
+[Statuscodes]
+100 = successfull
+101 = content not found
+200 = too many API requests in the last 15 minutes from your IP address. please try again later.
+
+[Result]
+ListNodeName = content

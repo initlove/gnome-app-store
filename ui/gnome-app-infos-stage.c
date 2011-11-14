@@ -228,7 +228,7 @@ gnome_app_infos_stage_load_query (GnomeAppInfosStage *infos_stage, GnomeAppQuery
 {
 	gint pagesize;
 	gchar *val;
-printf ("gnome_app_infos_stage_load_query\n");
+
 	if (infos_stage->priv->query)
 		g_object_unref (infos_stage->priv->query);
 	infos_stage->priv->query = g_object_ref (query);
@@ -239,8 +239,8 @@ printf ("gnome_app_infos_stage_load_query\n");
 		pagesize = 1;
 	}
 	val = g_strdup_printf ("%d", pagesize);
-	g_object_set (infos_stage->priv->query, QUERY_PAGESIZE, val, NULL);
-	g_object_set (infos_stage->priv->query, QUERY_PAGE, "0", NULL); // no need in fact
+	gnome_app_query_set (infos_stage->priv->query, "pagesize", val);
+	gnome_app_query_set (infos_stage->priv->query, "page", "0"); // no need in fact
 	g_free (val);
 
 	load_query (infos_stage);
@@ -253,19 +253,18 @@ gnome_app_infos_stage_page_change (GnomeAppInfosStage *infos_stage, gint change)
 	gint page;
 
 	if (infos_stage->priv->query) {
-		g_object_get (infos_stage->priv->query, QUERY_PAGE, &val, NULL);
+		val = gnome_app_query_get (infos_stage->priv->query, "page");
 		if (val) {
 			page = atoi (val);
 			page += change;
 			if (page < 0) {
 				/* nothing happen */
 			} else {
-				g_free (val);
 				val = g_strdup_printf ("%d", page);
-				g_object_set (infos_stage->priv->query, QUERY_PAGE, val, NULL);
+				gnome_app_query_set (infos_stage->priv->query, "page", val);
 				load_query (infos_stage);
+				g_free (val);
 			}
-			g_free (val);
 		}
 		
 	}

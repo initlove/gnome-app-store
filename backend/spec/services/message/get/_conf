@@ -1,0 +1,16 @@
+[Summary]
+Description = Get a message. Only authenticated users are allowed to access this method. Authentication is done by sending a Basic HTTP Authorisation header. the message will be marked as "read" if you access it with this method. 
+
+Syntax = /v1/message/"folderid"/"messageid"
+Method = GET
+
+[Args]
+folderid = 
+messageid = 
+
+[Statuscodes]
+100 = successfull
+101 = message not found 
+
+[Result]
+ListNodeName = message
