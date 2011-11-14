@@ -6,26 +6,47 @@
 #include <glib.h>
 #include <glib-object.h>
 
+typedef enum _SPEC_TYPE {
+	SPEC_NONE,
+	SPEC_REQUEST,
+	SPEC_RESULT,
+	SPEC_LAST
+} SPEC_TYPE;
 
 static gchar *conf_filename = "_conf";
-gboolean is_query = FALSE;
+static SPEC_TYPE create_type = SPEC_NONE;
 
 gboolean
-is_query_group (gchar *query)
+is_type (gchar *group_name, SPEC_TYPE type)
 {
-/* 	If we are going to generate the query.xml, 
+/* 	If we are going to generate the request.xml, 
 	we should only use the following group:
 	Summary, Args, POST_Args, URL_Args
 	In Summary, only Syntax and Method are necessary, but we leave Description here
 */
-	gchar *query_groups [] = {
+	gchar *request_groups [] = {
 		"Summary", "Args", "POST_Args", "URL_Args", NULL,
+	};
+	gchar *result_groups [] = {
+		"Result", NULL, 
 	};
 	gint i;
 
-	for (i = 0; query_groups [i]; i++) {
-		if (strcmp (query, query_groups [i]) == 0)
-			return TRUE;
+	switch (type) {
+		case SPEC_REQUEST:
+			for (i = 0; request_groups [i]; i++) {
+				if (strcmp (group_name, request_groups [i]) == 0)
+				return TRUE;
+			}
+			break;
+		case SPEC_RESULT:
+			for (i = 0; result_groups [i]; i++) {
+				if (strcmp (group_name, result_groups [i]) == 0)
+				return TRUE;
+			}
+			break;
+		default:
+			break;
 	}
 
 	return FALSE;
@@ -55,10 +76,8 @@ ocs_add_file (xmlNodePtr node, gchar *filename)
 	groups = g_key_file_get_groups (key_file, &group_number);
 
 	for (group_loop = 0; group_loop < group_number; group_loop ++) {
-		if (is_query) {
-			if (!is_query_group (*(groups + group_loop)))
-				continue;
-		}
+		if (!is_type (*(groups + group_loop), create_type))
+			continue;
 		xmlNodePtr group_node;
 		group_node = xmlNewTextChild (node, NULL, *(groups + group_loop), NULL);
 		keys = g_key_file_get_keys (key_file, *(groups + group_loop), &key_numbers, NULL);
@@ -115,9 +134,21 @@ main (int argc, gchar **argv)
         g_type_init ();
 
 	ocs_config = "ocs.conf";
-	is_query = TRUE;
-	if (is_query)
-		output = "ocs-services-query.xml";
+	if (argc < 2) {
+		printf ("spec + action\n");
+		return 1;
+	}
+	if (strcmp (argv [1], "request") == 0) {
+		create_type = SPEC_REQUEST;
+		output = "ocs-services-request.xml";
+	} else if (strcmp (argv [1], "result") == 0) {
+		create_type = SPEC_RESULT;
+		output = "ocs-services-result.xml";
+	} else {
+		printf ("input the corrent action!\n");
+		return 1;
+	}
+	
 
 	key_file = g_key_file_new ();
 	error = NULL;

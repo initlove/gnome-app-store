@@ -79,17 +79,17 @@ get_ids_by_list (GList *list, gchar sep)
 }
 
 xmlDocPtr
-ocs_query_get_default_doc ()
+ocs_request_get_default_doc ()
 {
 	static xmlDocPtr doc_ptr = NULL;
 	gchar *doc_file;
 
 	if (!doc_ptr) {
 /*TODO other dir */
-		doc_file = "/home/novell/gnome-app-store/spec/ocs-services-query.xml";
+		doc_file = "/home/novell/gnome-app-store/backend/spec/ocs-services-request.xml";
 		doc_ptr = xmlParseFile (doc_file);
 		if (!doc_ptr) {
-			g_critical ("Cannot find ocs-query doc in %s\n", doc_file);
+			g_critical ("Cannot find ocs-request doc in %s\n", doc_file);
 			exit (1);
 		}
 	}
@@ -98,7 +98,7 @@ ocs_query_get_default_doc ()
 }
 
 gchar *
-ocs_query_get_value (const gchar *services, 
+ocs_request_get_value (const gchar *services, 
 		const gchar *operation, 
 		const gchar *group, 
 		const gchar *key)
@@ -109,7 +109,7 @@ ocs_query_get_value (const gchar *services,
 	xmlNodePtr root_node, services_node, operation_node, group_node, key_node;
 	gchar *val;
 
-	doc_ptr = ocs_query_get_default_doc ();
+	doc_ptr = ocs_request_get_default_doc ();
 	root_node = ocs_find_node (doc_ptr, "services");
 
 	for (services_node = root_node->xmlChildrenNode; services_node; services_node = services_node->next) {
@@ -152,8 +152,10 @@ ocs_query_get_value (const gchar *services,
 		return NULL;
 }
 
+/*TODO: make a cache or something */
+/*TODO: make the ocs-request-xml validation check be for use it */
 GList *
-ocs_query_get_keys (const gchar *services, 
+ocs_request_get_keys (const gchar *services, 
 		const gchar *operation, 
 		const gchar *group)
 {
@@ -161,7 +163,7 @@ ocs_query_get_keys (const gchar *services,
 	xmlNodePtr root_node, services_node, operation_node, group_node, key_node;
 	GList *list = NULL;
 
-	doc_ptr = ocs_query_get_default_doc ();
+	doc_ptr = ocs_request_get_default_doc ();
 	root_node = ocs_find_node (doc_ptr, "services");
 
 	for (services_node = root_node->xmlChildrenNode; services_node; services_node = services_node->next) {
@@ -213,7 +215,7 @@ ocs_query_get_keys (const gchar *services,
 }
 
 gboolean
-ocs_query_is_valid (GnomeAppQuery *query)
+ocs_request_is_valid (OpenRequest *request)
 {
 	/*Check the services,
 	  Check the Args,
@@ -223,15 +225,15 @@ ocs_query_is_valid (GnomeAppQuery *query)
 	const gchar *operation;
 	gchar *syntax;
 
-	services = gnome_app_query_get (query, "services");
+	services = open_request_get (request, "services");
 	if (!services || !services [0])
 		return FALSE;
 
-	operation = gnome_app_query_get (query, "operation");
+	operation = open_request_get (request, "operation");
 	if (!operation || !operation [0])
 		return FALSE;
 
-	syntax = ocs_query_get_value (services, operation, "Summary", "Syntax");
+	syntax = ocs_request_get_value (services, operation, "Summary", "Syntax");
 	if (!syntax || !syntax [0]) {
 		g_critical ("Cannot find syntax of %s - %s\n", services, operation);
 		exit (1); 
@@ -257,16 +259,16 @@ ocs_query_is_valid (GnomeAppQuery *query)
 	const gchar *val;
 
 	for (i = 0; groups [i]; i++) {
-		keys = ocs_query_get_keys (services, operation, groups [i]);
+		keys = ocs_request_get_keys (services, operation, groups [i]);
 		for (l = keys; l; l = l->next) {
 			key = (gchar *) l->data;
 			if (strcmp (groups [i], "Args") == 0) {
 			} else {
-				val = ocs_query_get_value (services, operation, groups [i], key);
+				val = ocs_request_get_value (services, operation, groups [i], key);
 				if (!val || (strcmp (val, "Mandatory") != 0))
 					continue;
 			}
-			val = gnome_app_query_get (query, key);
+			val = open_request_get (request, key);
 			if (!val || !val [0]) {
 				g_list_free (keys);
 				return FALSE;
@@ -279,20 +281,21 @@ ocs_query_is_valid (GnomeAppQuery *query)
 }
 
 gchar *
-ocs_make_request_by_query (OcsBackend *backend, GnomeAppQuery *query)
+ocs_get_request_url (OcsBackend *backend, OpenRequest *request)
 {
-	g_return_val_if_fail (query && GNOME_APP_IS_QUERY (query), NULL);
+	g_return_val_if_fail (request && IS_OPEN_REQUEST (request), NULL);
 
-	if (!ocs_query_is_valid (query))
+	if (!ocs_request_is_valid (request))
 		return NULL;
+
 	const gchar *services;
 	const gchar *operation;
-	GString *request;
+	GString *url;
 
-	services = gnome_app_query_get (query, "services");
-	operation = gnome_app_query_get (query, "operation");
-        request = g_string_new ("https://");
-        g_string_append_printf (request, "%s:%s@%s",
+	services = open_request_get (request, "services");
+	operation = open_request_get (request, "operation");
+        url = g_string_new ("https://");
+        g_string_append_printf (url, "%s:%s@%s",
 				ocs_backend_get_username (backend),
 				ocs_backend_get_password (backend),
 				ocs_backend_get_server_uri (backend));
@@ -303,13 +306,13 @@ ocs_make_request_by_query (OcsBackend *backend, GnomeAppQuery *query)
 	gchar *key;
 	const gchar *value;
 
-	syntax = ocs_query_get_value (services, operation, "Summary", "Syntax");
+	syntax = ocs_request_get_value (services, operation, "Summary", "Syntax");
         for (begin = syntax;;) {
                 if (!begin || !begin [0])
                         break;
                 p = strchr (begin, '"');
                 if (!p) {
-                        g_string_append_printf (request, "%s", begin);
+                        g_string_append_printf (url, "%s", begin);
                         break;
                 }   
 
@@ -318,39 +321,39 @@ ocs_make_request_by_query (OcsBackend *backend, GnomeAppQuery *query)
                 p = strchr (key, '"');
                 *p = 0;
                 if (begin && begin [0])
-                        g_string_append_printf (request, "%s", begin);
-		value = gnome_app_query_get (query, key);
-                g_string_append_printf (request, "%s", value);
+                        g_string_append_printf (url, "%s", begin);
+		value = open_request_get (request, key);
+                g_string_append_printf (url, "%s", value);
                 begin = p + 1;
         }
 	g_free (syntax);
 
 	/* URL_Args */
 	gboolean first;
-	GList *url_keys, *l;
-	gchar *url_key;
-	const gchar *url_value;
+	GList *keys, *l;
 
 	first = TRUE;
-	url_keys = ocs_query_get_keys (services, operation, "URL_Args");
-	for (l = url_keys; l; l = l->next) {
-		url_key = (gchar *) l->data;
-		url_value = gnome_app_query_get (query, url_key);
-		if (!url_value || !url_value [0])
+	keys = ocs_request_get_keys (services, operation, "URL_Args");
+	for (l = keys; l; l = l->next) {
+		key = (gchar *) l->data;
+		value = open_request_get (request, key);
+		if (!value || !value [0])
 			 continue;
 		if (first) {
 			first = FALSE;
-			g_string_append_c (request, '?');
+			g_string_append_c (url, '?');
 		} else {
-			g_string_append_c (request, '&');
+			g_string_append_c (url, '&');
 		}
-                g_string_append_printf (request, "%s=%s", url_key, url_value);
+                g_string_append_printf (url, "%s=%s", key, value);
 	}
 
 	gchar *val;
 
-	val = request->str;
-	g_string_free (request, FALSE);
+	val = url->str;
+	g_string_free (url, FALSE);
+
+	g_debug ("Make the request %s\n", val);
 
 	return val;
 }

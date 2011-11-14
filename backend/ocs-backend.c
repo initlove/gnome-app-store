@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ocs-app-info.h"
+#include "ocs-result.h"
 #include "ocs-request.h"
 #include "ocs-backend.h"
 #include "gnome-app-config.h"
@@ -188,13 +188,12 @@ parse_apps (OcsBackend *ocs_backend, xmlNodePtr data_node)
 	gchar *id;
 	GList *list = NULL;
 
-	OcsAppInfo *info;
+	OcsResult *result;
 
 	for (apps_node = data_node->xmlChildrenNode; apps_node; apps_node = apps_node->next) {
 		if (strcmp (apps_node->name, "content") == 0) {
-			info = ocs_app_info_new ();
-			ocs_app_info_set_summary (info, apps_node);
-			list = g_list_prepend (list, info);
+		//	result = ocs_app_result_new ();
+			list = g_list_prepend (list, result);
 		}
 	}
 	if (list)
@@ -204,18 +203,18 @@ parse_apps (OcsBackend *ocs_backend, xmlNodePtr data_node)
 }
 
 static GList *
-get_apps_by_query (AppBackend *backend, GnomeAppQuery *query)
+get_results (AppBackend *backend, OpenRequest *request)
 {
 	OcsBackend *ocs_backend = OCS_BACKEND (backend);
 	OcsBackendPrivate *priv = ocs_backend->priv;
 
-	gchar *request;
+	gchar *url;
 	xmlDocPtr doc_ptr;
 	xmlNodePtr data_node;
 	GList *list;
 
-	request = ocs_make_request_by_query (ocs_backend, query);
-	doc_ptr = ocs_get_request_doc (ocs_backend, request);
+	url = ocs_get_request_url (ocs_backend, request);
+	doc_ptr = ocs_get_request_doc (ocs_backend, url);
 
 	if (doc_ptr) {
 		data_node = ocs_find_node (doc_ptr, "data");
@@ -224,7 +223,7 @@ get_apps_by_query (AppBackend *backend, GnomeAppQuery *query)
 	} else
 		list = NULL;
 
-	g_free (request);
+	g_free (url);
 
 	return list;
 }
@@ -296,7 +295,7 @@ ocs_backend_class_init (OcsBackendClass *klass)
 	parent_class->get_backend_type = get_backend_type;
 	parent_class->get_backend_name = get_backend_name;
 	parent_class->get_backend_icon_name = get_backend_icon_name;
-	parent_class->get_apps_by_query = get_apps_by_query;
+	parent_class->get_results = get_results;
 	parent_class->set_config = set_config;
 
 	g_type_class_add_private (object_class, sizeof (OcsBackendPrivate));

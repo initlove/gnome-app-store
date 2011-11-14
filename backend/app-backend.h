@@ -23,9 +23,8 @@
 #ifndef __APP_BACKEND_H__
 #define __APP_BACKEND_H__
 
-#include "gnome-app-info.h"
 #include "gnome-app-config.h"
-#include "gnome-app-query.h"
+#include "open-request.h"
 
 G_BEGIN_DECLS
 
@@ -61,8 +60,9 @@ struct _AppBackendClass
 	const gchar *(*get_backend_type) (AppBackend        *backend);
 	const gchar *(*get_backend_name) (AppBackend        *backend);
 	const gchar *(*get_backend_icon_name) (AppBackend        *backend);
-	GList	    *(*get_apps_by_query)	 (AppBackend *backend,
-						GnomeAppQuery *query);
+	GList	    *(*get_results)	 (AppBackend *backend,
+					 OpenRequest *request,
+					 gint *totalitems);
 	gboolean     (*set_config)		(AppBackend *backend,
 						GnomeAppConfig *config);
 };
@@ -72,7 +72,7 @@ AppBackend  *	app_backend_new_from_config 		(GnomeAppConfig *config);
 const gchar *	app_backend_get_backend_type		(AppBackend	*backend);
 const gchar *	app_backend_get_backend_name		(AppBackend	*backend);
 const gchar *	app_backend_get_backend_icon_name	(AppBackend	*backend);
-GList *		app_backend_get_apps_by_query		(AppBackend	*backend, GnomeAppQuery *query);
+GList *		app_backend_get_results			(AppBackend	*backend, OpenRequest *request, gint *totalitems);
 
 G_END_DECLS
 

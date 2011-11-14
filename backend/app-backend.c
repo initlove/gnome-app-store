@@ -64,11 +64,11 @@ app_backend_get_backend_icon_name (AppBackend *backend)
 }
 
 GList *
-app_backend_get_apps_by_query (AppBackend *backend, GnomeAppQuery *query)
+app_backend_get_results (AppBackend *backend, OpenRequest *request, gint *totalitems)
 {
 	g_return_val_if_fail (APP_IS_BACKEND (backend), NULL);
 
-	return APP_BACKEND_GET_CLASS (backend)->get_apps_by_query (backend, query);
+	return APP_BACKEND_GET_CLASS (backend)->get_results (backend, request, totalitems);
 }
 
 gboolean

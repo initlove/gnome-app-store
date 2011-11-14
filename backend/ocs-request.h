@@ -25,7 +25,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include "gnome-app-query.h"
+#include "open-request.h"
 #include "ocs-backend.h"
 
 G_BEGIN_DECLS
@@ -34,11 +34,11 @@ G_BEGIN_DECLS
 /* make the cache better */
 
 xmlNodePtr	ocs_find_node			(xmlDocPtr doc_ptr, gchar *node_name);
-gchar *		ocs_make_request_by_query 	(OcsBackend *backend, GnomeAppQuery *query);
+gchar *		ocs_get_request_url	 	(OcsBackend *backend, OpenRequest *request);
 xmlDocPtr	ocs_get_request_doc		(OcsBackend *backend, gchar *request);
-gboolean	ocs_query_is_valid		(GnomeAppQuery *query);
-GList *		ocs_query_get_keys		(const gchar *services,	const gchar *operation, const gchar *group);
-gchar *		ocs_query_get_value		(const gchar *services,	const gchar *operation, const gchar *group, const gchar *key);
+gboolean	ocs_request_is_valid		(OpenRequest *request);
+GList *		ocs_request_get_keys		(const gchar *services,	const gchar *operation, const gchar *group);
+gchar *		ocs_request_get_value		(const gchar *services,	const gchar *operation, const gchar *group, const gchar *key);
 
 
 G_END_DECLS
