@@ -43,8 +43,7 @@ gnome_app_store_ui_init (GnomeAppStoreUI *ui)
 
 	priv->info_page = NULL;
 	priv->frame_ui = gnome_app_frame_ui_new ();
-        query = gnome_app_query_new ();
-        g_object_set (query, QUERY_GROUP, NULL, NULL);
+        query = gnome_app_query_new_with_services ("content", "list");
 	gnome_app_frame_ui_load_query (priv->frame_ui, query);
         g_object_unref (query);
 

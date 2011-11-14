@@ -99,7 +99,7 @@ init_cids (OcsBackend *ocs_backend)
 				priv->server_uri);
         doc_ptr = ocs_get_request_doc (ocs_backend, request);
         if (doc_ptr) {
-                data_node = find_node (doc_ptr, "data");
+                data_node = ocs_find_node (doc_ptr, "data");
                 parse_cids (ocs_backend, data_node);
                 xmlFreeDoc(doc_ptr);
         }
@@ -214,11 +214,11 @@ get_apps_by_query (AppBackend *backend, GnomeAppQuery *query)
 	xmlNodePtr data_node;
 	GList *list;
 
-	request = make_request_by_query (ocs_backend, query);
+	request = ocs_make_request_by_query (ocs_backend, query);
 	doc_ptr = ocs_get_request_doc (ocs_backend, request);
 
 	if (doc_ptr) {
-		data_node = find_node (doc_ptr, "data");
+		data_node = ocs_find_node (doc_ptr, "data");
 		list = parse_apps (ocs_backend, data_node);
 		xmlFreeDoc(doc_ptr);
 	} else

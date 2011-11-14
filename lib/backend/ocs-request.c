@@ -31,7 +31,7 @@
 /*FIXME: there must be such function in xml interface !*/
 /*Search in the childnode of the rootnode*/
 xmlNodePtr
-find_node (xmlDocPtr doc_ptr, gchar *node_name)
+ocs_find_node (xmlDocPtr doc_ptr, gchar *node_name)
 {
         xmlNodePtr root_node, data_node;
 
@@ -47,20 +47,6 @@ find_node (xmlDocPtr doc_ptr, gchar *node_name)
                         return data_node;
         }
         return NULL;
-}
-
-gchar *
-make_request_by_appid (OcsBackend *backend, gchar *id)
-{
-        gchar *url;
-
-        url = g_strdup_printf ("http://%s:%s@%s%s/v1/content/data/%s", 
-				ocs_backend_get_username (backend),
-				ocs_backend_get_password (backend),
-				ocs_backend_get_server_uri (backend),
-                                id);
-
-	return url;
 }
 
 static gchar *
@@ -92,44 +78,277 @@ get_ids_by_list (GList *list, gchar sep)
         return str;
 }
 
-gchar *
-make_request_by_query (OcsBackend *backend, GnomeAppQuery *query)
+xmlDocPtr
+ocs_query_get_default_doc ()
 {
-	GString *request;
-        GList *list;
-        gint prop_id;
-        gchar *prop_value;
-        gboolean begin;
+	static xmlDocPtr doc_ptr = NULL;
+	gchar *doc_file;
+
+	if (!doc_ptr) {
+/*TODO other dir */
+		doc_file = "/home/novell/gnome-app-store/spec/ocs-services-query.xml";
+		doc_ptr = xmlParseFile (doc_file);
+		if (!doc_ptr) {
+			g_critical ("Cannot find ocs-query doc in %s\n", doc_file);
+			exit (1);
+		}
+	}
+
+	return doc_ptr;
+}
+
+gchar *
+ocs_query_get_value (const gchar *services, 
+		const gchar *operation, 
+		const gchar *group, 
+		const gchar *key)
+{
+	g_return_val_if_fail (services && operation && group &&key, NULL);
+
+	xmlDocPtr doc_ptr;
+	xmlNodePtr root_node, services_node, operation_node, group_node, key_node;
 	gchar *val;
 
-	g_return_val_if_fail (gnome_app_query_is_valid (query), NULL);
+	doc_ptr = ocs_query_get_default_doc ();
+	root_node = ocs_find_node (doc_ptr, "services");
 
+	for (services_node = root_node->xmlChildrenNode; services_node; services_node = services_node->next) {
+                if (strcmp (services_node->name, services) == 0)
+			break;
+	}
+	if (!services_node) {
+		g_debug ("Cannot find the service %s!\n", services);
+		return NULL;
+	}
+
+	for (operation_node = services_node->xmlChildrenNode; operation_node; operation_node = operation_node->next) {
+		if (strcmp (operation_node->name, operation) == 0)
+			break;
+	}
+	if (!operation_node) {
+		g_debug ("Cannot find the operation %s in service %s!\n", operation, services);
+		return NULL;
+	}
+
+	for (group_node = operation_node->xmlChildrenNode; group_node; group_node = group_node->next) {
+		if (strcmp (group_node->name, group) == 0)
+			break;
+	}
+	if (!group_node)
+		return NULL;
+
+	for (key_node = group_node->xmlChildrenNode; key_node; key_node = key_node->next) {
+		if (strcmp (key_node->name, key) == 0)
+			break;
+	}
+	if (!key_node)
+		return NULL;
+
+	val = xmlNodeGetContent (key_node);
+
+	if (val && val [0])
+		return g_strdup (val);
+	else
+		return NULL;
+}
+
+GList *
+ocs_query_get_keys (const gchar *services, 
+		const gchar *operation, 
+		const gchar *group)
+{
+	xmlDocPtr doc_ptr;
+	xmlNodePtr root_node, services_node, operation_node, group_node, key_node;
+	GList *list = NULL;
+
+	doc_ptr = ocs_query_get_default_doc ();
+	root_node = ocs_find_node (doc_ptr, "services");
+
+	for (services_node = root_node->xmlChildrenNode; services_node; services_node = services_node->next) {
+		if (services) {
+	                if (strcmp (services_node->name, services) == 0)
+				break;
+		} else {
+			list = g_list_prepend (list, g_strdup (services_node->name));
+		}
+	}
+	if (!services_node) {
+		list = g_list_reverse (list);
+		return list;
+	}
+
+	for (operation_node = services_node->xmlChildrenNode; operation_node; operation_node = operation_node->next) {
+		if (operation) {
+			if (strcmp (operation_node->name, operation) == 0)
+				break;
+		} else {
+			list = g_list_prepend (list, g_strdup (operation_node->name));
+		}
+	}
+	if (!operation_node) {
+		list = g_list_reverse (list);
+		return list;
+	}
+
+	for (group_node = operation_node->xmlChildrenNode; group_node; group_node = group_node->next) {
+		if (group_node) {
+			if (strcmp (group_node->name, group) == 0)
+				break;
+		} else {
+			list = g_list_prepend (list, g_strdup (group_node->name));
+		}
+	}
+	if (!group_node) {
+		list = g_list_reverse (list);
+		return list;
+	}
+	
+	for (key_node = group_node->xmlChildrenNode; key_node; key_node = key_node->next) {
+		list = g_list_prepend (list, g_strdup (key_node->name));
+	}
+	if (list)
+		list = g_list_reverse (list);
+
+	return list;
+}
+
+gboolean
+ocs_query_is_valid (GnomeAppQuery *query)
+{
+	/*Check the services,
+	  Check the Args,
+	  Check the mandatory URL_Args and POST_Args
+	*/
+	const gchar *services;
+	const gchar *operation;
+	gchar *syntax;
+
+	services = gnome_app_query_get (query, "services");
+	if (!services || !services [0])
+		return FALSE;
+
+	operation = gnome_app_query_get (query, "operation");
+	if (!operation || !operation [0])
+		return FALSE;
+
+	syntax = ocs_query_get_value (services, operation, "Summary", "Syntax");
+	if (!syntax || !syntax [0]) {
+		g_critical ("Cannot find syntax of %s - %s\n", services, operation);
+		exit (1); 
+	}
+
+	gint i, len;
+	gboolean syntax_valid;
+
+	syntax_valid = TRUE;
+	len = strlen (syntax);
+	for (i = 0; i < len; i++)
+		if (*(syntax + i) == '"')
+			syntax_valid = !syntax_valid;
+	if (!syntax_valid) {
+		g_critical ("Fatal error in ocs syntax %s - %s : %s!\n", services, operation, syntax);
+		exit (1);
+	}
+	g_free (syntax);
+
+	const gchar *groups [] = {"Args", "URL_Args", "POST_Args", NULL};
+	GList *keys, *l;
+	gchar *key;
+	const gchar *val;
+
+	for (i = 0; groups [i]; i++) {
+		keys = ocs_query_get_keys (services, operation, groups [i]);
+		for (l = keys; l; l = l->next) {
+			key = (gchar *) l->data;
+			if (strcmp (groups [i], "Args") == 0) {
+			} else {
+				val = ocs_query_get_value (services, operation, groups [i], key);
+				if (!val || (strcmp (val, "Mandatory") != 0))
+					continue;
+			}
+			val = gnome_app_query_get (query, key);
+			if (!val || !val [0]) {
+				g_list_free (keys);
+				return FALSE;
+			}
+		}
+		g_list_free (keys);
+	}
+
+	return TRUE;
+}
+
+gchar *
+ocs_make_request_by_query (OcsBackend *backend, GnomeAppQuery *query)
+{
+	g_return_val_if_fail (query && GNOME_APP_IS_QUERY (query), NULL);
+
+	if (!ocs_query_is_valid (query))
+		return NULL;
+	const gchar *services;
+	const gchar *operation;
+	GString *request;
+
+	services = gnome_app_query_get (query, "services");
+	operation = gnome_app_query_get (query, "operation");
         request = g_string_new ("https://");
-        g_string_append_printf (request, "%s:%s@%s/v1/content/data?",
+        g_string_append_printf (request, "%s:%s@%s",
 				ocs_backend_get_username (backend),
 				ocs_backend_get_password (backend),
 				ocs_backend_get_server_uri (backend));
 
-        /*TODO: if the prop was not exist, solve it ! */
-        begin = TRUE;
-        for (prop_id = PROP_QUERY_GROUP; prop_id < PROP_QUERY_LAST; prop_id ++) {
-                g_object_get (query, query_units [prop_id].name, &prop_value, NULL);
-                if (prop_value) {
-                        if (begin)
-                                begin = FALSE;
-                        else
-                                g_string_append_c (request, '&');
-                        if (prop_id == PROP_QUERY_GROUP) {
-                                g_free (prop_value);
-                                list = ocs_get_cid_list_by_group (backend, prop_value);
-                                prop_value = get_ids_by_list (list, 'x');
-                                g_list_free (list);
-                        	g_string_append_printf (request, "%s=%s", "categories", prop_value);
-                        } else
- 	                       g_string_append_printf (request, "%s=%s", query_units [prop_id].name, prop_value);
-                        g_free (prop_value);
-                }
+	/* Syntax and Args */
+	gchar *syntax;
+	gchar *begin, *p;
+	gchar *key;
+	const gchar *value;
+
+	syntax = ocs_query_get_value (services, operation, "Summary", "Syntax");
+        for (begin = syntax;;) {
+                if (!begin || !begin [0])
+                        break;
+                p = strchr (begin, '"');
+                if (!p) {
+                        g_string_append_printf (request, "%s", begin);
+                        break;
+                }   
+
+                *p = 0;
+                key = p + 1;
+                p = strchr (key, '"');
+                *p = 0;
+                if (begin && begin [0])
+                        g_string_append_printf (request, "%s", begin);
+		value = gnome_app_query_get (query, key);
+                g_string_append_printf (request, "%s", value);
+                begin = p + 1;
         }
+	g_free (syntax);
+
+	/* URL_Args */
+	gboolean first;
+	GList *url_keys, *l;
+	gchar *url_key;
+	const gchar *url_value;
+
+	first = TRUE;
+	url_keys = ocs_query_get_keys (services, operation, "URL_Args");
+	for (l = url_keys; l; l = l->next) {
+		url_key = (gchar *) l->data;
+		url_value = gnome_app_query_get (query, url_key);
+		if (!url_value || !url_value [0])
+			 continue;
+		if (first) {
+			first = FALSE;
+			g_string_append_c (request, '?');
+		} else {
+			g_string_append_c (request, '&');
+		}
+                g_string_append_printf (request, "%s=%s", url_key, url_value);
+	}
+
+	gchar *val;
+
 	val = request->str;
 	g_string_free (request, FALSE);
 
@@ -154,7 +373,7 @@ check_data_valid (xmlDocPtr doc_ptr)
         gint status_code;
         gchar *message;
 
-        meta_node = find_node (doc_ptr, "meta");
+        meta_node = ocs_find_node (doc_ptr, "meta");
         if (!meta_node) {
                 return FALSE;
         } else {

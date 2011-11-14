@@ -1,0 +1,25 @@
+[Summary]
+Description = Add a comment. Only authenticated users are allowed to access this method. Authentication is done by sending a Basic HTTP Authorisation header. 
+
+Syntax = /v1/comments/add
+Method = POST
+
+[POST_Args]
+type =
+contentid =
+contentid2 =
+parent =
+subject =
+message =
+
+[type]
+1 = content
+4 = forum
+7 = knowledgebase
+8 = event 
+
+[Statuscodes]
+100 = successfull
+101 = content must not be empty
+102 = message or subject must not be empty
+103 = no permission to add a comment 

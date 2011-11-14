@@ -105,7 +105,7 @@ on_search_entry_activate (ClutterActor *actor,
 		return;
 				
 	query = gnome_app_query_new ();
-	g_object_set (query, QUERY_GROUP, search, NULL);
+	gnome_app_query_set (query, "search", search);
 	gnome_app_infos_stage_load_query (ui->priv->infos_stage, query);
 	g_object_unref (query);
 }
@@ -167,7 +167,8 @@ on_category_event (ClutterActor *actor,
 		label_new = st_button_get_label (ST_BUTTON (actor));
 		ui = GNOME_APP_FRAME_UI (data);
 		query = gnome_app_query_new ();
-		g_object_set (query, QUERY_GROUP, label_new, NULL);
+// TODO this GROUP should be get from backend
+//	g_object_set (query, QUERY_GROUP, label_new, NULL);
 		gnome_app_infos_stage_load_query (ui->priv->infos_stage, query);
 		g_object_unref (query);
 		break;

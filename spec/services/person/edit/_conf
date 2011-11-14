@@ -1,0 +1,15 @@
+[Summary]
+Description=Update the latitude, longitude, city and country of myself. Only authenticated users are allowed to access this method. Authentication is done by sending a Basic HTTP Authorisation header.
+
+Syntax = /v1/person/self
+Method = POST
+
+[POST_Args]
+latitude =
+longitude =
+city =
+country =
+
+[Statuscodes]
+100 = successfull
+101 = no parameters to update found 

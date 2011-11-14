@@ -33,9 +33,13 @@ G_BEGIN_DECLS
 /*FIXME: make request a gobject ? */
 /* make the cache better */
 
-gchar 		*make_request_by_query 	(OcsBackend *backend, GnomeAppQuery *query);
-xmlNodePtr	find_node		(xmlDocPtr doc_ptr, gchar *node_name);
-xmlDocPtr	ocs_get_request_doc	(OcsBackend *backend, gchar *request);
+xmlNodePtr	ocs_find_node			(xmlDocPtr doc_ptr, gchar *node_name);
+gchar *		ocs_make_request_by_query 	(OcsBackend *backend, GnomeAppQuery *query);
+xmlDocPtr	ocs_get_request_doc		(OcsBackend *backend, gchar *request);
+gboolean	ocs_query_is_valid		(GnomeAppQuery *query);
+GList *		ocs_query_get_keys		(const gchar *services,	const gchar *operation, const gchar *group);
+gchar *		ocs_query_get_value		(const gchar *services,	const gchar *operation, const gchar *group, const gchar *key);
+
 
 G_END_DECLS
 

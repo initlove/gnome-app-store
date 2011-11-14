@@ -1,0 +1,8 @@
+[Summary]
+Description = Get a list of all possible dependencies. 
+Syntax = /v1/content/dependencies 
+Method = GET
+
+[Statuscodes]
+100 = successfull
+200 = too many API requests in the last 15 minutes from your IP address. please try again later. 

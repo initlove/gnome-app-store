@@ -1,0 +1,14 @@
+[Summary]
+Description = Check if the given login and password or the API key is valid. It returns the associated username. 
+
+Syntax = /v1/person/check
+Method = POST
+
+[POST_Args]
+login = Mandatory
+password =
+
+[Statuscodes]
+100 = successfull / valid account
+101 = please specify all mandatory fields
+102 = login not valid 
