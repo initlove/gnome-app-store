@@ -57,6 +57,8 @@ GnomeAppConfig *        gnome_app_config_new                    (void);
 gchar 	*		gnome_app_config_get_server_type 	(GnomeAppConfig *config);
 gchar   *		gnome_app_config_get_server_uri		(GnomeAppConfig *conf);
 gchar	*		gnome_app_config_get_cache_dir		(GnomeAppConfig *conf);
+gchar	*		gnome_app_config_get_username		(GnomeAppConfig *conf);
+gchar	*		gnome_app_config_get_password		(GnomeAppConfig *conf);
 
 G_END_DECLS
 

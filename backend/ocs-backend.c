@@ -181,18 +181,18 @@ get_backend_icon_name (AppBackend *backend)
 }
 
 static GList *
-parse_apps (OcsBackend *ocs_backend, xmlNodePtr data_node)
+parse_data (OcsBackend *ocs_backend, xmlNodePtr data_node)
 {
 	OcsBackendPrivate *priv = ocs_backend->priv;
-	xmlNodePtr apps_node, id_node;
+	xmlNodePtr apps_node, id_node, node;
 	gchar *id;
 	GList *list = NULL;
 
 	OcsResult *result;
 
-	for (apps_node = data_node->xmlChildrenNode; apps_node; apps_node = apps_node->next) {
+	for (node = data_node->xmlChildrenNode; node; node = node->next) {
 		if (strcmp (apps_node->name, "content") == 0) {
-		//	result = ocs_app_result_new ();
+			result = ocs_result_new_with_data (node);
 			list = g_list_prepend (list, result);
 		}
 	}
@@ -218,7 +218,7 @@ get_results (AppBackend *backend, OpenRequest *request)
 
 	if (doc_ptr) {
 		data_node = ocs_find_node (doc_ptr, "data");
-		list = parse_apps (ocs_backend, data_node);
+		list = parse_data (ocs_backend, data_node);
 		xmlFreeDoc(doc_ptr);
 	} else
 		list = NULL;
@@ -237,8 +237,8 @@ set_config (AppBackend *backend, GnomeAppConfig *config)
 
 	priv->server_uri = gnome_app_config_get_server_uri (config);
 	/*FIXME: the following should be retrieved from config too*/
-	priv->username = g_strdup ("initlove");
-	priv->password = g_strdup ("novell123456");
+	priv->username = gnome_app_config_get_username (config);
+	priv->password = gnome_app_config_get_password (config);
 	priv->sync = TRUE;
 	priv->cafile = NULL;
 	priv->session = gnome_app_soup_session_new (priv->sync, priv->cafile);
