@@ -1,5 +1,5 @@
 CLEANFILES =
-SUBDIRS = spec
+SUBDIRS = ocs-spec
 
 lib_LTLIBRARIES = libapp-backend.la
 
@@ -20,9 +20,10 @@ AM_CFLAGS = $(WARN_CFLAGS)
 
 libapp_backend_la_SOURCES = 	\
 	app-backend.c app-backend.h \
-	ocs-result.c ocs-result.h \
-	ocs-request.c ocs-request.h \
 	ocs-backend.c ocs-backend.h	\
+	ocs-result.c ocs-result.h \
+	ocs-results.c ocs-results.h \
+	ocs-request.c ocs-request.h \
 	$(NULL)
 
 libapp_backend_la_LIBADD =	\

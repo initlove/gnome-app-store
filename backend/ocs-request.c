@@ -86,7 +86,8 @@ ocs_request_get_default_doc ()
 
 	if (!doc_ptr) {
 /*TODO other dir */
-		doc_file = "/home/novell/gnome-app-store/backend/spec/ocs-services-request.xml";
+/*TODO: make the ocs-request-xml validation check be in this time ! */
+		doc_file = "/home/novell/gnome-app-store/backend/ocs-spec/ocs-services-request.xml";
 		doc_ptr = xmlParseFile (doc_file);
 		if (!doc_ptr) {
 			g_critical ("Cannot find ocs-request doc in %s\n", doc_file);

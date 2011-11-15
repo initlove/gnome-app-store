@@ -23,6 +23,7 @@
 #ifndef __OCS_RESULT_H__
 #define __OCS_RESULT_H__
 
+#include <libxml/tree.h>
 #include "open-result.h"
 
 G_BEGIN_DECLS

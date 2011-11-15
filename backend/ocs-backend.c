@@ -180,29 +180,7 @@ get_backend_icon_name (AppBackend *backend)
 {
 }
 
-static GList *
-parse_data (OcsBackend *ocs_backend, xmlNodePtr data_node)
-{
-	OcsBackendPrivate *priv = ocs_backend->priv;
-	xmlNodePtr apps_node, id_node, node;
-	gchar *id;
-	GList *list = NULL;
-
-	OcsResult *result;
-
-	for (node = data_node->xmlChildrenNode; node; node = node->next) {
-		if (strcmp (apps_node->name, "content") == 0) {
-			result = ocs_result_new_with_data (node);
-			list = g_list_prepend (list, result);
-		}
-	}
-	if (list)
-		list = g_list_reverse (list);
-
-	return list;
-}
-
-static GList *
+static OpenResults *
 get_results (AppBackend *backend, OpenRequest *request)
 {
 	OcsBackend *ocs_backend = OCS_BACKEND (backend);
@@ -210,22 +188,18 @@ get_results (AppBackend *backend, OpenRequest *request)
 
 	gchar *url;
 	xmlDocPtr doc_ptr;
-	xmlNodePtr data_node;
-	GList *list;
+	OpenResults *results;
 
 	url = ocs_get_request_url (ocs_backend, request);
 	doc_ptr = ocs_get_request_doc (ocs_backend, url);
-
 	if (doc_ptr) {
-		data_node = ocs_find_node (doc_ptr, "data");
-		list = parse_data (ocs_backend, data_node);
+		results = ocs_get_results (request, doc_ptr);
 		xmlFreeDoc(doc_ptr);
-	} else
-		list = NULL;
+	}
 
 	g_free (url);
 
-	return list;
+	return results;
 }
 
 /*TODO: FIXME: if set config for more than once, do the free thing.. */

@@ -107,7 +107,7 @@ AC_CONFIG_FILES([
 Makefile
 common/Makefile
 backend/Makefile
-backend/spec/Makefile
+backend/ocs-spec/Makefile
 lib/Makefile
 ui/Makefile
 lib/gnome-app-store-0.1.pc

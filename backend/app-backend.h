@@ -25,6 +25,7 @@
 
 #include "gnome-app-config.h"
 #include "open-request.h"
+#include "open-results.h"
 
 G_BEGIN_DECLS
 
@@ -60,9 +61,8 @@ struct _AppBackendClass
 	const gchar *(*get_backend_type) (AppBackend        *backend);
 	const gchar *(*get_backend_name) (AppBackend        *backend);
 	const gchar *(*get_backend_icon_name) (AppBackend        *backend);
-	GList	    *(*get_results)	 (AppBackend *backend,
-					 OpenRequest *request,
-					 gint *totalitems);
+	OpenResults *(*get_results)	 (AppBackend *backend,
+					 OpenRequest *request);
 	gboolean     (*set_config)		(AppBackend *backend,
 						GnomeAppConfig *config);
 };
@@ -72,7 +72,7 @@ AppBackend  *	app_backend_new_from_config 		(GnomeAppConfig *config);
 const gchar *	app_backend_get_backend_type		(AppBackend	*backend);
 const gchar *	app_backend_get_backend_name		(AppBackend	*backend);
 const gchar *	app_backend_get_backend_icon_name	(AppBackend	*backend);
-GList *		app_backend_get_results			(AppBackend	*backend, OpenRequest *request, gint *totalitems);
+OpenResults *	app_backend_get_results			(AppBackend	*backend, OpenRequest *request);
 
 G_END_DECLS
 

@@ -63,12 +63,12 @@ app_backend_get_backend_icon_name (AppBackend *backend)
 	return APP_BACKEND_GET_CLASS (backend)->get_backend_icon_name (backend) ;
 }
 
-GList *
-app_backend_get_results (AppBackend *backend, OpenRequest *request, gint *totalitems)
+OpenResults *
+app_backend_get_results (AppBackend *backend, OpenRequest *request)
 {
 	g_return_val_if_fail (APP_IS_BACKEND (backend), NULL);
 
-	return APP_BACKEND_GET_CLASS (backend)->get_results (backend, request, totalitems);
+	return APP_BACKEND_GET_CLASS (backend)->get_results (backend, request);
 }
 
 gboolean
