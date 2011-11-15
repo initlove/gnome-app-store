@@ -23,9 +23,9 @@ Author: David Liang <dliang@novell.com>
 
 #include "gnome-app-store.h"
 #include "backend/app-backend.h"
-#include "common/gnome-app-info.h"
 #include "common/gnome-app-config.h"
-#include "common/gnome-app-query.h"
+#include "common/open-request.h"
+#include "common/open-results.h"
 
 struct _GnomeAppStorePrivate
 {
@@ -105,44 +105,13 @@ app_need_reload (GnomeAppStore *store, gchar *app_id)
 	return FALSE;
 }
 
-static void
-app_timestamp_mark (GnomeAppStore *store, GnomeAppInfo *info)
-{
-	/*FIXME: not implement */
-}
-
-GnomeAppInfo *
-gnome_app_store_get_app_by_id (GnomeAppStore *store, gchar *app_id)
-{
-/*FIXME: make a cache? */
-#if 0
-	GnomeAppInfo *info;
-
-	info = g_hash_table_lookup (store->priv->app_id, app_id);
-	if (!info) {
-		info = app_backend_get_app_by_id (store->priv->backend, app_id);
-		app_timestamp_mark (store, info);
-		g_hash_table_insert (store->priv->app_id, g_strdup (app_id), info);
-	} else if (app_need_reload (store, app_id)){
-		info = app_backend_get_app_by_id (store->priv->backend, app_id);
-		g_hash_table_replace (store->priv->app_id, g_strdup (app_id), info);
-	}
-
-	return g_object_ref (info);
-#endif
-}
-
-GList *
-gnome_app_store_get_apps_by_query (GnomeAppStore *store, OpenQuery *query)
+OpenResults *
+gnome_app_store_get_results (GnomeAppStore *store, OpenRequest *request)
 {
 	g_return_val_if_fail (store && GNOME_APP_IS_STORE (store), NULL);
-	g_return_val_if_fail (query && GNOME_APP_IS_QUERY (query), NULL);
+	g_return_val_if_fail (request && IS_OPEN_REQUEST (request), NULL);
 
-	GList *list;
-
-	list = app_backend_get_apps_by_query (store->priv->backend, query);
-
-	return list;
+	return app_backend_get_results (store->priv->backend, request);
 }
 
 const GnomeAppStore *
