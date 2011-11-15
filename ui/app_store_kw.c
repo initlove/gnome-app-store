@@ -39,7 +39,6 @@ main (int argc, char *argv[])
 	clutter_container_add_actor (CLUTTER_CONTAINER (stage), scroll);
 	      
 	GnomeAppStore *store;
-	GnomeAppInfo *info;
 	GnomeAppInfoIcon *info_ui;
 /*TODO
 	remove all the content 

@@ -24,7 +24,7 @@
 #define __GNOME_APP_INFOS_STAGE_H__
 
 #include <clutter/clutter.h>
-#include "gnome-app-query.h"
+#include "open-request.h"
 
 G_BEGIN_DECLS
 
@@ -56,7 +56,7 @@ void			gnome_app_infos_stage_clean			(GnomeAppInfosStage *infos_stage);
 void			gnome_app_infos_stage_add_actor		(GnomeAppInfosStage *infos_stage, ClutterActor *actor);
 //FIXME: add_actors seems useless 
 void			gnome_app_infos_stage_add_actors		(GnomeAppInfosStage *infos_stage, GList *actors);
-void			gnome_app_infos_stage_load_query		(GnomeAppInfosStage *infos_stage, GnomeAppQuery *query);
+void			gnome_app_infos_stage_load_request		(GnomeAppInfosStage *infos_stage, OpenRequest *request);
 void			gnome_app_infos_stage_page_change		(GnomeAppInfosStage *infos_stage, gint change);
 
 G_END_DECLS

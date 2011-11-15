@@ -279,8 +279,6 @@ gnome_app_get_local_icon (const gchar *uri)
 {
 	g_return_val_if_fail (uri != NULL, NULL);
 
-	g_debug ("gnome_app_get_local_icon %s\n", uri);
-
 	GnomeAppConfig *config;
 	gchar *md5;
 	gchar *cache_dir;

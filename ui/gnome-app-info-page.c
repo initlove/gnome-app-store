@@ -18,15 +18,16 @@ Author: Lance Wang <lzwang@suse.com>
 
 #include <clutter/clutter.h>
 
+#include "open-services.h"
+
 #include "gnome-app-utils.h"
 #include "gnome-app-store-ui.h"
 #include "gnome-app-info-page.h"
-#include "gnome-app-info.h"
 #include "gnome-app-install.h"
 
 struct _GnomeAppInfoPagePrivate
 {
-	GnomeAppInfo *info;
+	AppInfo *info;
 };
 
 G_DEFINE_TYPE (GnomeAppInfoPage, gnome_app_info_page, CLUTTER_TYPE_GROUP)
@@ -91,7 +92,7 @@ on_info_page_event (ClutterActor *actor,
 }
 
 GnomeAppInfoPage *
-gnome_app_info_page_new_with_app (GnomeAppInfo *info)
+gnome_app_info_page_new_with_app (AppInfo *info)
 {
 	GnomeAppInfoPage *page;
 
@@ -130,7 +131,7 @@ gnome_app_info_page_new_with_app (GnomeAppInfo *info)
 		clutter_script_get_objects (script, prop [i], &actor, NULL);
 		if (!actor)
 			continue;
-		val = gnome_app_info_get (info, prop [i]);
+		val = app_info_get (info, prop [i]);
 		if (CLUTTER_IS_TEXTURE (actor)) {
 			local_uri = gnome_app_get_local_icon (val);
 /*FIXME: tmp for no network debug */
@@ -150,7 +151,7 @@ local_uri = g_strdup ("/home/novell/.gnome-app-store/cache/ocs/img/fe6835c189e43
 	}
 
 	gchar *scores [] = { "score-1", "score-2", "score-3", "score-4", "score-5", NULL};
-	gint app_score = atoi (gnome_app_info_get (info, "score")) / 20;
+	gint app_score = atoi (app_info_get (info, "score")) / 20;
 	for (i = 0; scores [i]; i++) {
 		clutter_script_get_objects (script, scores [i], &actor, NULL);
 		if (!actor)
@@ -163,16 +164,16 @@ local_uri = g_strdup ("/home/novell/.gnome-app-store/cache/ocs/img/fe6835c189e43
 
 	gchar *id;
 	gchar *comment_count;
-	clutter_script_get_object (script, "comments-details", &actor, NULL)
+	clutter_script_get_objects (script, "comments-details", &actor, NULL);
 	if (actor) {
-		id = gnome_app_info_get (info, "id");
-		GnomeAppQuery *c_query;
-        	query = gnome_app_query_new_with_services ("comments", "get");
-	        gnome_app_query_set (query, "type", "1");
-        	gnome_app_query_set (query, "contentid", id);
-	        gnome_app_query_set (query, "contentid2", "0");
-        	gnome_app_query_set (query, "pagesize", "35");
-	        gnome_app_query_set (query, "page", "0");
+		id = app_info_get (info, "id");
+		CommentRequest *request;
+        	request = comment_request_new ();
+	        comment_request_set (request, "type", "1");
+        	comment_request_set (request, "contentid", id);
+	        comment_request_set (request, "contentid2", "0");
+        	comment_request_set (request, "pagesize", "35");
+	        comment_request_set (request, "page", "0");
 
 	}
 

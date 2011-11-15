@@ -97,3 +97,14 @@ open_request_get (OpenRequest *request, gchar *key)
 
 	return value;
 }
+
+OpenRequest *
+open_request_new_with_services  (gchar *services)
+{
+	OpenRequest *request;
+
+        request = open_request_new ();
+        open_request_set (request, "services", services);
+
+	return request;
+}  

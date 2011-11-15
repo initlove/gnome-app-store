@@ -15,9 +15,9 @@ Author: David Liang <dliang@novell.com>
 #include <math.h>
 #include <clutter/clutter.h>
 #include "st.h"
-#include "gnome-app-query.h"
+#include "open-services.h"
+#include "open-request.h"
 #include "gnome-app-store.h"
-#include "gnome-app-info.h"
 #include "gnome-app-info-icon.h"
 #include "gnome-app-infos-stage.h"
 
@@ -35,7 +35,7 @@ struct _GnomeAppInfosStagePrivate
 	gint icon_width;
 	gint icon_height;
 
-	GnomeAppQuery *query;
+	AppRequest *request;
 };
 
 G_DEFINE_TYPE (GnomeAppInfosStage, gnome_app_infos_stage, CLUTTER_TYPE_GROUP)
@@ -103,7 +103,7 @@ gnome_app_infos_stage_init (GnomeAppInfosStage *infos_stage)
 	priv->cols = 7; //FIXME: should be calculated
 	priv->icon_width = 96;
 	priv->icon_height = 96;
-	priv->query = NULL;
+	priv->request = NULL;
 
 	priv->viewport = clutter_box_new (clutter_box_layout_new ());
 	clutter_container_add_actor (CLUTTER_CONTAINER (infos_stage), priv->viewport);
@@ -137,8 +137,8 @@ gnome_app_infos_stage_finalize (GObject *object)
 	GnomeAppInfosStage *infos_stage = GNOME_APP_INFOS_STAGE (object);
 	GnomeAppInfosStagePrivate *priv = infos_stage->priv;
 
-	if (priv->query)
-		g_object_unref (priv->query);
+	if (priv->request)
+		g_object_unref (priv->request);
 //TODO: any other thing to finalize ?
 	
 	G_OBJECT_CLASS (gnome_app_infos_stage_parent_class)->finalize (object);
@@ -199,39 +199,41 @@ gnome_app_infos_stage_add_actors (GnomeAppInfosStage *infos_stage, GList *actors
 }
 
 static void
-load_query (GnomeAppInfosStage *infos_stage)
+load_request (GnomeAppInfosStage *infos_stage)
 {
         GList *list, *l;
         const GnomeAppStore *store;
+	OpenResults *results;
 
 	store = gnome_app_store_get_default (); 
-	list = gnome_app_store_get_apps_by_query ((GnomeAppStore *)store, infos_stage->priv->query);
+	results = gnome_app_store_get_results ((GnomeAppStore *)store, infos_stage->priv->request);
+	list = open_results_get_data (results);
 	if (list)
 		gnome_app_infos_stage_clean (infos_stage);
 	else
 		return;
 
         for (l = list; l; l = l->next) {
-               	GnomeAppInfo *info;
+               	AppInfo *info;
 		GnomeAppInfoIcon *info_icon;
-		info = (GnomeAppInfo *) l->data;
+		info = (AppInfo *) l->data;
 		info_icon = gnome_app_info_icon_new_with_app (info);
 		gnome_app_infos_stage_add_actor (infos_stage, CLUTTER_ACTOR (info_icon));
 /*FIXME: ref or unref? */
 //		g_object_unref (info_icon);
         }
-//	g_list_free (list);
+	g_object_unref (results);
 }
 
 void
-gnome_app_infos_stage_load_query (GnomeAppInfosStage *infos_stage, GnomeAppQuery *query)
+gnome_app_infos_stage_load_request (GnomeAppInfosStage *infos_stage, AppRequest *request)
 {
 	gint pagesize;
 	gchar *val;
 
-	if (infos_stage->priv->query)
-		g_object_unref (infos_stage->priv->query);
-	infos_stage->priv->query = g_object_ref (query);
+	if (infos_stage->priv->request)
+		g_object_unref (infos_stage->priv->request);
+	infos_stage->priv->request = g_object_ref (request);
 
 	pagesize = infos_stage->priv->rows * infos_stage->priv->cols;
 	if (pagesize < 1) {
@@ -239,11 +241,11 @@ gnome_app_infos_stage_load_query (GnomeAppInfosStage *infos_stage, GnomeAppQuery
 		pagesize = 1;
 	}
 	val = g_strdup_printf ("%d", pagesize);
-	gnome_app_query_set (infos_stage->priv->query, "pagesize", val);
-	gnome_app_query_set (infos_stage->priv->query, "page", "0"); // no need in fact
+	app_request_set (infos_stage->priv->request, "pagesize", val);
+	app_request_set (infos_stage->priv->request, "page", "0"); // no need in fact
 	g_free (val);
 
-	load_query (infos_stage);
+	load_request (infos_stage);
 }
 
 void
@@ -252,8 +254,8 @@ gnome_app_infos_stage_page_change (GnomeAppInfosStage *infos_stage, gint change)
 	gchar *val;
 	gint page;
 
-	if (infos_stage->priv->query) {
-		val = gnome_app_query_get (infos_stage->priv->query, "page");
+	if (infos_stage->priv->request) {
+		val = app_request_get (infos_stage->priv->request, "page");
 		if (val) {
 			page = atoi (val);
 			page += change;
@@ -261,8 +263,8 @@ gnome_app_infos_stage_page_change (GnomeAppInfosStage *infos_stage, gint change)
 				/* nothing happen */
 			} else {
 				val = g_strdup_printf ("%d", page);
-				gnome_app_query_set (infos_stage->priv->query, "page", val);
-				load_query (infos_stage);
+				app_request_set (infos_stage->priv->request, "page", val);
+				load_request (infos_stage);
 				g_free (val);
 			}
 		}

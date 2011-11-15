@@ -51,12 +51,11 @@ struct _OpenRequestClass
         GObjectClass parent_class;
 };
 
-/*We only provide a mechanism */
-
 GType                   open_request_get_type		(void);
-OpenRequest *         	open_request_new			(void);
-void			open_request_set 			(OpenRequest *request, gchar *arg_name, gchar *arg_value);
-const gchar *		open_request_get 			(OpenRequest *request, gchar *arg);
+OpenRequest *         	open_request_new		(void);
+void			open_request_set 		(OpenRequest *request, gchar *arg_name, gchar *arg_value);
+const gchar *		open_request_get 		(OpenRequest *request, gchar *arg);
+OpenRequest *         	open_request_new_with_services	(gchar *services);
 
 G_END_DECLS
 

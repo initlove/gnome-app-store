@@ -25,7 +25,7 @@
 #include <glib.h>
 #include <clutter/clutter.h>
 
-#include "gnome-app-info.h"
+#include "open-services.h"
 
 G_BEGIN_DECLS
 
@@ -55,7 +55,7 @@ struct _GnomeAppStoreUIClass
 GType				gnome_app_store_ui_get_type		(void);
 GnomeAppStoreUI *		gnome_app_store_ui_get_default		(void);
 GnomeAppStoreUI *		gnome_app_store_ui_new			(void);
-void				gnome_app_store_ui_load_app_info	(GnomeAppStoreUI *ui, GnomeAppInfo *info);
+void				gnome_app_store_ui_load_app_info	(GnomeAppStoreUI *ui, AppInfo *info);
 void				gnome_app_store_ui_load_frame_ui	(GnomeAppStoreUI *ui);
 
 G_END_DECLS

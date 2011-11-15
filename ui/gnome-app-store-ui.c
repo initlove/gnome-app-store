@@ -16,6 +16,7 @@ Author: Liang chenye <liangchenye@gmail.com>
 #include <glib/gi18n.h>
 #include <clutter/clutter.h>
 
+#include "open-services.h"
 #include "gnome-app-store-ui.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-frame-ui.h"
@@ -32,7 +33,7 @@ static void
 gnome_app_store_ui_init (GnomeAppStoreUI *ui)
 {
 	GnomeAppStoreUIPrivate *priv;
-        GnomeAppQuery *query;
+        AppRequest *request;
 
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
 							 GNOME_APP_TYPE_STORE_UI,
@@ -43,9 +44,10 @@ gnome_app_store_ui_init (GnomeAppStoreUI *ui)
 
 	priv->info_page = NULL;
 	priv->frame_ui = gnome_app_frame_ui_new ();
-        query = gnome_app_query_new_with_services ("content", "list");
-	gnome_app_frame_ui_load_query (priv->frame_ui, query);
-        g_object_unref (query);
+        request = app_request_new ();
+	app_request_set (request, "operation", "list");
+	gnome_app_frame_ui_load_request (priv->frame_ui, request);
+        g_object_unref (request);
 
 	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (priv->frame_ui));
 }
@@ -98,7 +100,7 @@ gnome_app_store_ui_get_default ()
 
 //TODO: here, we can implement some animation when click between frame and page
 void
-gnome_app_store_ui_load_app_info (GnomeAppStoreUI *ui, GnomeAppInfo *info)
+gnome_app_store_ui_load_app_info (GnomeAppStoreUI *ui, AppInfo *info)
 {
 	GnomeAppStoreUIPrivate *priv = ui->priv;
 

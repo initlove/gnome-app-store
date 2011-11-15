@@ -17,16 +17,15 @@ Author: Lance Wang <lzwang@suse.com>
 #include <string.h>
 
 #include <clutter/clutter.h>
-
+#include "open-services.h"
 #include "gnome-app-utils.h"
-#include "gnome-app-info.h"
 #include "gnome-app-info-icon.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-store-ui.h"
 
 struct _GnomeAppInfoIconPrivate
 {
-	GnomeAppInfo *info;
+	AppInfo *info;
 };
 
 G_DEFINE_TYPE (GnomeAppInfoIcon, gnome_app_info_icon, CLUTTER_TYPE_GROUP)
@@ -72,7 +71,7 @@ gnome_app_info_icon_class_init (GnomeAppInfoIconClass *klass)
 }
 
 static gboolean
-app_fullview_cb (GnomeAppInfo *info)
+app_fullview_cb (AppInfo *info)
 {
 	gnome_app_info_debug (info);
 #if 0
@@ -92,17 +91,17 @@ on_info_icon_event (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
-	GnomeAppInfo *info;
+	AppInfo *info;
 	GnomeAppStoreUI *store_ui;
 	ClutterActor *page, *stage;
 
-	info = GNOME_APP_INFO (data);
+	info = APP_INFO (data);
 	switch (event->type)
 	{
 	case CLUTTER_BUTTON_PRESS:
 		store_ui = gnome_app_store_ui_get_default ();
 		gnome_app_store_ui_load_app_info (store_ui, info);
-printf ("debug event %s\n", gnome_app_info_get (info, "name"));
+printf ("debug event %s\n", app_info_get (info, "name"));
 
 		break;
 		
@@ -111,7 +110,7 @@ printf ("debug event %s\n", gnome_app_info_get (info, "name"));
 }
 
 GnomeAppInfoIcon *
-gnome_app_info_icon_new_with_app (GnomeAppInfo *info)
+gnome_app_info_icon_new_with_app (AppInfo *info)
 {
 	GnomeAppInfoIcon *info_icon;
 
@@ -147,11 +146,11 @@ gnome_app_info_icon_new_with_app (GnomeAppInfo *info)
         gchar *local_uri;
 
 	clutter_script_get_objects (script, "name", &actor, NULL);
-	val = gnome_app_info_get (info, "name");
+	val = app_info_get (info, "name");
 	clutter_text_set_text (CLUTTER_TEXT (actor), val);
 
 	clutter_script_get_objects (script, "smallpreviewpic1", &actor, NULL);
-	val = gnome_app_info_get (info, "smallpreviewpic1");
+	val = app_info_get (info, "smallpreviewpic1");
 	local_uri = gnome_app_get_local_icon (val);
 	clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), local_uri, NULL);
 	g_free (local_uri);

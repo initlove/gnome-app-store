@@ -16,7 +16,7 @@ Author: Liang chenye <liangchenye@gmail.com>
 #include <stdio.h>
 #include <string.h>
 #include <clutter/clutter.h>
-#include "gnome-app-query.h"
+#include "open-request.h"
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-infos-stage.h"
 
@@ -98,16 +98,17 @@ on_search_entry_activate (ClutterActor *actor,
 		GnomeAppFrameUI *ui)
 {
 	const gchar *search;
-	GnomeAppQuery *query;
+	AppRequest *request;
 
 	search = clutter_text_get_text (CLUTTER_TEXT (actor));
 	if (is_blank_text (search))
 		return;
 				
-	query = gnome_app_query_new_with_services ("content", "list");
-	gnome_app_query_set (query, "search", search);
-	gnome_app_infos_stage_load_query (ui->priv->infos_stage, query);
-	g_object_unref (query);
+	request = app_request_new ();
+	app_request_set (request, "operation", "list");
+	app_request_set (request, "search", search);
+	gnome_app_infos_stage_load_request (ui->priv->infos_stage, request);
+	g_object_unref (request);
 }
 
 static gboolean
@@ -117,7 +118,7 @@ on_search_entry_event (ClutterActor *actor,
 {
 	gchar *search;
 	GnomeAppFrameUI *ui;
-	GnomeAppQuery *query;
+	AppRequest *request;
 
 	ui = GNOME_APP_FRAME_UI (data);
         switch (event->type)
@@ -159,18 +160,18 @@ on_category_event (ClutterActor *actor,
 {
 	const gchar *label_new;
 	GnomeAppFrameUI *ui;
-	GnomeAppQuery *query;
+	AppRequest *request;
 
         switch (event->type)
         {
         case CLUTTER_BUTTON_PRESS:
 		label_new = st_button_get_label (ST_BUTTON (actor));
 		ui = GNOME_APP_FRAME_UI (data);
-		query = gnome_app_query_new ();
+		request = app_request_new ();
 // TODO this GROUP should be get from backend
-//	g_object_set (query, QUERY_GROUP, label_new, NULL);
-		gnome_app_infos_stage_load_query (ui->priv->infos_stage, query);
-		g_object_unref (query);
+//	g_object_set (request, QUERY_GROUP, label_new, NULL);
+		gnome_app_infos_stage_load_request (ui->priv->infos_stage, request);
+		g_object_unref (request);
 		break;
 	}
 
@@ -336,9 +337,9 @@ gnome_app_frame_ui_class_init (GnomeAppFrameUIClass *klass)
 }
 
 void
-gnome_app_frame_ui_load_query (GnomeAppFrameUI *ui, GnomeAppQuery *query)
+gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui, AppRequest *request)
 {
-	gnome_app_infos_stage_load_query (ui->priv->infos_stage, query);
+	gnome_app_infos_stage_load_request (ui->priv->infos_stage, request);
 }
 
 GnomeAppFrameUI *
