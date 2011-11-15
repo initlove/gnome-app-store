@@ -213,7 +213,6 @@ ocs_get_results (OpenRequest *request, xmlDocPtr doc_ptr)
 	}
 
 	list_node_name = ocs_results_get_value (request, "ListNodeName");
-printf ("list node %s\n", list_node_name);
 	if (list_node_name) {
 		data_node = ocs_find_node (doc_ptr, "data");
 		list = parse_data (request, data_node, list_node_name);

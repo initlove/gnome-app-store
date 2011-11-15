@@ -204,9 +204,16 @@ load_request (GnomeAppInfosStage *infos_stage)
         GList *list, *l;
         const GnomeAppStore *store;
 	OpenResults *results;
+	gint total_items;
 
 	store = gnome_app_store_get_default (); 
 	results = gnome_app_store_get_results ((GnomeAppStore *)store, infos_stage->priv->request);
+	if (!open_results_get_status (results)) {
+		g_debug ("Fail to send request !\n");
+		return ;
+	}
+	total_items = open_results_get_total_items (results);
+printf ("total items %d\n", total_items);
 	list = open_results_get_data (results);
 	if (list)
 		gnome_app_infos_stage_clean (infos_stage);
@@ -251,7 +258,7 @@ gnome_app_infos_stage_load_request (GnomeAppInfosStage *infos_stage, AppRequest 
 void
 gnome_app_infos_stage_page_change (GnomeAppInfosStage *infos_stage, gint change)
 {
-	gchar *val;
+	const gchar *val;
 	gint page;
 
 	if (infos_stage->priv->request) {
@@ -262,10 +269,11 @@ gnome_app_infos_stage_page_change (GnomeAppInfosStage *infos_stage, gint change)
 			if (page < 0) {
 				/* nothing happen */
 			} else {
-				val = g_strdup_printf ("%d", page);
-				app_request_set (infos_stage->priv->request, "page", val);
+				gchar *new_val;
+				new_val = g_strdup_printf ("%d", page);
+				app_request_set (infos_stage->priv->request, "page", new_val);
 				load_request (infos_stage);
-				g_free (val);
+				g_free (new_val);
 			}
 		}
 		
