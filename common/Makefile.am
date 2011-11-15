@@ -17,6 +17,7 @@ AM_CPPFLAGS =							\
 AM_CFLAGS = $(WARN_CFLAGS)
 
 libgnome_app_common_la_SOURCES = 	\
+	open-services.h \
 	open-request.c open-request.h \
 	open-result.c open-result.h \
 	open-results.c open-results.h \
