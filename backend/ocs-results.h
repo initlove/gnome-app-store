@@ -64,10 +64,12 @@ struct _OcsResultsClass
 
 GType		ocs_results_get_type		(void) G_GNUC_CONST;
 OcsResults *	ocs_results_new			(void);
-void		ocs_results_set_meta		(OcsResults *results, xmlNodePtr meta_node);
+void		ocs_results_set_meta		(OpenResults *results, xmlNodePtr meta_node);
+void		ocs_results_set_data		(OpenResults *results, GList *list);
 const gchar *	ocs_results_get_meta		(OpenResults *results, const gchar *prop);
-void		ocs_results_set_data		(OcsResults *results, GList *list);
 GList *		ocs_results_get_data		(OpenResults *results);
+gboolean	ocs_results_get_status		(OpenResults *results);
+gint		ocs_results_get_total_items	(OpenResults *results);
 
 G_END_DECLS
 

@@ -53,12 +53,18 @@ struct _OpenResultsClass
 	/* virtual */
 	const gchar	*(*get_meta)		(OpenResults *results, const gchar *prop);
 	GList		*(*get_data)		(OpenResults *results);
+	/*get status and get total items can be done by get_meta, but different spec may have diffent 'name' */
+	gboolean	(*get_status)		(OpenResults *results);
+	gint		(*get_total_items)	(OpenResults *results);
 };
 
 GType			open_results_get_type		(void);
 OpenResults *		open_results_new		(void);
 const gchar *		open_results_get_meta		(OpenResults *results, const gchar *prop);
 GList *			open_results_get_data		(OpenResults *results);
+
+gboolean		open_results_get_status		(OpenResults *results);
+gint			open_results_get_total_items	(OpenResults *results);
 
 G_END_DECLS
 

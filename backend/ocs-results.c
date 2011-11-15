@@ -22,6 +22,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "ocs-request.h"
@@ -82,6 +83,8 @@ ocs_results_class_init (OcsResultsClass *klass)
 
 	parent_class->get_meta = ocs_results_get_meta;
 	parent_class->get_data = ocs_results_get_data;
+	parent_class->get_status = ocs_results_get_status;
+	parent_class->get_total_items = ocs_results_get_total_items;
 
 	g_type_class_add_private (object_class, sizeof (OcsResultsPrivate));
 }
@@ -221,10 +224,12 @@ printf ("list node %s\n", list_node_name);
 }
 
 void
-ocs_results_set_meta (OcsResults *results, xmlNodePtr meta_node)
+ocs_results_set_meta (OpenResults *open_results, xmlNodePtr meta_node)
 {
+	OcsResults *results;
 	OcsResultsPrivate *priv;
 
+	results = OCS_RESULTS (open_results);
 	priv = results->priv;
 	if (priv->meta)
 		xmlFreeNode (priv->meta);
@@ -232,10 +237,12 @@ ocs_results_set_meta (OcsResults *results, xmlNodePtr meta_node)
 }
 
 void
-ocs_results_set_data (OcsResults *results, GList *list)
+ocs_results_set_data (OpenResults *open_results, GList *list)
 {
+	OcsResults *results;
 	OcsResultsPrivate *priv;
 
+	results = OCS_RESULTS (open_results);
 	priv = results->priv;
 	if (priv->data)
 		g_list_free (priv->data);
@@ -271,3 +278,28 @@ ocs_results_get_data (OpenResults *open_results)
 	return results->priv->data;
 }
 
+gboolean
+ocs_results_get_status (OpenResults *open_results)
+{
+	gboolean val;
+	const gchar *value;
+	
+	value = ocs_results_get_meta (open_results, "statuscode");
+	if (value && (strcmp (value, "100") == 0))
+		return TRUE;
+
+	return FALSE;
+}
+
+gint
+ocs_results_get_total_items (OpenResults *open_results)
+{
+	gboolean val;
+	const gchar *value;
+	
+	value = ocs_results_get_meta (open_results, "totalitems");
+	if (value)
+		return atoi (value);
+
+	return -1;
+}

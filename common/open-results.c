@@ -43,3 +43,19 @@ open_results_get_data (OpenResults *results)
 	return OPEN_RESULTS_GET_CLASS (results)->get_data (results);
 }
 
+gboolean
+open_results_get_status (OpenResults *results)
+{
+	g_return_val_if_fail (results && IS_OPEN_RESULTS (results), FALSE);
+
+	return OPEN_RESULTS_GET_CLASS (results)->get_status (results);
+}
+
+gint
+open_results_get_total_items (OpenResults *results)
+{
+	g_return_val_if_fail (results && IS_OPEN_RESULTS (results), -1);
+
+	return OPEN_RESULTS_GET_CLASS (results)->get_total_items (results);
+}
+
