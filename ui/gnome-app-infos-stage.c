@@ -174,6 +174,12 @@ gnome_app_infos_stage_clean (GnomeAppInfosStage *infos_stage)
 	}
 }
 
+gint
+gnome_app_infos_stage_get_pagesize (GnomeAppInfosStage *infos_stage)
+{
+	return infos_stage->priv->rows * infos_stage->priv->cols;
+}
+
 void
 gnome_app_infos_stage_add_actor (GnomeAppInfosStage *infos_stage, ClutterActor *actor)
 {
@@ -189,93 +195,16 @@ gnome_app_infos_stage_add_actor (GnomeAppInfosStage *infos_stage, ClutterActor *
 }
 
 void
-gnome_app_infos_stage_add_actors (GnomeAppInfosStage *infos_stage, GList *actors)
+gnome_app_infos_stage_load (GnomeAppInfosStage *infos_stage, GList *data)
 {
+	AppInfo *info;
+	GnomeAppInfoIcon *info_icon;
 	GList *l;
 
-	for (l = actors; l; l = l->next) {
-		gnome_app_infos_stage_add_actor (infos_stage, CLUTTER_ACTOR (l->data));
-	}
-}
-
-static void
-load_request (GnomeAppInfosStage *infos_stage)
-{
-        GList *list, *l;
-        const GnomeAppStore *store;
-	OpenResults *results;
-	gint total_items;
-
-	store = gnome_app_store_get_default (); 
-	results = gnome_app_store_get_results ((GnomeAppStore *)store, infos_stage->priv->request);
-	if (!open_results_get_status (results)) {
-		g_debug ("Fail to send request !\n");
-		return ;
-	}
-	total_items = open_results_get_total_items (results);
-printf ("total items %d\n", total_items);
-	list = open_results_get_data (results);
-	if (list)
-		gnome_app_infos_stage_clean (infos_stage);
-	else
-		return;
-
-        for (l = list; l; l = l->next) {
-               	AppInfo *info;
-		GnomeAppInfoIcon *info_icon;
-		info = (AppInfo *) l->data;
+	for (l = data; l; l = l->next) {
+		info = APP_INFO (l->data);
 		info_icon = gnome_app_info_icon_new_with_app (info);
 		gnome_app_infos_stage_add_actor (infos_stage, CLUTTER_ACTOR (info_icon));
-/*FIXME: ref or unref? */
-//		g_object_unref (info_icon);
-        }
-	g_object_unref (results);
-}
-
-void
-gnome_app_infos_stage_load_request (GnomeAppInfosStage *infos_stage, AppRequest *request)
-{
-	gint pagesize;
-	gchar *val;
-
-	if (infos_stage->priv->request)
-		g_object_unref (infos_stage->priv->request);
-	infos_stage->priv->request = g_object_ref (request);
-
-	pagesize = infos_stage->priv->rows * infos_stage->priv->cols;
-	if (pagesize < 1) {
-		printf ("fatal issus: rows and cols error!\n");
-		pagesize = 1;
-	}
-	val = g_strdup_printf ("%d", pagesize);
-	app_request_set (infos_stage->priv->request, "pagesize", val);
-	app_request_set (infos_stage->priv->request, "page", "0"); // no need in fact
-	g_free (val);
-
-	load_request (infos_stage);
-}
-
-void
-gnome_app_infos_stage_page_change (GnomeAppInfosStage *infos_stage, gint change)
-{
-	const gchar *val;
-	gint page;
-
-	if (infos_stage->priv->request) {
-		val = app_request_get (infos_stage->priv->request, "page");
-		if (val) {
-			page = atoi (val);
-			page += change;
-			if (page < 0) {
-				/* nothing happen */
-			} else {
-				gchar *new_val;
-				new_val = g_strdup_printf ("%d", page);
-				app_request_set (infos_stage->priv->request, "page", new_val);
-				load_request (infos_stage);
-				g_free (new_val);
-			}
-		}
-		
 	}
 }
+

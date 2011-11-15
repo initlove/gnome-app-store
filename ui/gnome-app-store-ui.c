@@ -33,7 +33,7 @@ static void
 gnome_app_store_ui_init (GnomeAppStoreUI *ui)
 {
 	GnomeAppStoreUIPrivate *priv;
-        AppRequest *request;
+	AppRequest *request;
 
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
 							 GNOME_APP_TYPE_STORE_UI,
@@ -44,10 +44,10 @@ gnome_app_store_ui_init (GnomeAppStoreUI *ui)
 
 	priv->info_page = NULL;
 	priv->frame_ui = gnome_app_frame_ui_new ();
-        request = app_request_new ();
-	app_request_set (request, "operation", "list");
-	gnome_app_frame_ui_load_request (priv->frame_ui, request);
-        g_object_unref (request);
+	request = app_request_new ();
+	app_request_set (request, "sortmode", "new");
+	gnome_app_frame_ui_set_default_request (priv->frame_ui, request);
+	gnome_app_frame_ui_load_request (priv->frame_ui);
 
 	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (priv->frame_ui));
 }

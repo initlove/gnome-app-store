@@ -16,7 +16,10 @@ Author: Liang chenye <liangchenye@gmail.com>
 #include <stdio.h>
 #include <string.h>
 #include <clutter/clutter.h>
+#include "gnome-app-store.h"
+#include "open-services.h"
 #include "open-request.h"
+#include "open-results.h"
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-infos-stage.h"
 
@@ -33,11 +36,61 @@ struct _GnomeAppFrameUIPrivate
 	ClutterActor	*prev;
 	ClutterActor	*next;
 	ClutterActor	*categories;
+	ClutterActor	*status;
+	ClutterActor	*total_items;
         GnomeAppInfosStage *infos_stage;
         ClutterScript	*script;
+
+	GnomeAppStore	*store;
+	OpenRequest	*request;
+
+	gint		pagesize;
+	gint 		current_page;
 };
 
 G_DEFINE_TYPE (GnomeAppFrameUI, gnome_app_frame_ui, CLUTTER_TYPE_GROUP)
+
+void
+gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui)
+{
+	g_return_if_fail (ui && ui->priv->request);
+
+	OpenResults *results;
+	gchar *pagesize, *page;
+	gchar *message;
+
+	pagesize = g_strdup_printf ("%d", ui->priv->pagesize);
+	page = g_strdup_printf ("%d", ui->priv->current_page);
+	app_request_set (ui->priv->request, "operation", "list");
+	app_request_set (ui->priv->request, "pagesize", pagesize);
+	app_request_set (ui->priv->request, "page", page);
+	g_free (page);	
+	g_free (pagesize);
+
+	results = gnome_app_store_get_results (ui->priv->store, ui->priv->request);
+	if (open_results_get_status (results)) {
+		clutter_actor_hide (ui->priv->status);
+	} else {
+		message = g_strdup_printf ("Error: %s!", open_results_get_meta (results, "message"));
+		clutter_text_set_text (ui->priv->status, message);
+
+		g_free (message);
+		g_object_unref (results);
+		return ;
+	}
+
+	const GList *list;
+	gint total_items;
+	total_items = open_results_get_total_items (results);
+printf ("total items %d\n", total_items);
+	if (total_items > 0) {
+	//	set_prev_next_actor_status (ui, total_items);
+		list = open_results_get_data (results);
+		gnome_app_infos_stage_load (ui->priv->infos_stage, list);
+	}
+	g_object_unref (results);
+}
+
 
 static gboolean
 is_blank_text (const gchar *text)
@@ -98,17 +151,19 @@ on_search_entry_activate (ClutterActor *actor,
 		GnomeAppFrameUI *ui)
 {
 	const gchar *search;
-	AppRequest *request;
 
 	search = clutter_text_get_text (CLUTTER_TEXT (actor));
 	if (is_blank_text (search))
 		return;
-				
-	request = app_request_new ();
-	app_request_set (request, "operation", "list");
-	app_request_set (request, "search", search);
-	gnome_app_infos_stage_load_request (ui->priv->infos_stage, request);
-	g_object_unref (request);
+
+	if (ui->priv->request)
+		g_object_unref (ui->priv->request);
+
+	ui->priv->request = app_request_new ();
+	ui->priv->current_page = 0;
+
+	app_request_set (ui->priv->request, "search", search);
+	gnome_app_frame_ui_load_request (ui);
 }
 
 static gboolean
@@ -118,7 +173,6 @@ on_search_entry_event (ClutterActor *actor,
 {
 	gchar *search;
 	GnomeAppFrameUI *ui;
-	AppRequest *request;
 
 	ui = GNOME_APP_FRAME_UI (data);
         switch (event->type)
@@ -170,7 +224,7 @@ on_category_event (ClutterActor *actor,
 		request = app_request_new ();
 // TODO this GROUP should be get from backend
 //	g_object_set (request, QUERY_GROUP, label_new, NULL);
-		gnome_app_infos_stage_load_request (ui->priv->infos_stage, request);
+//		gnome_app_infos_stage_load_request (ui->priv->infos_stage, request);
 		g_object_unref (request);
 		break;
 	}
@@ -214,12 +268,21 @@ on_icon_press (ClutterActor *actor,
 	GnomeAppFrameUI *ui;
 
 	ui = GNOME_APP_FRAME_UI (data);
-	if (actor == ui->priv->prev) {
-		gnome_app_infos_stage_page_change (ui->priv->infos_stage, -1);
-	} else if (actor == ui->priv->next) {
-		gnome_app_infos_stage_page_change (ui->priv->infos_stage, 1);
-	} else if (actor == ui->priv->search_icon) {
+
+	if (actor == ui->priv->search_icon) {
 		on_search_entry_activate (ui->priv->search_entry, ui);
+	} else {
+		if (actor == ui->priv->prev) {
+			if (ui->priv->current_page > 0)
+				ui->priv->current_page --;
+		} else if (actor == ui->priv->next) {
+			ui->priv->current_page ++;
+		}
+		if (!ui->priv->request) {
+			g_critical ("the request did not initialized!");
+			return FALSE;
+		}
+		gnome_app_frame_ui_load_request (ui);
 	}
 
 	return TRUE;
@@ -262,6 +325,9 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	                                                 GnomeAppFrameUIPrivate);
 	ui->priv->is_search_enabled = FALSE;
 	ui->priv->is_search_hint_enabled = TRUE;
+	ui->priv->request = NULL;
+	ui->priv->store = gnome_app_store_new ();
+	ui->priv->current_page = 0;
 
         const gchar *filename;
 	GError *error;
@@ -283,6 +349,8 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 					"search-entry", &priv->search_entry, 
 					"infos-stage", &priv->infos_stage_group,
 					"categories", &priv->categories_group,
+					"status", &priv->status,
+					"total-items", &priv->total_items,
 					"prev-icon", &priv->prev,
 					"next-icon", &priv->next,
 					NULL);
@@ -290,6 +358,7 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	priv->categories = create_category_list (ui);
 	clutter_container_add_actor (CLUTTER_CONTAINER (priv->categories_group), priv->categories);
 	priv->infos_stage = gnome_app_infos_stage_new ();
+	priv->pagesize = gnome_app_infos_stage_get_pagesize (priv->infos_stage);
 	clutter_container_add_actor (CLUTTER_CONTAINER (priv->infos_stage_group), CLUTTER_ACTOR (priv->infos_stage));
 
 //script connect did not work?
@@ -322,6 +391,11 @@ gnome_app_frame_ui_finalize (GObject *object)
 	GnomeAppFrameUI *ui = GNOME_APP_FRAME_UI (object);
 	GnomeAppFrameUIPrivate *priv = ui->priv;
 
+	if (priv->request)
+		g_object_unref (priv->request);
+	if (priv->store)
+		g_object_unref (priv->store);
+
 	G_OBJECT_CLASS (gnome_app_frame_ui_parent_class)->finalize (object);
 }
 
@@ -336,16 +410,16 @@ gnome_app_frame_ui_class_init (GnomeAppFrameUIClass *klass)
 	g_type_class_add_private (object_class, sizeof (GnomeAppFrameUIPrivate));
 }
 
-void
-gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui, AppRequest *request)
-{
-	gnome_app_infos_stage_load_request (ui->priv->infos_stage, request);
-}
-
 GnomeAppFrameUI *
 gnome_app_frame_ui_new (void)
 {
 	return g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
 }
 
-
+void
+gnome_app_frame_ui_set_default_request (GnomeAppFrameUI *ui, AppRequest *request)
+{
+	if (ui->priv->request)
+		g_object_unref (ui->priv->request);
+	ui->priv->request = g_object_ref (request);
+}
