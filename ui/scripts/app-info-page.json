@@ -149,43 +149,11 @@
         ]
       },
       {
-        "id" : "downloads-label",
-        "type" : "ClutterText",
-        "x" : 50,
-        "y" : 150,
-        "text" : "downloads",
-        "font-name" : "Sans 12px",
-        "color" : "black",
-        "line-alignment" : "center",
-        "line-wrap" : false,
-        "ellipsize" : "none",
-        "rotation" : [
-          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
-          { "z-axis" : [ 45.0, [  75,  75 ] ] }
-        ]
-      },
-      {
         "id" : "comments",
         "type" : "ClutterText",
         "x" : 20,
         "y" : 170,
         "text" : "app comments",
-        "font-name" : "Sans 13px",
-        "color" : "black",
-        "line-alignment" : "center",
-        "line-wrap" : false,
-        "ellipsize" : "none",
-        "rotation" : [
-          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
-          { "z-axis" : [ 45.0, [  75,  75 ] ] }
-        ]
-      },
-      {
-        "id" : "comments-label",
-        "type" : "ClutterText",
-        "x" : 50,
-        "y" : 170,
-        "text" : "comments",
         "font-name" : "Sans 13px",
         "color" : "black",
         "line-alignment" : "center",

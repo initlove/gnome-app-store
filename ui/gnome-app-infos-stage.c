@@ -195,14 +195,14 @@ gnome_app_infos_stage_add_actor (GnomeAppInfosStage *infos_stage, ClutterActor *
 }
 
 void
-gnome_app_infos_stage_load (GnomeAppInfosStage *infos_stage, GList *data)
+gnome_app_infos_stage_load (GnomeAppInfosStage *infos_stage, const GList *data)
 {
 	AppInfo *info;
 	GnomeAppInfoIcon *info_icon;
 	GList *l;
 
 	gnome_app_infos_stage_clean (infos_stage);
-	for (l = data; l; l = l->next) {
+	for (l = (GList *)data; l; l = l->next) {
 		info = APP_INFO (l->data);
 		info_icon = gnome_app_info_icon_new_with_app (info);
 		gnome_app_infos_stage_add_actor (infos_stage, CLUTTER_ACTOR (info_icon));

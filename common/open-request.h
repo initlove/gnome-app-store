@@ -53,9 +53,9 @@ struct _OpenRequestClass
 
 GType                   open_request_get_type		(void);
 OpenRequest *         	open_request_new		(void);
-void			open_request_set 		(OpenRequest *request, gchar *arg_name, gchar *arg_value);
-const gchar *		open_request_get 		(OpenRequest *request, gchar *arg);
-OpenRequest *         	open_request_new_with_services	(gchar *services);
+void			open_request_set 		(OpenRequest *request, const gchar *arg_name, const gchar *arg_value);
+const gchar *		open_request_get 		(OpenRequest *request, const gchar *arg);
+OpenRequest *         	open_request_new_with_services	(const gchar *services);
 
 G_END_DECLS
 

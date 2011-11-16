@@ -69,7 +69,7 @@ open_request_new ()
 }
 
 void
-open_request_set (OpenRequest *request, gchar *key_name, gchar *value)
+open_request_set (OpenRequest *request, const gchar *key_name, const gchar *value)
 {
 	g_return_if_fail (request && IS_OPEN_REQUEST (request));
 	g_return_if_fail (key_name);
@@ -85,7 +85,7 @@ open_request_set (OpenRequest *request, gchar *key_name, gchar *value)
 }
 
 const gchar *
-open_request_get (OpenRequest *request, gchar *key)
+open_request_get (OpenRequest *request, const gchar *key)
 {
 	g_return_val_if_fail (request && IS_OPEN_REQUEST (request), NULL);
 	g_return_val_if_fail (key, NULL);
@@ -99,7 +99,7 @@ open_request_get (OpenRequest *request, gchar *key)
 }
 
 OpenRequest *
-open_request_new_with_services  (gchar *services)
+open_request_new_with_services  (const gchar *services)
 {
 	OpenRequest *request;
 

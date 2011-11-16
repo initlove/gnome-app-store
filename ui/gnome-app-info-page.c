@@ -138,11 +138,18 @@ if (!local_uri)
 {
 g_debug ("not pp no truth !\n");
 } else {
-			clutter_texture_set_from_file (actor, local_uri, NULL);
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), local_uri, NULL);
 			g_free (local_uri);
 }
 		} else if (CLUTTER_IS_TEXT (actor)) {
-			clutter_text_set_text (actor, val);
+			if ((strcmp (prop [i], "comments") == 0) || (strcmp (prop [i], "downloads") == 0)) {
+				gchar *val_label;
+
+				val_label = g_strdup_printf ("%s %s", val, prop [i]);
+				clutter_text_set_text (CLUTTER_TEXT (actor), val_label);
+				g_free (val_label);
+			} else
+				clutter_text_set_text (CLUTTER_TEXT (actor), val);
 		} 
 #if 0
 /*FIXME: cannot use the user defined object? */
@@ -159,12 +166,12 @@ g_debug ("not pp no truth !\n");
 		if (!actor)
 			continue;
 		if (i < app_score)
-			clutter_texture_set_from_file (actor, "/home/novell/gnome-app-store/pixmaps/starred.png", NULL);
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), "/home/novell/gnome-app-store/pixmaps/starred.png", NULL);
 		else
-			clutter_texture_set_from_file (actor, "/home/novell/gnome-app-store/pixmaps/non-starred.png", NULL);
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), "/home/novell/gnome-app-store/pixmaps/non-starred.png", NULL);
 	}
 
-	gchar *id;
+	const gchar *id;
 	gchar *comment_count;
 	clutter_script_get_objects (script, "comments-details", &actor, NULL);
 	if (actor) {

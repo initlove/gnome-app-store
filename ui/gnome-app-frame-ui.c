@@ -75,7 +75,7 @@ gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui)
 		clutter_actor_hide (ui->priv->prev);
 		clutter_actor_hide (ui->priv->next);
 		message = g_strdup_printf ("Error: %s!", open_results_get_meta (results, "message"));
-		clutter_text_set_text (ui->priv->status, message);
+		clutter_text_set_text (CLUTTER_TEXT (ui->priv->status), message);
 
 		g_free (message);
 		g_object_unref (results);
@@ -89,7 +89,7 @@ gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui)
 	if (total_items > 0) {
 		gchar *total_items_text;
 		total_items_text = g_strdup_printf ("%d apps", total_items);
-		clutter_text_set_text (ui->priv->total_items, total_items_text);
+		clutter_text_set_text (CLUTTER_TEXT (ui->priv->total_items), total_items_text);
 		g_free (total_items_text);
 
 		if (ui->priv->current_page > 0) {
@@ -325,11 +325,11 @@ create_category_list (GnomeAppFrameUI *ui)
 	layout_box = clutter_box_new (layout);
 
 	col = row = 0;
-	gchar **categories;
+	const gchar **categories;
 
 	categories = open_app_get_default_categories ();
 	for (categories; *categories; categories ++) {
-		name = *categories;
+		name = (gchar *)*categories;
 		actor = (ClutterActor *)st_button_new_with_label (name);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), col, row);
 		row ++;

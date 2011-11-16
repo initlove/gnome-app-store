@@ -39,7 +39,7 @@ gnome_app_store_ui_init (GnomeAppStoreUI *ui)
 							 GNOME_APP_TYPE_STORE_UI,
 							 GnomeAppStoreUIPrivate);
 	clutter_stage_set_title (CLUTTER_STAGE (ui), _("AppStore"));
-        clutter_actor_set_size (ui, 900, 660);
+        clutter_actor_set_size (CLUTTER_ACTOR (ui), 900, 660);
         g_signal_connect (ui, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
 	priv->info_page = NULL;
@@ -123,10 +123,10 @@ gnome_app_store_ui_load_app_info (GnomeAppStoreUI *ui, AppInfo *info)
                            "fixed::reactive", FALSE,
                            NULL);
 #endif
-	clutter_actor_hide (priv->frame_ui);
-//TODO: i want to know, why the remove actor delete the object!?
+	clutter_actor_hide (CLUTTER_ACTOR (priv->frame_ui));
+//TODO: i want to know, why the remove actor delete the object!? Should put it into memo..
 //	clutter_container_remove_actor (CLUTTER_CONTAINER (ui), priv->frame_ui);
-	clutter_container_add_actor (CLUTTER_CONTAINER (ui), priv->info_page);
+	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (priv->info_page));
 }
 
 void
@@ -135,10 +135,10 @@ gnome_app_store_ui_load_frame_ui (GnomeAppStoreUI *ui)
 	GnomeAppStoreUIPrivate *priv = ui->priv;
 
 	if (priv->info_page) {
-		clutter_container_remove_actor (CLUTTER_CONTAINER (ui), priv->info_page);
+		clutter_container_remove_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (priv->info_page));
 		g_object_unref (priv->info_page);
 		priv->info_page = NULL;
 	}
 
-	clutter_actor_show (priv->frame_ui);
+	clutter_actor_show (CLUTTER_ACTOR (priv->frame_ui));
 }

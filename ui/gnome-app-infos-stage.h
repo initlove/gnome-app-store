@@ -54,7 +54,7 @@ GType			gnome_app_infos_stage_get_type              	(void);
 GnomeAppInfosStage *    gnome_app_infos_stage_new                   	(void);
 void			gnome_app_infos_stage_clean			(GnomeAppInfosStage *infos_stage);
 void			gnome_app_infos_stage_add_actor			(GnomeAppInfosStage *infos_stage, ClutterActor *actor);
-void			gnome_app_infos_stage_load			(GnomeAppInfosStage *infos_stage, GList *data);
+void			gnome_app_infos_stage_load			(GnomeAppInfosStage *infos_stage, const GList *data);
 gint			gnome_app_infos_stage_get_pagesize		(GnomeAppInfosStage *infos_stage);
 
 G_END_DECLS

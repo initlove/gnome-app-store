@@ -19,7 +19,7 @@ main (int argc, char *argv[])
 	if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
 	  return 1;
 
-	stage = gnome_app_store_ui_get_default ();
+	stage = CLUTTER_ACTOR (gnome_app_store_ui_get_default ());
 	clutter_actor_show_all (stage);
 	clutter_main ();
 
