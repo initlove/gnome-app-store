@@ -155,7 +155,7 @@ init_category (OcsBackend *ocs_backend)
 }
 
 const gchar *
-ocs_get_categories_by_name (OcsBackend *backend, gchar *category_name)
+ocs_get_categories_by_name (OcsBackend *backend, const gchar *category_name)
 {
 	g_return_val_if_fail (category_name, NULL);
 

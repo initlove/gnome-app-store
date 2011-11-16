@@ -260,11 +260,10 @@ ocs_request_hot_fix (OcsBackend *backend, OpenRequest *request)
 	category_name = open_request_get (request, "category_name");
 
 	if (category_name && category_name [0]) {
-		gchar *categories;
+		const gchar *categories;
 		categories = ocs_get_categories_by_name (backend, category_name);
 		if (categories) {
 			open_request_set (request, "categories", categories);
-			g_free (categories);
 		}
 		
 	}
