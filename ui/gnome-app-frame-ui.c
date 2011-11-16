@@ -69,6 +69,10 @@ gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui)
 	g_free (pagesize);
 
 	results = gnome_app_store_get_results (ui->priv->store, ui->priv->request);
+	if (!results) {
+		g_debug ("Error in getting results !\n");
+		return;
+	}
 	if (open_results_get_status (results)) {
 		clutter_actor_hide (ui->priv->status);
 	} else {
