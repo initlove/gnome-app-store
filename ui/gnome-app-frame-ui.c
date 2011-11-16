@@ -183,6 +183,7 @@ on_search_entry_activate (ClutterActor *actor,
 	ui->priv->request = app_request_new ();
 	ui->priv->current_page = 0;
 
+	app_request_set (ui->priv->request, "operation", "list");
 	app_request_set (ui->priv->request, "search", search);
 	gnome_app_frame_ui_load_request (ui);
 }
@@ -244,8 +245,10 @@ on_category_event (ClutterActor *actor,
 		ui = GNOME_APP_FRAME_UI (data);
 		if (ui->priv->request)
 			g_object_unref (ui->priv->request);
+		ui->priv->request = app_request_new ();	
 		ui->priv->current_page = 0;
 /*TODO: category_name is very special, did not know the proper way to deal with this in ocs standard */
+		app_request_set (ui->priv->request, "operation", "list");
 		app_request_set (ui->priv->request, "category_name", label_new);
 		gnome_app_frame_ui_load_request (ui);
 		break;
