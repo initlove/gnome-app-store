@@ -101,7 +101,7 @@ gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui)
 		} else {
 			clutter_actor_hide (ui->priv->prev);
 		}
-		if (ui->priv->current_page * ui->priv->pagesize <= total_items) {
+		if ((ui->priv->current_page + 1) * ui->priv->pagesize <= total_items) {
 			clutter_actor_show (ui->priv->next);
 		} else {
 			clutter_actor_hide (ui->priv->next);
