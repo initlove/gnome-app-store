@@ -29,8 +29,8 @@ libgnome_app_store_la_SOURCES = \
 	gnome-app-store.c gnome-app-store.h
 
 libgnome_app_store_la_LIBADD =	\
-	$(top_srcdir)/common/libgnome-app-common.la \
-	$(top_srcdir)/backend/libapp-backend.la \
+	$(top_srcdir)/common/libopen-app-common.la \
+	$(top_srcdir)/backend/libopen-app-backend.la \
 	$(GNOME_APP_STORE_LIBS)
 
 appconfigdir = /etc/gnome-app-store

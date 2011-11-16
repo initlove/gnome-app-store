@@ -23,14 +23,15 @@ Author: David Liang <dliang@novell.com>
 
 #include "gnome-app-store.h"
 #include "backend/app-backend.h"
-#include "common/gnome-app-config.h"
+#include "common/open-app-config.h"
 #include "common/open-request.h"
 #include "common/open-results.h"
 
 struct _GnomeAppStorePrivate
 {
 	AppBackend *backend;
-	
+	OpenAppConfig *config;
+
 	/*FIXME: Donnot use this at present */
 	GList *appid_list;	/* should be reload every timestamp time */
 	GHashTable *app_id;
@@ -46,7 +47,6 @@ static void
 gnome_app_store_init (GnomeAppStore *store)
 {
 	GnomeAppStorePrivate *priv;
-	GnomeAppConfig *config;
 
 	store->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (store,
                                                    GNOME_APP_TYPE_STORE,
@@ -55,9 +55,8 @@ gnome_app_store_init (GnomeAppStore *store)
 	priv->appid_list = NULL;
 	priv->app_id = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 	priv->app_timestamp = -1;	/* FIXME: not implement yet */
-	config = gnome_app_config_new ();
-	priv->backend = app_backend_new_from_config (config);
-	g_object_unref (config);
+	priv->config = open_app_config_new ();
+	priv->backend = app_backend_new_from_config (priv->config);
 }
 
 static void
@@ -76,6 +75,8 @@ gnome_app_store_finalize (GObject *object)
 		g_list_free (priv->appid_list);
 	if (priv->app_id)
 		g_hash_table_destroy (priv->app_id);
+	if (priv->config)
+		g_object_unref (priv->config);
 
 	G_OBJECT_CLASS (gnome_app_store_parent_class)->finalize (object);
 }
@@ -113,16 +114,3 @@ gnome_app_store_get_results (GnomeAppStore *store, OpenRequest *request)
 
 	return app_backend_get_results (store->priv->backend, request);
 }
-
-const GnomeAppStore *
-gnome_app_store_get_default ()
-{
-	static const GnomeAppStore *default_store = NULL;
-
-	if (!default_store)
-		default_store = gnome_app_store_new ();
-
-	return default_store;
-}
-
-

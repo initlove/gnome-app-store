@@ -55,7 +55,6 @@ struct _GnomeAppStoreClass
 
 GType			gnome_app_store_get_type			(void);
 GnomeAppStore *		gnome_app_store_new				(void);
-const GnomeAppStore *	gnome_app_store_get_default			(void);
 OpenResults *		gnome_app_store_get_results			(GnomeAppStore *store, OpenRequest *request);
 
 G_END_DECLS
