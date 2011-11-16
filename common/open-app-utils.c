@@ -1,4 +1,4 @@
-/* gnome-app-utils.c -
+/* open-app-utils.c -
 
    Copyright 2011
 
@@ -19,15 +19,7 @@
 
    Author: Liang chenye <liangchenye@gmail.com>
 */
-#ifndef GMENU_I_KNOW_THIS_IS_UNSTABLE
-#define GMENU_I_KNOW_THIS_IS_UNSTABLE
-#endif
-#include <gmenu-tree.h>
-#ifdef HAVE_GNOME
-#include <libsoup/soup-gnome.h>
-#else
 #include <libsoup/soup.h>
-#endif
 #include <libsoup/soup-address.h>
 #include <libsoup/soup-auth-domain-basic.h>
 #include <libsoup/soup-auth-domain-digest.h>
@@ -36,89 +28,15 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "gnome-app-config.h"
-#include "gnome-app-utils.h"
+#include "open-app-config.h"
+#include "open-app-utils.h"
 
 #if 0
 #define SERVER_DEBUG
 #endif
 
-
-static GList *local_categories = NULL;
-
-static void
-gather_entries_recurse (GMenuTreeDirectory *trunk)
-{
-	GSList *contents;
-	GSList *iter;
-	contents = gmenu_tree_directory_get_contents (trunk);
-
-	for (iter = contents; iter; iter = iter->next) {
-		GMenuTreeItem *item = iter->data;
-		GMenuTreeDirectory *dir;
-		const gchar *name;
-
-		switch (gmenu_tree_item_get_type (item)) {
-			case GMENU_TREE_ITEM_DIRECTORY:
-				dir = GMENU_TREE_DIRECTORY (item);
-				name = gmenu_tree_directory_get_name (dir);
-				local_categories = g_list_prepend (local_categories, g_strdup (name));
-				/*FIXME: if the return value of get_local_categories change to a tree on day.
-				  we should enable this ...
-				gather_entries_recurse (dir);
-				*/
-				break;
-			default:
-				break;
-		}
-		gmenu_tree_item_unref (item);
-	}
-	g_slist_free (contents);
-}
-
-const GList *
-gnome_app_get_local_categories ()
-{
-	if (local_categories)
-		return local_categories;
-
-	GMenuTree *apps_tree;
-	GMenuTreeDirectory *trunk;
-
-	apps_tree = gmenu_tree_lookup ("applications.menu", GMENU_TREE_FLAGS_INCLUDE_NODISPLAY);
-	trunk = gmenu_tree_get_root_directory (apps_tree);
-	gather_entries_recurse (trunk);
-	gmenu_tree_item_unref (trunk);
-	gmenu_tree_unref (apps_tree);
-	local_categories = g_list_reverse (local_categories);
-
-	return (const GList *) local_categories;
-}
-
-/*FIXME: better way to get matched group, maybe ocs/appstream different? */
-gboolean
-gnome_app_category_match_group (gchar *cname, gchar *group)
-{
-	if (!group)
-		return TRUE;
-	if (!cname)
-		return FALSE;
-
-	gchar *short_name;
-	short_name = g_strdup (group);
-	if (strlen (short_name) > 3)
-		*(short_name + 3) = 0;
-	if (strcasestr (cname, short_name)) {
-		g_free (short_name);
-		return TRUE;
-	} else {
-		g_free (short_name);
-		return FALSE;
-	}
-}
-
 SoupSession *
-gnome_app_soup_session_new (gboolean sync, gchar *cafile)
+open_app_soup_session_new (gboolean sync, gchar *cafile)
 {
 	SoupSession *session;
 
@@ -150,7 +68,7 @@ gnome_app_soup_session_new (gboolean sync, gchar *cafile)
 }
 
 gchar *
-gnome_app_get_md5 (const gchar *str)
+open_app_get_md5 (const gchar *str)
 {
 	gchar *checksum;
 
@@ -162,7 +80,7 @@ gnome_app_get_md5 (const gchar *str)
 }
 
 SoupBuffer *
-gnome_app_get_data_by_request (SoupSession *session, const gchar *request)
+open_app_get_data_by_request (SoupSession *session, const gchar *request)
 {
 	SoupMessage *msg;
 	SoupBuffer *buf;
@@ -172,7 +90,7 @@ gnome_app_get_data_by_request (SoupSession *session, const gchar *request)
 
 	g_return_val_if_fail (request != NULL, NULL);
 
-	g_debug ("gnome_app_get_data_by_request: %s\n", request);
+	g_debug ("open_app_get_data_by_request: %s\n", request);
 
 	buf = NULL;
 	method = SOUP_METHOD_GET;
@@ -220,7 +138,7 @@ gnome_app_get_data_by_request (SoupSession *session, const gchar *request)
 
 			request = soup_uri_new_with_base (soup_message_get_uri (msg), header);
 			request_string = soup_uri_to_string (request, FALSE);
-			buf = gnome_app_get_data_by_request (session, request_string);
+			buf = open_app_get_data_by_request (session, request_string);
 			g_free (request_string);
 			soup_uri_free (request);
 		}
@@ -250,11 +168,11 @@ download_file (const gchar *source, const gchar *dest)
 	sync = TRUE;
 	cafile = NULL;
 /*TODO: should we have the static session? */
-	session = gnome_app_soup_session_new (sync, cafile);
+	session = open_app_soup_session_new (sync, cafile);
 
 	gint retry;
 	for (retry = 0; retry <3; retry ++) {
-		buf = gnome_app_get_data_by_request (session, source);
+		buf = open_app_get_data_by_request (session, source);
 		if (buf)
 			break;
 		g_debug ("retry %d\n", retry);
@@ -275,18 +193,18 @@ download_file (const gchar *source, const gchar *dest)
 }
 
 gchar *
-gnome_app_get_local_icon (const gchar *uri)
+open_app_get_local_icon (const gchar *uri)
 {
 	g_return_val_if_fail (uri != NULL, NULL);
 
-	GnomeAppConfig *config;
+	OpenAppConfig *config;
 	gchar *md5;
 	gchar *cache_dir;
 	gchar *img_dir;
 	gchar *local_uri;
-	config = gnome_app_config_new ();
-	cache_dir = gnome_app_config_get_cache_dir (config);
-	md5 = gnome_app_get_md5 (uri);
+	config = open_app_config_new ();
+	cache_dir = open_app_config_get_cache_dir (config);
+	md5 = open_app_get_md5 (uri);
 	img_dir = g_build_filename (cache_dir, "img", NULL);
 	local_uri = g_build_filename (img_dir, md5, NULL);
 
@@ -306,5 +224,18 @@ gnome_app_get_local_icon (const gchar *uri)
 	g_free (img_dir);
 
 	return local_uri;
+}
+
+/*TODO: FIXME: how to get from server ??!!! */
+const gchar **
+open_app_get_default_categories ()
+{
+/*FIXME: 'Other' is the last and special one */
+	static const gchar *defaults[] = {
+		"Accessories", "Games", "Graphics", "Internet", "Office", 
+		"Programming", "Sound & Video", "System Tools", "Universal Access",
+		"Other", NULL
+	};
+	return defaults;
 }
 

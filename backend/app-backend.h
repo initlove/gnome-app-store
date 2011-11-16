@@ -23,7 +23,7 @@
 #ifndef __APP_BACKEND_H__
 #define __APP_BACKEND_H__
 
-#include "gnome-app-config.h"
+#include "open-app-config.h"
 #include "open-request.h"
 #include "open-results.h"
 
@@ -64,11 +64,11 @@ struct _AppBackendClass
 	OpenResults *(*get_results)	 (AppBackend *backend,
 					 OpenRequest *request);
 	gboolean     (*set_config)		(AppBackend *backend,
-						GnomeAppConfig *config);
+						OpenAppConfig *config);
 };
 
 GType        	app_backend_get_type			(void) G_GNUC_CONST;
-AppBackend  *	app_backend_new_from_config 		(GnomeAppConfig *config);
+AppBackend  *	app_backend_new_from_config 		(OpenAppConfig *config);
 const gchar *	app_backend_get_backend_type		(AppBackend	*backend);
 const gchar *	app_backend_get_backend_name		(AppBackend	*backend);
 const gchar *	app_backend_get_backend_icon_name	(AppBackend	*backend);

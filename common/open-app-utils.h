@@ -20,20 +20,20 @@
    Author: Liang chenye <liangchenye@gmail.com>
 */
 
-#ifndef __GNOME_APP_UTILS_H__
-#define __GNOME_APP_UTILS_H__
+#ifndef __OPEN_APP_UTILS_H__
+#define __OPEN_APP_UTILS_H__
 
 #include <glib.h>
 #include <libsoup/soup-session.h>
 
 G_BEGIN_DECLS
 
-const GList *	gnome_app_get_local_categories ();
-gchar *		gnome_app_get_md5 (const gchar *str);
-gboolean	gnome_app_category_match_group (gchar *cname, gchar *group);
-SoupBuffer *	gnome_app_get_data_by_request (SoupSession *session, const gchar *request);
-SoupSession *	gnome_app_soup_session_new (gboolean sync, gchar *cafile);
-gchar *		gnome_app_get_local_icon (const gchar *uri);
+gchar *		open_app_get_md5 (const gchar *str);
+SoupBuffer *	open_app_get_data_by_request (SoupSession *session, const gchar *request);
+SoupSession *	open_app_soup_session_new (gboolean sync, gchar *cafile);
+gchar *		open_app_get_local_icon (const gchar *uri);
+
+const gchar **	open_app_get_default_categories ();
 
 G_END_DECLS
 

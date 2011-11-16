@@ -6,6 +6,32 @@
     "height" : 660,
     "children" : [
       {
+        "id" : "total-items",
+        "type" : "ClutterText",
+        "x" : 60,
+	"y" : 16,
+        "width" : 200,
+        "font-name" : "Sans 14px",
+        "color" : "gray",
+	"activatable" : true,
+	"single_line_mode" : true,
+	"selectable" : true,
+	"reactive" : true
+      },
+      {
+        "id" : "status",
+        "type" : "ClutterText",
+        "x" : 260,
+	"y" : 14,
+        "width" : 150,
+        "font-name" : "Sans 16px",
+        "color" : "red",
+	"activatable" : true,
+	"single_line_mode" : true,
+	"selectable" : true,
+	"reactive" : true
+      },
+      {
         "id" : "search-entry",
         "type" : "ClutterText",
         "x" : 560,

@@ -1,9 +1,9 @@
 #include <stdio.h>
 
-#include "gnome-app-install.h"
+#include "open-app-install.h"
 
 gboolean
-gnome_app_install (gchar *pkgname)
+open_app_install (gchar *pkgname)
 {
 	/* FIXME: TODO */
 	return TRUE;

@@ -16,10 +16,11 @@ Author: Liang chenye <liangchenye@gmail.com>
 #include <stdio.h>
 #include <string.h>
 #include <clutter/clutter.h>
-#include "gnome-app-store.h"
 #include "open-services.h"
 #include "open-request.h"
 #include "open-results.h"
+#include "open-app-utils.h"
+#include "gnome-app-store.h"
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-infos-stage.h"
 
@@ -71,6 +72,8 @@ gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui)
 	if (open_results_get_status (results)) {
 		clutter_actor_hide (ui->priv->status);
 	} else {
+		clutter_actor_hide (ui->priv->prev);
+		clutter_actor_hide (ui->priv->next);
 		message = g_strdup_printf ("Error: %s!", open_results_get_meta (results, "message"));
 		clutter_text_set_text (ui->priv->status, message);
 
@@ -81,12 +84,30 @@ gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui)
 
 	const GList *list;
 	gint total_items;
+
 	total_items = open_results_get_total_items (results);
-printf ("total items %d\n", total_items);
 	if (total_items > 0) {
-	//	set_prev_next_actor_status (ui, total_items);
+		gchar *total_items_text;
+		total_items_text = g_strdup_printf ("%d apps", total_items);
+		clutter_text_set_text (ui->priv->total_items, total_items_text);
+		g_free (total_items_text);
+
+		if (ui->priv->current_page > 0) {
+			clutter_actor_show (ui->priv->prev);
+		} else {
+			clutter_actor_hide (ui->priv->prev);
+		}
+		if (ui->priv->current_page * ui->priv->pagesize <= total_items) {
+			clutter_actor_show (ui->priv->next);
+		} else {
+			clutter_actor_hide (ui->priv->next);
+		}
+
 		list = open_results_get_data (results);
 		gnome_app_infos_stage_load (ui->priv->infos_stage, list);
+	} else {
+		clutter_actor_hide (ui->priv->prev);
+		clutter_actor_hide (ui->priv->next);
 	}
 	g_object_unref (results);
 }
@@ -221,11 +242,12 @@ on_category_event (ClutterActor *actor,
         case CLUTTER_BUTTON_PRESS:
 		label_new = st_button_get_label (ST_BUTTON (actor));
 		ui = GNOME_APP_FRAME_UI (data);
-		request = app_request_new ();
-// TODO this GROUP should be get from backend
-//	g_object_set (request, QUERY_GROUP, label_new, NULL);
-//		gnome_app_infos_stage_load_request (ui->priv->infos_stage, request);
-		g_object_unref (request);
+		if (ui->priv->request)
+			g_object_unref (ui->priv->request);
+		ui->priv->current_page = 0;
+/*TODO: category_name is very special, did not know the proper way to deal with this in ocs standard */
+		app_request_set (ui->priv->request, "category_name", label_new);
+		gnome_app_frame_ui_load_request (ui);
 		break;
 	}
 
@@ -303,9 +325,11 @@ create_category_list (GnomeAppFrameUI *ui)
 	layout_box = clutter_box_new (layout);
 
 	col = row = 0;
-	list = (const GList *)gnome_app_get_local_categories ();
-	for (l = (GList *)list; l; l = l->next) {
-		name = (gchar *)l->data;
+	gchar **categories;
+
+	categories = open_app_get_default_categories ();
+	for (categories; *categories; categories ++) {
+		name = *categories;
 		actor = (ClutterActor *)st_button_new_with_label (name);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), col, row);
 		row ++;

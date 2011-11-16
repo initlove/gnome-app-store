@@ -26,11 +26,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "open-services.h"
+#include "open-app-config.h"
+#include "open-app-utils.h"
+
+#include "ocs-results.h"
 #include "ocs-result.h"
 #include "ocs-request.h"
 #include "ocs-backend.h"
-#include "gnome-app-config.h"
-#include "gnome-app-utils.h"
 
 struct _OcsBackendPrivate
 {
@@ -42,107 +45,130 @@ struct _OcsBackendPrivate
 	gchar *cache_dir;
 	SoupSession *session;
 
-	GList *cids;
-	GHashTable *cid_name;
-
+	GHashTable *categories;
 };
 
 G_DEFINE_TYPE (OcsBackend, ocs_backend, APP_TYPE_BACKEND)
 
-static void
-parse_cids (OcsBackend *ocs_backend, xmlNodePtr data_node)
+static gboolean
+category_name_match (const gchar *name, const gchar *category)
 {
-        OcsBackendPrivate *priv = ocs_backend->priv;
-        xmlNodePtr cate_node, id_node;
-        gchar *id, *name;
+	g_return_val_if_fail (name && category, FALSE);
 
-        if (!data_node)
-                return;
-
-        for (cate_node = data_node->xmlChildrenNode; cate_node; cate_node = cate_node->next) {
-                if (strcmp (cate_node->name, "category") == 0) {
-                        id = name = NULL;
-                        for (id_node = cate_node->xmlChildrenNode; id_node; id_node = id_node->next) {
-                                if (strcmp (id_node->name, "id") == 0) {
-                                        id = xmlNodeGetContent (id_node);
-                                        priv->cids = g_list_prepend (priv->cids, g_strdup (id));
-                                } else if (strcmp (id_node->name, "name") == 0) {
-                                        name = xmlNodeGetContent (id_node);
-                                }
-                        }
-                        if (id) {
-                                /*Backend bug! */
-                                if (!name) {
-                                        printf ("fatal error in backend !\n");
-                                        name = id;
-                                }
-                                g_hash_table_insert (priv->cid_name, g_strdup (id), g_strdup (name));
-                        }
-                }
-        }
-
-        if (priv->cids)
-                priv->cids = g_list_reverse (priv->cids);
+	if (strcasestr (name, category))
+		return TRUE;
+	else
+		return FALSE;
 }
 
 static void
-init_cids (OcsBackend *ocs_backend)
+setup_category (OcsBackend *ocs_backend, GList *results_data)
 {
-        OcsBackendPrivate *priv = ocs_backend->priv;
-        gchar *request;
+	const gchar **default_categories;
+	GString *ids [100];	/*FIXME: */
+	gchar *categories [100];
+	int i;
+	GList *list, *l;
+	OpenResult *result;
+	const gchar *id;
+	const gchar *name;
+	gboolean match;
+	gint other;
+
+	default_categories = open_app_get_default_categories ();
+	for (i = 0; default_categories [i]; i++) {
+		ids [i] = NULL;
+		categories [i] = g_strdup (default_categories [i]);
+		if (strlen (categories [i]) > 3)
+			*(categories [i] + 3) = 0;
+	}
+	ids [i] = NULL;
+	categories [i] = NULL;
+	other = i - 1;	/*FIXME: other is the last one */
+
+	for (l = results_data; l; l = l->next) {
+		result = OPEN_RESULT (l->data);
+		id = open_result_get (result, "id");
+		name = open_result_get (result, "name");
+		if (!id || !id [0] || !name || !name [0])
+			continue;
+		match = FALSE;
+
+		for (i = 0; categories [i]; i++) {
+			if (category_name_match (name, (const gchar *)categories [i])) {
+				if (match == FALSE)
+					match = TRUE;
+				if (ids [i] == NULL) {
+					ids [i] = g_string_new (id);
+				} else {
+			                g_string_append_c (ids [i], 'x');
+        		                g_string_append (ids [i], id);
+				}
+			}
+		}
+		if (!match) {
+			if (ids [other] == NULL) {
+				ids [other] = g_string_new (id);
+			} else {
+			        g_string_append_c (ids [other], 'x');
+        		        g_string_append (ids [other], id);
+			}
+		}
+	}
+
+	for (i = 0; default_categories [i]; i++) {
+		if (ids [i]) {
+			g_hash_table_insert (ocs_backend->priv->categories, g_strdup (default_categories [i]), ids [i]->str);
+			g_string_free (ids [i], FALSE);
+		}
+	}
+}
+
+static void
+init_category (OcsBackend *ocs_backend)
+{
+	OpenResults *results;
+	AppRequest *request;
+        gchar *url;
         xmlDocPtr doc_ptr;
-        xmlNodePtr data_node;
+	gboolean refresh;
 
-        request = g_strdup_printf ("http://%s:%s@%s/v1/content/categories",
-				priv->username,
-				priv->password,
-				priv->server_uri);
-        doc_ptr = ocs_get_request_doc (ocs_backend, request);
+	refresh = FALSE;
+	request = app_request_new ();
+	app_request_set (request, "operation", "categories");
+	url = ocs_get_request_url (ocs_backend, request);
+        doc_ptr = ocs_get_request_doc (ocs_backend, url, refresh);
         if (doc_ptr) {
-                data_node = ocs_find_node (doc_ptr, "data");
-                parse_cids (ocs_backend, data_node);
-                xmlFreeDoc(doc_ptr);
-        }
+		results = ocs_get_results (request, doc_ptr);
+		if (!refresh && ocs_results_get_status (results)) {
+			GList *list;
 
-        g_free (request);
+			list = ocs_results_get_data (results);
+			setup_category (ocs_backend, list);
+			ocs_cache_doc (ocs_backend, doc_ptr, url);
+		}
+		xmlFreeDoc(doc_ptr);
+	}
+
+        g_object_unref (request);
+	g_free (url);
 }
 
-static gchar *
-get_cname_by_id (OcsBackend *backend, gchar *category_id)
+const gchar *
+ocs_get_categories_by_name (OcsBackend *backend, gchar *category_name)
 {
-        OcsBackendPrivate *priv = backend->priv;
-        gchar *cname;
+	g_return_val_if_fail (category_name, NULL);
 
-        cname = g_hash_table_lookup (priv->cid_name, category_id);
-        if (cname) {
-                return g_strdup (cname);
-        } else {
-                return NULL;
-        }
-}
+	const gchar *val;
 
-GList *
-ocs_get_cid_list_by_group (OcsBackend *backend, gchar *group)
-{
-        OcsBackendPrivate *priv = backend->priv;
-        GList *list = NULL, *l;
-        gchar *id, *cname;
-
-        if (group == NULL) {
-        /*FIXME: TODO: should make cids a struct with more category fileds */
-                return g_list_copy (priv->cids);
-        } else {
-                for (l = priv->cids; l; l = l->next) {
-                        id = (gchar *) l->data;
-                        cname = get_cname_by_id (backend, id);
-                        if (gnome_app_category_match_group (cname, group))
-                                list = g_list_prepend (list, g_strdup (id));
-                        g_free (cname);
-                }
-        }
-        if (list)
-                list = g_list_reverse (list);
-        return list;
+	val = (const gchar *) g_hash_table_lookup (backend->priv->categories, category_name);
+/*TODO: if the category group is empty, we set the ids  to -1,
+	in this case, the return value will be empty!
+*/
+	if (!val || !val [0])
+		val = "-1";
+	
+	return val;
 }
 
 static void
@@ -160,8 +186,7 @@ ocs_backend_init (OcsBackend *backend)
 	priv->cafile = NULL;
 	priv->session = NULL;
 	priv->cache_dir = NULL;
-	priv->cids = NULL;
-	priv->cid_name = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	priv->categories = NULL;
 }
 
 static const gchar *
@@ -189,11 +214,17 @@ get_results (AppBackend *backend, OpenRequest *request)
 	gchar *url;
 	xmlDocPtr doc_ptr;
 	OpenResults *results;
+	gboolean refresh;
 
+	results = NULL;
+	refresh = FALSE;		/*TODO: make refresh mechanism */
 	url = ocs_get_request_url (ocs_backend, request);
-	doc_ptr = ocs_get_request_doc (ocs_backend, url);
+	doc_ptr = ocs_get_request_doc (ocs_backend, url, refresh);
 	if (doc_ptr) {
 		results = ocs_get_results (request, doc_ptr);
+		/*TODO: if need to refresh, most time, it means, no need to cache */
+		if (!refresh && ocs_results_get_status (results))
+			ocs_cache_doc (ocs_backend, doc_ptr, url);
 		xmlFreeDoc(doc_ptr);
 	}
 
@@ -204,21 +235,21 @@ get_results (AppBackend *backend, OpenRequest *request)
 
 /*TODO: FIXME: if set config for more than once, do the free thing.. */
 static gboolean
-set_config (AppBackend *backend, GnomeAppConfig *config)
+set_config (AppBackend *backend, OpenAppConfig *config)
 {
 	OcsBackend *ocs_backend = OCS_BACKEND (backend);
 	OcsBackendPrivate *priv = ocs_backend->priv;
 
-	priv->server_uri = gnome_app_config_get_server_uri (config);
+	priv->server_uri = open_app_config_get_server_uri (config);
 	/*FIXME: the following should be retrieved from config too*/
-	priv->username = gnome_app_config_get_username (config);
-	priv->password = gnome_app_config_get_password (config);
+	priv->username = open_app_config_get_username (config);
+	priv->password = open_app_config_get_password (config);
 	priv->sync = TRUE;
 	priv->cafile = NULL;
-	priv->session = gnome_app_soup_session_new (priv->sync, priv->cafile);
-	priv->cache_dir = gnome_app_config_get_cache_dir (config);
-
-	init_cids (ocs_backend);
+	priv->session = open_app_soup_session_new (priv->sync, priv->cafile);
+	priv->cache_dir = open_app_config_get_cache_dir (config);
+	priv->categories = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	init_category (ocs_backend);
 
 	return TRUE;
 }
@@ -247,10 +278,8 @@ ocs_backend_finalize (GObject *object)
 		g_object_unref (priv->session);
 	if (priv->cache_dir)
 		g_free (priv->cache_dir);
-	if (priv->cids)
-		g_list_free (priv->cids);
-	if (priv->cid_name)
-		g_hash_table_destroy (priv->cid_name);
+	if (priv->categories)
+		g_hash_table_destroy (priv->categories);
 
 	G_OBJECT_CLASS (ocs_backend_parent_class)->finalize (object);
 }

@@ -201,6 +201,7 @@ gnome_app_infos_stage_load (GnomeAppInfosStage *infos_stage, GList *data)
 	GnomeAppInfoIcon *info_icon;
 	GList *l;
 
+	gnome_app_infos_stage_clean (infos_stage);
 	for (l = data; l; l = l->next) {
 		info = APP_INFO (l->data);
 		info_icon = gnome_app_info_icon_new_with_app (info);

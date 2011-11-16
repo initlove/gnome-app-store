@@ -20,7 +20,7 @@
  * Author: Liang chenye <liangchenye@gmail.com>
  */
 
-#include "gnome-app-config.h"
+#include "open-app-config.h"
 #include "app-backend.h"
 #include "ocs-backend.h"
 /* FIXME: mask the app stream, also remove it from Makefile.am */
@@ -72,7 +72,7 @@ app_backend_get_results (AppBackend *backend, OpenRequest *request)
 }
 
 gboolean
-app_backend_set_config (AppBackend *backend, GnomeAppConfig *config)
+app_backend_set_config (AppBackend *backend, OpenAppConfig *config)
 {
 	g_return_val_if_fail (APP_IS_BACKEND (backend), FALSE);
 
@@ -80,14 +80,14 @@ app_backend_set_config (AppBackend *backend, GnomeAppConfig *config)
 }
 
 AppBackend *
-app_backend_new_from_config (GnomeAppConfig *config)
+app_backend_new_from_config (OpenAppConfig *config)
 {
-	g_return_val_if_fail (GNOME_APP_IS_CONFIG (config), NULL);
+	g_return_val_if_fail (OPEN_APP_IS_CONFIG (config), NULL);
 	
 	AppBackend *backend;
 	gchar *type;
 
-	type = gnome_app_config_get_server_type (config);
+	type = open_app_config_get_server_type (config);
 	
 	if (strcmp (type, "ocs") == 0)
 		backend = g_object_new (TYPE_OCS_BACKEND, NULL);

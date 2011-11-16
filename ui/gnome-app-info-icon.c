@@ -18,7 +18,8 @@ Author: Lance Wang <lzwang@suse.com>
 
 #include <clutter/clutter.h>
 #include "open-services.h"
-#include "gnome-app-utils.h"
+#include "open-app-utils.h"
+
 #include "gnome-app-info-icon.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-store-ui.h"
@@ -151,7 +152,7 @@ gnome_app_info_icon_new_with_app (AppInfo *info)
 
 	clutter_script_get_objects (script, "smallpreviewpic1", &actor, NULL);
 	val = app_info_get (info, "smallpreviewpic1");
-	local_uri = gnome_app_get_local_icon (val);
+	local_uri = open_app_get_local_icon (val);
 	clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), local_uri, NULL);
 	g_free (local_uri);
 

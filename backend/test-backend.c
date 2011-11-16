@@ -1,39 +1,40 @@
 #include <stdio.h>
 
-#include "ocs-result.h"
-#include "ocs-results.h"
 #include "open-result.h"
 #include "open-results.h"
 #include "open-request.h"
-#include "gnome-app-config.h"
+#include "open-app-config.h"
+
 #include "app-backend.h"
+#include "ocs-backend.h"
+#include "ocs-result.h"
+#include "ocs-results.h"
 
 int main ()
 {
-	GnomeAppConfig *config;
+	OpenAppConfig *config;
 	AppBackend *backend;
 	OpenRequest *request;
 	OpenResults *results;
 
 	const gchar *type;
+	gchar *ids;
 	const GList *local_categories;
 	GList *l, *list;
-	gchar *url;
 	gint totalitems;
 
 	g_type_init ();
 
-	config = gnome_app_config_new ();
+	config = open_app_config_new ();
 	backend = app_backend_new_from_config (config);
 	type = app_backend_get_backend_type (backend);
-	printf ("backend type is %s\n", type);
-
+	ids = ocs_get_categories_by_name (backend, "Accessories");
+	printf ("backend type is %s %s\n", type, ids);
 	request = open_request_new ();
 	open_request_set (request, "services", "content");
 	open_request_set (request, "operation", "list");
 	open_request_set (request, "pagesize", "35");
 	open_request_set (request, "page", "0");
-	url = ocs_get_request_url (backend, request);
 	results = app_backend_get_results (backend, request);
 	list = open_results_get_data (results);
 	for (l = list; l; l = l->next) {
@@ -52,7 +53,6 @@ int main ()
 	open_request_set (request, "contentid2", "0");
 	open_request_set (request, "pagesize", "35");
 	open_request_set (request, "page", "0");
-	url = ocs_get_request_url (backend, request);
 	results = app_backend_get_results (backend, request);
 
 	gchar *val;

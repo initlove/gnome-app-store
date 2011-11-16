@@ -197,7 +197,7 @@ ocs_get_results (OpenRequest *request, xmlDocPtr doc_ptr)
 {
 	g_return_val_if_fail (doc_ptr, NULL);
 
-	OcsResults *results;
+	OpenResults *results;
 	GList *list;
 	const gchar *list_node_name;
 	xmlNodePtr meta_node, data_node;
@@ -205,7 +205,7 @@ ocs_get_results (OpenRequest *request, xmlDocPtr doc_ptr)
 	results = NULL;
 	meta_node = ocs_find_node (doc_ptr, "meta");
 	if (meta_node) {
-		results = ocs_results_new ();
+		results = OPEN_RESULTS (ocs_results_new ());
 		ocs_results_set_meta (results, meta_node);
 	} else {
 		g_debug ("Error in get meta node!\n");
@@ -219,7 +219,7 @@ ocs_get_results (OpenRequest *request, xmlDocPtr doc_ptr)
 		ocs_results_set_data (results, list);
 	}
 
-	return OPEN_RESULTS (results);
+	return results;
 }
 
 void
@@ -280,6 +280,8 @@ ocs_results_get_data (OpenResults *open_results)
 gboolean
 ocs_results_get_status (OpenResults *open_results)
 {
+	g_return_val_if_fail (open_results, FALSE);
+
 	gboolean val;
 	const gchar *value;
 	

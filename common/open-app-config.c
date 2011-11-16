@@ -13,14 +13,15 @@ Author: David Liang <dliang@novell.com>
 
 */
 #include <stdio.h>
-#include "gnome-app-config.h"
+#include "open-app-config.h"
 
-struct _GnomeAppConfigPrivate
+/* TODO maybe we should make it an abstruct */
+struct _OpenAppConfigPrivate
 {
         GKeyFile *key_file;
 };
 
-G_DEFINE_TYPE (GnomeAppConfig, gnome_app_config, G_TYPE_OBJECT)
+G_DEFINE_TYPE (OpenAppConfig, open_app_config, G_TYPE_OBJECT)
 
 static GKeyFile *
 create_default_key_file (gchar *file_url)
@@ -54,33 +55,33 @@ create_default_key_file (gchar *file_url)
 }
 
 static void
-gnome_app_config_init (GnomeAppConfig *config)
+open_app_config_init (OpenAppConfig *config)
 {
-	GnomeAppConfigPrivate *priv;
+	OpenAppConfigPrivate *priv;
         GError  *error;
         gchar *filename;
 
 	config->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (config,
-	                                                 GNOME_APP_TYPE_CONFIG,
-	                                                 GnomeAppConfigPrivate);
+	                                                 OPEN_APP_TYPE_CONFIG,
+	                                                 OpenAppConfigPrivate);
 
-        filename = g_build_filename (g_get_home_dir (), ".gnome-app-store", "gnome-app-store.conf", NULL);
+        filename = g_build_filename (g_get_home_dir (), ".open-app-store", "open-app-store.conf", NULL);
 	if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
                 g_free (filename);
-                filename = g_build_filename (CONFIGDIR, "gnome-app-store.conf", NULL);
+                filename = g_build_filename (CONFIGDIR, "open-app-store.conf", NULL);
         }
 
 	if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
 		gchar *dir, *cmd;
 
-		dir = g_build_filename (g_get_home_dir (), ".gnome-app-store", NULL);
+		dir = g_build_filename (g_get_home_dir (), ".open-app-store", NULL);
 		if (!g_file_test (dir, G_FILE_TEST_EXISTS)) {
 			g_mkdir (dir, 0755);
 		}
 		g_free (dir);
 
                 g_free (filename);
-                filename = g_build_filename (g_get_home_dir (), ".gnome-app-store", "gnome-app-store.conf", NULL);
+                filename = g_build_filename (g_get_home_dir (), ".open-app-store", "open-app-store.conf", NULL);
 		priv->key_file = create_default_key_file (filename);
         } else {
 		priv->key_file = g_key_file_new ();
@@ -99,59 +100,58 @@ gnome_app_config_init (GnomeAppConfig *config)
 }
 
 static void
-gnome_app_config_dispose (GObject *object)
+open_app_config_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (gnome_app_config_parent_class)->dispose (object);
+	G_OBJECT_CLASS (open_app_config_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_config_finalize (GObject *object)
+open_app_config_finalize (GObject *object)
 {
-	GnomeAppConfig *config = GNOME_APP_CONFIG (object);
-	GnomeAppConfigPrivate *priv = config->priv;
+	OpenAppConfig *config = OPEN_APP_CONFIG (object);
+	OpenAppConfigPrivate *priv = config->priv;
 
 	if (priv->key_file)
 		g_key_file_free (priv->key_file);
 
-	G_OBJECT_CLASS (gnome_app_config_parent_class)->finalize (object);
+	G_OBJECT_CLASS (open_app_config_parent_class)->finalize (object);
 }
 
 static void
-gnome_app_config_class_init (GnomeAppConfigClass *klass)
+open_app_config_class_init (OpenAppConfigClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = gnome_app_config_dispose;
-	object_class->finalize = gnome_app_config_finalize;
+	object_class->dispose = open_app_config_dispose;
+	object_class->finalize = open_app_config_finalize;
 	 
-	g_type_class_add_private (object_class, sizeof (GnomeAppConfigPrivate));
+	g_type_class_add_private (object_class, sizeof (OpenAppConfigPrivate));
 }
 
-GnomeAppConfig *
-gnome_app_config_new (void)
+OpenAppConfig *
+open_app_config_new (void)
 {
-	return g_object_new (GNOME_APP_TYPE_CONFIG, NULL);
+	return g_object_new (OPEN_APP_TYPE_CONFIG, NULL);
 }
 
 gchar *
-gnome_app_config_get_cache_dir (GnomeAppConfig *config)
+open_app_config_get_cache_dir (OpenAppConfig *config)
 {
-	g_return_val_if_fail (config && GNOME_APP_IS_CONFIG (config), NULL);
+	g_return_val_if_fail (config && OPEN_APP_IS_CONFIG (config), NULL);
 
         GError  *error = NULL;
 	gchar *val;
 	gchar *type;
 
-	type = gnome_app_config_get_server_type (config);
+	type = open_app_config_get_server_type (config);
 	val = g_key_file_get_value (config->priv->key_file, "Local", "CacheDir", &error);
 
 	if (error) {
 		g_error_free (error);
-		/*FIXME: might do better? */
-		if (strcmp (type, "ocs") == 0) {
-			val = g_build_filename (g_get_home_dir (), ".gnome-app-store", "cache", type, NULL);
-		} else if (strcmp (type, "app_stream") == 0) {
-			val = g_build_filename (g_get_home_dir (), ".gnome-app-store", "cache", NULL);
+		if (type) {
+			val = g_build_filename (g_get_home_dir (), ".open-app-store", "cache", type, NULL);
+		} else {
+			val = g_build_filename (g_get_home_dir (), ".open-app-store", "cache", "failsave", NULL);
 		}
 	} else
 		val = g_strdup (val);
@@ -164,7 +164,7 @@ gnome_app_config_get_cache_dir (GnomeAppConfig *config)
 }
 
 gchar *
-gnome_app_config_get_server_uri (GnomeAppConfig *config)
+open_app_config_get_server_uri (OpenAppConfig *config)
 {
 	g_return_val_if_fail (config->priv->key_file != NULL, NULL);
 
@@ -183,7 +183,7 @@ gnome_app_config_get_server_uri (GnomeAppConfig *config)
 }
 
 gchar *
-gnome_app_config_get_server_type (GnomeAppConfig *config)
+open_app_config_get_server_type (OpenAppConfig *config)
 {
         GError  *error = NULL;
 	gchar *val;
@@ -200,7 +200,7 @@ gnome_app_config_get_server_type (GnomeAppConfig *config)
 }
 
 gchar *
-gnome_app_config_get_username (GnomeAppConfig *config)
+open_app_config_get_username (OpenAppConfig *config)
 {
         GError  *error = NULL;
 	gchar *val;
@@ -217,7 +217,7 @@ gnome_app_config_get_username (GnomeAppConfig *config)
 }
 
 gchar *
-gnome_app_config_get_password (GnomeAppConfig *config)
+open_app_config_get_password (OpenAppConfig *config)
 {
         GError  *error = NULL;
 	gchar *val;

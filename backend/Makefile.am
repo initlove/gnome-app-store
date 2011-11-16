@@ -1,24 +1,21 @@
 CLEANFILES =
 SUBDIRS = ocs-spec
 
-lib_LTLIBRARIES = libapp-backend.la
+lib_LTLIBRARIES = libopen-app-backend.la
 
 AM_CPPFLAGS =							\
 	-I$(top_srcdir)						\
 	-I$(top_srcdir)/common					\
 	$(LIBSOUP_CFLAGS)					\
 	$(GNOME_APP_STORE_CFLAGS)				\
-	-DCONFIGDIR=\""/etc/gnome-app-store\""                  \
-	-DG_LOG_DOMAIN=\"GnomeAppStore\"			\
-	-DGNOMELOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale\""	\
-	-DPNP_IDS=\""$(PNP_IDS)"\"				\
+	-DCONFIGDIR=\""/etc/open-app-store\""                  \
 	$(DEBUG_CFLAGS) 					\
 	$(DISABLE_DEPRECATED_CFLAGS)				\
 	$(NULL)
 
 AM_CFLAGS = $(WARN_CFLAGS)
 
-libapp_backend_la_SOURCES = 	\
+libopen_app_backend_la_SOURCES = 	\
 	app-backend.c app-backend.h \
 	ocs-backend.c ocs-backend.h	\
 	ocs-result.c ocs-result.h \
@@ -26,7 +23,7 @@ libapp_backend_la_SOURCES = 	\
 	ocs-request.c ocs-request.h \
 	$(NULL)
 
-libapp_backend_la_LIBADD =	\
+libopen_app_backend_la_LIBADD =	\
 	$(LIBSOUP_LIBS)	\
 	$(GNOME_APP_STORE_LIBS)	\
 	$(NULL)
@@ -38,7 +35,7 @@ test_backend_SOURCES =      \
         test-backend.c
 
 test_backend_LDADD =        \
-	$(top_srcdir)/common/libgnome-app-common.la \
-	libapp-backend.la	\
+	$(top_srcdir)/common/libopen-app-common.la \
+	libopen-app-backend.la	\
         $(GNOME_APP_STORE_LIBS)
 

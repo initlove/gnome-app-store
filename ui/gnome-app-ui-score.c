@@ -18,7 +18,7 @@ Author: liangchenye <liangchenye@gmail.com>
 
 #include <clutter/clutter.h>
 
-#include "gnome-app-utils.h"
+#include "open-app-utils.h"
 #include "gnome-app-ui-score.h"
 
 struct _GnomeAppUIScorePrivate

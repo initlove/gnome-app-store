@@ -33,7 +33,7 @@ app_store_SOURCES =        \
 	app_store.c
 
 app_store_LDADD =          \
-	$(top_srcdir)/common/libgnome-app-common.la \
+	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
 	libst-1.0.la	\
 	$(GNOME_APP_STORE_LIBS)
@@ -49,7 +49,7 @@ app_store_kw_SOURCES =        \
 	app_store_kw.c
 
 app_store_kw_LDADD =          \
-	$(top_srcdir)/common/libgnome-app-common.la \
+	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
 	libst-1.0.la	\
 	$(GNOME_APP_STORE_LIBS)

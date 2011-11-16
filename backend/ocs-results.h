@@ -23,6 +23,7 @@
 #ifndef __OCS_RESULTS_H__
 #define __OCS_RESULTS_H__
 
+#include "open-request.h"
 #include "open-results.h"
 
 G_BEGIN_DECLS
@@ -70,6 +71,8 @@ const gchar *	ocs_results_get_meta		(OpenResults *results, const gchar *prop);
 GList *		ocs_results_get_data		(OpenResults *results);
 gboolean	ocs_results_get_status		(OpenResults *results);
 gint		ocs_results_get_total_items	(OpenResults *results);
+OpenResults *	ocs_get_results			(OpenRequest *request, xmlDocPtr doc_ptr);
+
 
 G_END_DECLS
 

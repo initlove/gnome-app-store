@@ -69,7 +69,7 @@ const char *		ocs_backend_get_password	(OcsBackend *backend);
 const SoupSession * 	ocs_backend_get_session	(OcsBackend *backend);
 const char *		ocs_backend_get_cache_dir	(OcsBackend *backend);
 
-GList *			ocs_get_cid_list_by_group (OcsBackend *ocs_backend, gchar *group);
+const gchar *		ocs_get_categories_by_name 	(OcsBackend *backend, gchar *category_name);
 
 G_END_DECLS
 

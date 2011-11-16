@@ -4,7 +4,7 @@
 #include <clutter/clutter.h>
 #include <glib/gi18n.h>
 
-#include "gnome-app-config.h"
+#include "open-app-config.h"
 #include "gnome-app-store.h"
 
 #include "gnome-app-infos-stage.h"
@@ -18,12 +18,12 @@ main (int argc, char *argv[])
 {
 	ClutterActor *stage;
 	ClutterActor *scroll, *box;
-	GnomeAppConfig *conf;
+	OpenAppConfig *conf;
 
 	if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
 	  return 1;
 
-	conf = gnome_app_config_new ();
+	conf = open_app_config_new ();
 
 	stage = clutter_stage_new ();
 	clutter_stage_set_title (CLUTTER_STAGE (stage), _("Scrolling"));

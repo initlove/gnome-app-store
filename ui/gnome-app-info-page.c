@@ -19,11 +19,10 @@ Author: Lance Wang <lzwang@suse.com>
 #include <clutter/clutter.h>
 
 #include "open-services.h"
+#include "open-app-utils.h"
 
-#include "gnome-app-utils.h"
 #include "gnome-app-store-ui.h"
 #include "gnome-app-info-page.h"
-#include "gnome-app-install.h"
 
 struct _GnomeAppInfoPagePrivate
 {
@@ -133,12 +132,15 @@ gnome_app_info_page_new_with_app (AppInfo *info)
 			continue;
 		val = app_info_get (info, prop [i]);
 		if (CLUTTER_IS_TEXTURE (actor)) {
-			local_uri = gnome_app_get_local_icon (val);
+			local_uri = open_app_get_local_icon (val);
 /*FIXME: tmp for no network debug */
 if (!local_uri)
-local_uri = g_strdup ("/home/novell/.gnome-app-store/cache/ocs/img/fe6835c189e4331dd6bce5b07537d44a");
+{
+g_debug ("not pp no truth !\n");
+} else {
 			clutter_texture_set_from_file (actor, local_uri, NULL);
 			g_free (local_uri);
+}
 		} else if (CLUTTER_IS_TEXT (actor)) {
 			clutter_text_set_text (actor, val);
 		} 
