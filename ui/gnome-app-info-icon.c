@@ -102,10 +102,13 @@ on_info_icon_event (ClutterActor *actor,
 	case CLUTTER_BUTTON_PRESS:
 		store_ui = gnome_app_store_ui_get_default ();
 		gnome_app_store_ui_load_app_info (store_ui, info);
-printf ("debug event %s\n", app_info_get (info, "name"));
-
 		break;
-		
+	case CLUTTER_ENTER:
+		clutter_actor_set_scale (actor, 1.5, 1.5);
+		break;
+	case CLUTTER_LEAVE:
+		clutter_actor_set_scale (actor, 1, 1);
+		break;
 	}
 	return TRUE;
 }

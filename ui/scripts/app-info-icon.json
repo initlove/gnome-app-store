@@ -2,6 +2,7 @@
   "Info preview" : {
     "id" : "info-icon", 
     "type" : "ClutterGroup",
+    "reactive" : true,
     "children" : [
       {
         "id" : "smallpreviewpic1",
@@ -11,15 +12,15 @@
         "keep-aspect-ratio" : true,
         "anchor-x" : "5 em",
         "anchor-y" : "5 pt",
-        "reactive" : true,
         "opacity" : 200,
+    	"reactive" : true,
         "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
       },
       {
         "id" : "name",
         "type" : "ClutterText",
         "text" : "app name",
-	"y" : 70,
+	"y" : 72,
         "width" : 64,
         "font-name" : "Sans 16px",
         "color" : "black",
