@@ -59,6 +59,7 @@ gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui)
 	OpenResults *results;
 	gchar *pagesize, *page;
 	gchar *message;
+	gint error_retry = 0;
 
 	pagesize = g_strdup_printf ("%d", ui->priv->pagesize);
 	page = g_strdup_printf ("%d", ui->priv->current_page);
@@ -71,8 +72,22 @@ gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui)
 	results = gnome_app_store_get_results (ui->priv->store, ui->priv->request);
 	if (!results) {
 		g_debug ("Error in getting results !\n");
-		return;
+/*FIXME: some error in the server, the xml file cannot be parsed */
+/*wuu, it is meanless, will cause bugs. should do it in xml level or other.. */
+		while (!results) {
+			if (error_retry >= 3) {
+				g_debug ("Fatal error, I've already retry 3 times !\n");
+				return ;
+			}
+			ui->priv->current_page ++;
+			error_retry ++;
+			page = g_strdup_printf ("%d", ui->priv->current_page);
+			app_request_set (ui->priv->request, "page", page);
+			g_free (page);
+			results = gnome_app_store_get_results (ui->priv->store, ui->priv->request);
+		}
 	}
+
 	if (open_results_get_status (results)) {
 		clutter_actor_hide (ui->priv->status);
 	} else {
@@ -101,6 +116,9 @@ gnome_app_frame_ui_load_request (GnomeAppFrameUI *ui)
 		} else {
 			clutter_actor_hide (ui->priv->prev);
 		}
+		/*HACK */
+		if (error_retry > 0)
+			clutter_actor_hide (ui->priv->prev);
 		if ((ui->priv->current_page + 1) * ui->priv->pagesize <= total_items) {
 			clutter_actor_show (ui->priv->next);
 		} else {
