@@ -1,0 +1,33 @@
+oasyncworker.c:				current->priv->callback (current, retval);
+oasyncworkertask.c: * in the callback of the task. When a cancellation point triggers a cancellation, 
+oasyncworkertask.c: * information from the body of the task to the callback.
+oasyncworkertask.c: * As this callback happens in the #GMainLoop, you should refrain from doing
+oasyncworkertask.c: * @callback: the callback where you need to free the arguments
+oasyncworkertask.c: * You need to free the arguments in the callback. This is why you need to give
+oasyncworkertask.c: * the @callback too: If you're not planning to use a @callback, you shouldn't set 
+oasyncworkertask.c:o_async_worker_task_new_with_arguments (gpointer arguments, OAsyncWorkerTaskCallback callback)
+oasyncworkertask.c:	o_async_worker_task_set_callback (retval, callback);
+oasyncworkertask.c: * function. You need to free it in the callback function which you must
+oasyncworkertask.c: * set with @o_async_worker_task_set_callback.
+oasyncworkertask.c: * It allows you to transfer data to the launcher function to the callback. 
+oasyncworkertask.c: * o_async_worker_task_set_callback:
+oasyncworkertask.c: * @callback: a reference to the callback function
+oasyncworkertask.c: * Sets the callback function of a task. The callback function is called after
+oasyncworkertask.c: * As this callback happens in the #GMainLoop, you should refrain from doing
+oasyncworkertask.c: * You can't make a cancellation point trigger a cancel in the @callback.
+oasyncworkertask.c: * Therefore the callback always runs. It can't be preempted. You can
+oasyncworkertask.c: * instruct a cancellation point to launch the callback after cancelling.
+oasyncworkertask.c: * task in the callback. Check out @o_async_worker_task_cancel_point for
+oasyncworkertask.c: * launcher func, you can leave the callback unassigned.
+oasyncworkertask.c:o_async_worker_task_set_callback (OAsyncWorkerTask *task, OAsyncWorkerTaskCallback callback)
+oasyncworkertask.c:		task->priv->callback = callback;
+oasyncworkertask.c: * o_async_worker_task_get_callback:
+oasyncworkertask.c: * @returns: a reference to the callback function
+oasyncworkertask.c:o_async_worker_task_get_callback (OAsyncWorkerTask *task)
+oasyncworkertask.c:		retval = task->priv->callback;
+oasyncworkertask.c: * This can be useful in a callback to know whether or not you need to free
+oasyncworkertask.c: * @run_callback: whether to run the callback after cancellation
+oasyncworkertask.c: * on a per-point basis whether the callback of the task must still be called.
+oasyncworkertask.c:o_async_worker_task_cancel_point (OAsyncWorkerTask *task, gboolean run_callback)
+oasyncworkertask.c:		if (task->priv->iwanttocancel && !task->priv->imincallback)
+oasyncworkertask.c:			_o_async_worker_try_cancel (queue, task, run_callback);

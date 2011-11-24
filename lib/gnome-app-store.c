@@ -13,35 +13,146 @@ Author: David Liang <dliang@novell.com>
 
 */
 #include <gio/gio.h>
-#include <gdesktop-enums.h>
 #include <glib/gdir.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+#include <rest/rest-proxy.h>
 #include <string.h>
 
-#include <clutter/clutter.h>
-
+#include "gnome-app-task.h"
 #include "gnome-app-store.h"
-#include "backend/app-backend.h"
+#include "liboasyncworker/oasyncworker.h"
+#include "liboasyncworker/oasyncworkertask.h"
+#include "common/open-app-utils.h"
 #include "common/open-app-config.h"
-#include "common/open-request.h"
+#include "common/open-result.h"
 #include "common/open-results.h"
 
 struct _GnomeAppStorePrivate
 {
-	AppBackend *backend;
 	OpenAppConfig *config;
+	gchar	*url;
+        GHashTable *categories;
+	GMainLoop *loop;
+
+	RestProxy *proxy;
+	OAsyncWorker *queue;
 
 	/*FIXME: Donnot use this at present */
 	GList *appid_list;	/* should be reload every timestamp time */
 	GHashTable *app_id;
-	gint app_timestamp;	/*FIXME: 1. should category have timestamp too?
-					 2. should appid_list and app_id have their own timestamp?
-					 3. should each app have its own timestamp?  add to the GnomeAppInfo ?
-				*/
 };
 
 G_DEFINE_TYPE (GnomeAppStore, gnome_app_store, G_TYPE_OBJECT)
+
+static void
+setup_category (GnomeAppStore *store, GList *results_data)
+{
+        const gchar **default_categories;
+        GString *ids [100];     /*FIXME: */
+        gchar *categories [100];
+        int i;
+        GList *list, *l;
+        OpenResult *result;
+        const gchar *id;
+        const gchar *name;
+        gboolean match;
+        gint other;
+
+        default_categories = open_app_get_default_categories ();
+        for (i = 0; default_categories [i]; i++) {
+                ids [i] = NULL;
+                categories [i] = g_strdup (default_categories [i]);
+                if (strlen (categories [i]) > 3)
+                        *(categories [i] + 3) = 0;
+        }
+        ids [i] = NULL;
+        categories [i] = NULL;
+        other = i - 1;  /*FIXME: other is the last one */
+
+        for (l = results_data; l; l = l->next) {
+                result = OPEN_RESULT (l->data);
+                id = open_result_get (result, "id");
+                name = open_result_get (result, "name");
+                if (!id || !id [0] || !name || !name [0])
+                        continue;
+                match = FALSE;
+
+                for (i = 0; categories [i]; i++) {
+		        if (strcasestr (name, categories [i])) {
+                                if (match == FALSE)
+                                        match = TRUE;
+                                if (ids [i] == NULL) {
+                                        ids [i] = g_string_new (id);
+                                } else {
+                                        g_string_append_c (ids [i], 'x');
+                                        g_string_append (ids [i], id);
+                                }
+                        }
+                }
+                if (!match) {
+                        if (ids [other] == NULL) {
+                                ids [other] = g_string_new (id);
+                        } else {
+                                g_string_append_c (ids [other], 'x');
+                                g_string_append (ids [other], id);
+                        }
+                }
+        }
+        for (i = 0; default_categories [i]; i++) {
+                if (ids [i]) {
+                        g_hash_table_insert (store->priv->categories, g_strdup (default_categories [i]), ids [i]->str);
+                        g_string_free (ids [i], FALSE);
+                }
+        }
+
+}
+
+static void
+proxy_call_raw_async_cb (RestProxyCall *call,
+                         const GError  *error,
+                         GObject       *weak_object,
+                         gpointer       userdata)
+{
+	GnomeAppStore *store;
+        const gchar *payload;
+        goffset len;
+        OpenResults *results;
+	GList *list;
+
+	store = GNOME_APP_STORE (userdata);
+        payload = rest_proxy_call_get_payload (call);
+        len = rest_proxy_call_get_payload_length (call);
+        results = (OpenResults *) ocs_get_results (payload, len);
+                
+	if (ocs_results_get_status (results)) {
+		list = open_results_get_data (results);
+		setup_category (store, list);
+	}
+
+	g_object_unref (results);
+        g_main_loop_quit (store->priv->loop);
+}
+
+static void
+init_category (GnomeAppStore *store)
+{
+        OpenResults *results;
+        RestProxy *proxy;
+        RestProxyCall *call;
+
+        proxy = rest_proxy_new (store->priv->url, FALSE);
+        call = rest_proxy_new_call (proxy);
+        rest_proxy_call_set_function (call, "/v1/content/categories");
+        rest_proxy_call_set_method (call, "GET");
+        rest_proxy_call_async (call,
+                         proxy_call_raw_async_cb,
+                         NULL,
+                         store,
+                         NULL);
+        g_main_loop_run (store->priv->loop);
+
+        g_object_unref (call);
+        g_object_unref (proxy);
+}
 
 static void
 gnome_app_store_init (GnomeAppStore *store)
@@ -54,9 +165,28 @@ gnome_app_store_init (GnomeAppStore *store)
 
 	priv->appid_list = NULL;
 	priv->app_id = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
-	priv->app_timestamp = -1;	/* FIXME: not implement yet */
 	priv->config = open_app_config_new ();
-	priv->backend = app_backend_new_from_config (priv->config);
+        priv->categories = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+
+	const gchar *user;
+	const gchar *password;
+	const gchar *server_url;
+
+	server_url = open_app_config_get_server_uri (priv->config);
+	if (!server_url) {
+		g_critical ("Cannot get the server uri !\n");
+		return;
+	}
+	user = open_app_config_get_username (priv->config);
+	password = open_app_config_get_password (priv->config);
+	if (user && password)
+		priv->url = g_strdup_printf ("http://%s:%s@%s", user, password, server_url);
+	else
+		priv->url = g_strdup_printf ("http://%s", server_url);
+
+	priv->proxy = rest_proxy_new (priv->url, FALSE);
+	priv->queue = o_async_worker_new ();
+//FIXME: ?        o_async_worker_join (queue);
 }
 
 static void
@@ -77,6 +207,14 @@ gnome_app_store_finalize (GObject *object)
 		g_hash_table_destroy (priv->app_id);
 	if (priv->config)
 		g_object_unref (priv->config);
+	if (priv->url)
+		g_free (priv->url);
+        if (priv->categories)
+                g_hash_table_destroy (priv->categories);
+	if (priv->proxy)
+		g_object_unref (priv->proxy);
+	if (priv->queue)
+		g_object_unref (priv->queue);
 
 	G_OBJECT_CLASS (gnome_app_store_parent_class)->finalize (object);
 }
@@ -98,19 +236,45 @@ gnome_app_store_new (void)
 	return g_object_new (GNOME_APP_TYPE_STORE, NULL);
 }
 
-static gboolean
-app_need_reload (GnomeAppStore *store, gchar *app_id)
+void
+gnome_app_store_set_mainloop (GnomeAppStore *store, GMainLoop *loop)
 {
-	/*FIXME: not implement */
-	/* timestamp */
-	return FALSE;
+	store->priv->loop = loop;
+	init_category (store);
 }
 
-OpenResults *
-gnome_app_store_get_results (GnomeAppStore *store, OpenRequest *request)
+const gchar *
+gnome_app_store_get_url (GnomeAppStore *store)
 {
-	g_return_val_if_fail (store && GNOME_APP_IS_STORE (store), NULL);
-	g_return_val_if_fail (request && IS_OPEN_REQUEST (request), NULL);
-
-	return app_backend_get_results (store->priv->backend, request);
+	return (const gchar *) store->priv->url;
 }
+
+const gchar *
+gnome_app_store_get_cids_by_name (GnomeAppStore *store, const gchar *category_name)
+{
+        g_return_val_if_fail (category_name, "-1");
+
+        const gchar *val;
+
+        val = (const gchar *) g_hash_table_lookup (store->priv->categories, category_name);
+/*TODO: if the category group is empty, we set the ids  to -1,
+        in this case, the return value will be empty!
+*/
+        if (!val || !val [0])
+                val = "-1";
+
+        return val;
+}
+
+void
+gnome_app_store_add_task (GnomeAppStore *store, GnomeAppTask *task)
+{
+        o_async_worker_add (store->priv->queue, gnome_app_task_get_task (task));
+}
+
+const RestProxy *
+gnome_app_store_get_proxy (GnomeAppStore *store)
+{
+	return store->priv->proxy;
+}
+

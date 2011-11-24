@@ -10,7 +10,7 @@ AM_CPPFLAGS =                                                   \
 	-I$(top_srcdir)                                         \
 	-I$(top_srcdir)/common					\
 	-I$(top_srcdir)/lib					\
-	$(LIBSOUP_CFLAGS)					\
+	$(LIBREST_CFLAGS)					\
 	$(GNOME_APP_STORE_CFLAGS)                               \
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"                        \
 	-DGNOMELOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale\""  \
@@ -35,6 +35,7 @@ app_store_SOURCES =        \
 app_store_LDADD =          \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
+	$(LIBREST_LIBS)	\
 	libst-1.0.la	\
 	$(GNOME_APP_STORE_LIBS)
 
@@ -51,5 +52,6 @@ app_store_kw_SOURCES =        \
 app_store_kw_LDADD =          \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
+	$(LIBREST_LIBS)	\
 	libst-1.0.la	\
 	$(GNOME_APP_STORE_LIBS)

@@ -17,16 +17,14 @@ Author: Lance Wang <lzwang@suse.com>
 #include <string.h>
 
 #include <clutter/clutter.h>
-#include "open-services.h"
 #include "open-app-utils.h"
-
 #include "gnome-app-info-icon.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-store-ui.h"
 
 struct _GnomeAppInfoIconPrivate
 {
-	AppInfo *info;
+	OpenResult *info;
 };
 
 G_DEFINE_TYPE (GnomeAppInfoIcon, gnome_app_info_icon, CLUTTER_TYPE_GROUP)
@@ -72,7 +70,7 @@ gnome_app_info_icon_class_init (GnomeAppInfoIconClass *klass)
 }
 
 static gboolean
-app_fullview_cb (AppInfo *info)
+app_fullview_cb (OpenResult *info)
 {
 	gnome_app_info_debug (info);
 #if 0
@@ -92,11 +90,11 @@ on_info_icon_event (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
-	AppInfo *info;
+	OpenResult *info;
 	GnomeAppStoreUI *store_ui;
 	ClutterActor *page, *stage;
 
-	info = APP_INFO (data);
+	info = OPEN_RESULT (data);
 	switch (event->type)
 	{
 	case CLUTTER_BUTTON_PRESS:
@@ -114,7 +112,7 @@ on_info_icon_event (ClutterActor *actor,
 }
 
 GnomeAppInfoIcon *
-gnome_app_info_icon_new_with_app (AppInfo *info)
+gnome_app_info_icon_new_with_app (OpenResult *info)
 {
 	GnomeAppInfoIcon *info_icon;
 
@@ -150,11 +148,11 @@ gnome_app_info_icon_new_with_app (AppInfo *info)
         gchar *local_uri;
 
 	clutter_script_get_objects (script, "name", &actor, NULL);
-	val = app_info_get (info, "name");
+	val = open_result_get (info, "name");
 	clutter_text_set_text (CLUTTER_TEXT (actor), val);
 
 	clutter_script_get_objects (script, "smallpreviewpic1", &actor, NULL);
-	val = app_info_get (info, "smallpreviewpic1");
+	val = open_result_get (info, "smallpreviewpic1");
 	local_uri = open_app_get_local_icon (val);
 	clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), local_uri, NULL);
 	g_free (local_uri);

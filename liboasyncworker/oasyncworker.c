@@ -1,0 +1,1075 @@
+/* OAsyncWorker
+ * Copyright (C) 2005 - 2008 Philip Van Hoof <pvanhoof@gnome.org>.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+#include <glib.h>
+#include <unistd.h>
+
+#ifdef HAVE_SCHED_H
+#include <sched.h>
+#include <sys/types.h>
+#endif
+
+#include "oasyncworker.h"
+#include "oasyncworkertask.h"
+
+#include "oasyncworker-priv.h"
+#include "oasyncworkertask-priv.h"
+#include "shared-priv.h"
+
+static GObjectClass *parent_class = NULL;
+
+G_LOCK_DEFINE_STATIC (tasks);
+
+static void o_async_worker_dispose (GObject *obj);
+static void o_async_worker_finalize (GObject *obj);
+static void o_async_worker_class_init (OAsyncWorkerClass *klass);
+static void o_async_worker_init (GTypeInstance *instance, gpointer g_class);
+static GObject* o_async_worker_constructor (GType type, guint n_construct_properties, GObjectConstructParam *construct_params);
+
+static void o_async_worker_real_task_finished (gpointer instance, gint arg1);
+static void o_async_worker_real_task_added (gpointer instance, gint arg1);
+static void o_async_worker_real_task_removed (gpointer instance, gint arg1);
+static void o_async_worker_real_task_cancelled (gpointer instance, gint arg1);
+
+enum {
+	TASK_ADDED,
+	TASK_FINISHED,
+	TASK_REMOVED,
+	TASK_CANCELLED,
+	TASK_STARTED,
+	LAST_SIGNAL,
+};
+
+static guint queue_signals[LAST_SIGNAL] = { 0 };
+
+GType
+o_async_worker_get_type (void)
+{
+	static GType type = 0;
+
+	if (type == 0) 
+	{
+		static const GTypeInfo info = 
+		{
+			sizeof (OAsyncWorkerClass),
+			NULL,  					/* base_init */
+			NULL,  					/* base_finalize */
+			(GClassInitFunc) o_async_worker_class_init, /* class_init */
+			NULL,					/* class_finalize */
+			NULL,					/* class_data */
+			sizeof (OAsyncWorker),
+			0,     					/* n_preallocs */
+			(GInstanceInitFunc) o_async_worker_init	/* instance_init */
+		};
+
+		type = g_type_register_static (G_TYPE_OBJECT,
+				"OAsyncWorker",
+				&info, 0);
+	}
+
+	return type;
+}
+
+static void
+o_async_worker_dispose (GObject *obj)
+{
+	OAsyncWorker *self = (OAsyncWorker *)obj;
+
+	if (!self->priv || self->priv->dispose_has_run)
+		return;
+
+	if (IS_VALID_OBJECT (self))
+	{
+		LOCK_OBJECT(self);
+		self->priv->dispose_has_run = TRUE;
+		if (self->priv->thread)
+		{
+			g_thread_join (self->priv->thread);
+			self->priv->thread = NULL;
+			self->priv->current = NULL;
+		}
+		UNLOCK_OBJECT(self);
+	}
+
+	G_OBJECT_CLASS (parent_class)->dispose (obj);
+
+	return;
+}
+
+static OAsyncWorkerTask*
+notfound (void)
+{
+	static OAsyncWorkerTask *notfound_cache;
+	if (!notfound_cache) 
+	{
+		notfound_cache = o_async_worker_task_new();
+		_o_async_worker_task_set_id (notfound_cache, -1);
+	}
+	return notfound_cache;
+}
+
+
+static void
+o_async_worker_finalize (GObject *obj)
+{
+	OAsyncWorker *self = (OAsyncWorker *)obj;
+
+	if (self->priv)
+	{
+		LOCK_FREE(self);
+		g_free (self->priv);
+		self->priv = NULL;
+	}
+
+	G_OBJECT_CLASS (parent_class)->finalize (obj);
+
+	return;
+}
+
+
+static void
+o_async_worker_class_init (OAsyncWorkerClass *klass)
+{
+	GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+	gobject_class->constructor = o_async_worker_constructor;
+	gobject_class->dispose = o_async_worker_dispose;
+	gobject_class->finalize = o_async_worker_finalize;
+
+	parent_class = g_type_class_peek_parent (klass);
+
+	g_type_class_add_private (klass, sizeof (OAsyncWorkerPrivate));
+
+	klass->task_finished = o_async_worker_real_task_finished;
+	klass->task_added = o_async_worker_real_task_added;
+	klass->task_removed = o_async_worker_real_task_removed;
+	klass->task_cancelled = o_async_worker_real_task_cancelled;
+
+/**
+ * OAsyncWorker::task-started
+ * @self: the #OAsyncWorker on which the signal is emitted
+ * @arg1: the task number that got started
+ *
+ * Emitted when a task starts
+ *
+ * If if you want to use the Gdk or Gtk+ subsystems, you have to acquire the 
+ * Gdk lock yourself in your handlers. Read http://live.gnome.org/GdkLock for 
+ * more information.
+ *
+ * Since: 1.0
+ **/
+	queue_signals[TASK_STARTED] =
+		g_signal_new ("task_started",
+		  G_OBJECT_CLASS_TYPE (gobject_class),
+		  G_SIGNAL_RUN_FIRST,
+		  G_STRUCT_OFFSET (OAsyncWorkerClass, task_started),
+		  NULL, NULL,
+		  g_cclosure_marshal_VOID__INT,
+		  G_TYPE_NONE, 1, G_TYPE_INT);
+
+
+/**
+ * OAsyncWorker::task-cancelled
+ * @self: the #OAsyncWorker on which the signal is emitted
+ * @arg1: the task number that got cancelled
+ *
+ * Emitted when a task gets cancelled
+ *
+ * If if you want to use the Gdk or Gtk+ subsystems, you have to acquire the 
+ * Gdk lock yourself in your handlers. Read http://live.gnome.org/GdkLock for 
+ * more information. The emission itself occurs in the #GMainLoop.
+ *
+ * Since: 1.0
+ **/
+	queue_signals[TASK_CANCELLED] =
+		g_signal_new ("task_cancelled",
+		  G_OBJECT_CLASS_TYPE (gobject_class),
+		  G_SIGNAL_RUN_FIRST,
+		  G_STRUCT_OFFSET (OAsyncWorkerClass, task_cancelled),
+		  NULL, NULL,
+		  g_cclosure_marshal_VOID__INT,
+		  G_TYPE_NONE, 1, G_TYPE_INT);
+
+
+/**
+ * OAsyncWorker::task-added
+ * @self: the #OAsyncWorker on which the signal is emitted
+ * @arg1: the task number that got added
+ *
+ * Emitted when a task gets added
+ *
+ * If if you want to use the Gdk or Gtk+ subsystems, you have to acquire the 
+ * Gdk lock yourself in your handlers. Read http://live.gnome.org/GdkLock for 
+ * more information. The emission itself occurs in the #GMainLoop.
+ *
+ * Since: 1.0
+ **/
+	queue_signals[TASK_ADDED] =
+		g_signal_new ("task_added",
+		  G_OBJECT_CLASS_TYPE (gobject_class),
+		  G_SIGNAL_RUN_FIRST,
+		  G_STRUCT_OFFSET (OAsyncWorkerClass, task_added),
+		  NULL, NULL,
+		  g_cclosure_marshal_VOID__INT,
+		  G_TYPE_NONE, 1, G_TYPE_INT);
+
+
+
+/**
+ * OAsyncWorker::task-finished
+ * @self: the #OAsyncWorker on which the signal is emitted
+ * @arg1: the task number that got started
+ *
+ * Emitted when a task finishes
+ *
+ * If if you want to use the Gdk or Gtk+ subsystems, you have to acquire the 
+ * Gdk lock yourself in your handlers. Read http://live.gnome.org/GdkLock for 
+ * more information. The emission itself occurs in the #GMainLoop.
+ *
+ * Since: 1.0
+ **/
+	queue_signals[TASK_FINISHED] =
+		g_signal_new ("task_finished",
+		  G_OBJECT_CLASS_TYPE (gobject_class),
+		  G_SIGNAL_RUN_FIRST,
+		  G_STRUCT_OFFSET (OAsyncWorkerClass, task_finished),
+		  NULL, NULL,
+		  g_cclosure_marshal_VOID__INT,
+		  G_TYPE_NONE, 1, G_TYPE_INT);
+
+
+/**
+ * OAsyncWorker::task-removed
+ * @self: the object on which the signal is emitted
+ * @arg1: the task number that got started
+ *
+ * Emitted when a task gets removed
+ *
+ * If if you want to use the Gdk or Gtk+ subsystems, you have to acquire the 
+ * Gdk lock yourself in your handlers. Read http://live.gnome.org/GdkLock for 
+ * more information. The emission itself occurs in the #GMainLoop.
+ *
+ * Since: 1.0
+ **/
+	queue_signals[TASK_REMOVED] =
+		g_signal_new ("task_removed",
+		  G_OBJECT_CLASS_TYPE (gobject_class),
+		  G_SIGNAL_RUN_FIRST,
+		  G_STRUCT_OFFSET (OAsyncWorkerClass, task_removed),
+		  NULL, NULL,
+		  g_cclosure_marshal_VOID__INT,
+		  G_TYPE_NONE, 1, G_TYPE_INT);
+
+	return;
+}
+
+static void 
+o_async_worker_real_task_finished (gpointer instance, gint arg1)
+{
+	return;
+}
+
+static void 
+o_async_worker_real_task_added (gpointer instance, gint arg1)
+{
+	return;
+}
+
+static void 
+o_async_worker_real_task_removed (gpointer instance, gint arg1)
+{
+	return;
+}
+
+static void 
+o_async_worker_real_task_cancelled (gpointer instance, gint arg1)
+{
+	return;
+}
+
+static void
+o_async_worker_init (GTypeInstance *instance, gpointer g_class)
+{
+	return;
+}
+
+
+static GObject*
+o_async_worker_constructor (GType type, guint n_construct_properties, GObjectConstructParam *construct_params)
+{
+	GObject *object;
+	OAsyncWorker *self;
+
+	object = (* G_OBJECT_CLASS (parent_class)->constructor) (type,
+				n_construct_properties,
+				construct_params);
+
+	self = O_ASYNC_WORKER (object);
+
+	if (!self->priv)
+	{
+		self->priv = g_new0 (OAsyncWorkerPrivate, 1);
+		self->priv->dispose_has_run = FALSE;
+		self->priv->pause = FALSE;
+		self->priv->cont = FALSE;
+		self->priv->thread = NULL;
+		self->priv->idseed = 0;
+
+#ifdef HAVE_SCHED_H
+		self->priv->affinity_mask = 0xFFFFFFFF;
+		self->priv->affinity_is_set = FALSE;
+		self->priv->scheduler_is_set = FALSE;
+#endif
+
+		LOCK_INIT(self);
+	}
+
+	return object;
+}
+
+/**
+ * o_async_worker_new:
+ * @returns: a new worker queue
+ *
+ * Create a new worker
+ * 
+ * Since: 1.0
+ */
+OAsyncWorker*
+o_async_worker_new (void)
+{
+	OAsyncWorker *retval = NULL;
+	retval = g_object_new (O_ASYNC_WORKER_TYPE, NULL);
+	return retval;
+}
+
+static gint
+o_async_worker_list_sort_tasks (gconstpointer a, gconstpointer b)
+{
+	gint prio_a = o_async_worker_task_get_priority ((OAsyncWorkerTask*)a);
+	gint prio_b = o_async_worker_task_get_priority ((OAsyncWorkerTask*)b);
+	return (prio_b - prio_a);
+}
+
+
+typedef struct {
+	OAsyncWorker *queue;
+	gint id;
+	guint *signals;
+} SignalTaskData ;
+
+static void
+signal_idle_destroy_data (gpointer user_data)
+{
+	if (user_data)
+		g_free (user_data);
+	return;
+}
+
+static gboolean
+signal_donothing_idle_func (gpointer user_data)
+{
+	return FALSE;
+}
+
+static gboolean
+signal_finished_idle_func (gpointer user_data)
+{
+	SignalTaskData *sdata = user_data;
+
+	if (sdata && sdata->queue && sdata->signals)
+		g_signal_emit (sdata->queue, sdata->signals[TASK_FINISHED], 
+			0, sdata->id);
+
+	return FALSE;
+}
+
+static gboolean
+signal_started_idle_func (gpointer user_data)
+{
+	SignalTaskData *sdata = user_data;
+
+	if (sdata && sdata->queue && sdata->signals)
+		g_signal_emit (sdata->queue, sdata->signals[TASK_STARTED], 
+			0, sdata->id);
+
+	return FALSE;
+}
+
+
+#ifdef DEBUG
+static void
+foreach_print (gpointer data, gpointer user_data)
+{
+	g_print ("%d has %d\n", ((OAsyncWorkerTask *)data)->priv->id,
+		((OAsyncWorkerTask *)data)->priv->priority);
+}
+#endif
+
+static gpointer 
+thread_main_func (gpointer user_data)
+{
+	OAsyncWorker *queue = user_data;
+	gboolean stopped = FALSE;
+
+#ifdef HAVE_SCHED_H
+	unsigned int len = -1;
+#endif
+
+	if (!IS_VALID_OBJECT (queue))
+		O_ASYNC_WORKER_OBJECT_NOT_READY (queue);
+
+#ifdef HAVE_SCHED_H
+	if (priv->queue->affinity_is_set)
+	{
+		len = sizeof (priv->queue->affinity_mask);
+		if (sched_setaffinity (getpid (), len, &priv->queue->affinity_mask) < 0) {
+			perror("sched_setaffinity");
+		}
+	}
+
+	if (priv->queue->scheduler_is_set)
+	{
+		if (sched_setscheduler (getpid (), priv->queue->policy, priv->queue->scheduler_param) < 0) {
+			perror("sched_setscheduler");
+		}
+	}
+#endif
+
+	while (!stopped)
+	{
+		GList *first = NULL;
+		OAsyncWorkerTask *current = NULL;
+		gint id = -1;
+
+		G_LOCK (tasks);
+#ifdef DEBUG
+		g_list_foreach (queue->priv->tasks, foreach_print, NULL);
+#endif
+		first = g_list_first (queue->priv->tasks);
+		if (first)
+		{
+			current = first->data;
+			queue->priv->current = current;
+		}
+		G_UNLOCK (tasks);
+
+		if (first && current)
+		{
+			SignalTaskData *sdata = NULL;
+			gpointer retval = NULL;
+
+			id = current->priv->id;
+
+			sdata = g_new0 (SignalTaskData, 1);
+			sdata->queue = queue;
+			sdata->id = id;
+			sdata->signals = queue_signals;
+
+			if (!queue->priv->pause && current->priv->func && !current->priv->removed
+				&& current->priv->cancelled == CANCEL_NOT_CANCELLED) 
+			{
+				current->priv->imincallback = FALSE;
+				
+				g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+					signal_started_idle_func, sdata,
+					NULL);
+					
+				retval = current->priv->func 
+					(current, current->priv->arguments);
+			}
+
+			if (!queue->priv->pause && current->priv->callback
+				&& current->priv->cancelled != CANCEL_NO_CALLBACK)
+			{
+				current->priv->imincallback = TRUE;
+				current->priv->callback (current, retval);
+			}
+
+
+			G_LOCK(tasks);
+
+			queue->priv->current = NULL;
+			queue->priv->tasks = g_list_delete_link 
+				(queue->priv->tasks, first);
+			current->priv->queue = NULL;
+
+			if (g_list_length (queue->priv->tasks) == 0)
+			{
+				stopped = TRUE;
+				queue->priv->thread = NULL;
+			}
+
+			if (!current->priv->removed)
+			{
+				g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+					signal_finished_idle_func, sdata,
+					signal_idle_destroy_data);
+			} else {
+				g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+					signal_donothing_idle_func, sdata,
+					signal_idle_destroy_data);
+			}
+			g_object_unref (current);
+
+			G_UNLOCK(tasks);
+
+		} else {
+			G_LOCK(tasks);
+			stopped = TRUE;
+			queue->priv->thread = NULL;
+			G_UNLOCK(tasks);
+		}
+	}
+
+	queue->priv->thread = NULL;
+
+	g_thread_exit (NULL);
+	return NULL;
+}
+
+static void
+o_async_worker_start (OAsyncWorker *queue)
+{
+	if (!g_thread_supported ())
+		g_thread_init (NULL);
+
+	queue->priv->thread = g_thread_create (thread_main_func, queue, 
+			TRUE, NULL);
+	g_thread_set_priority (queue->priv->thread, G_THREAD_PRIORITY_NORMAL);
+
+	return;
+}
+
+/**
+ * o_async_worker_add:
+ * @queue: a #OAsyncWorker
+ * @task: the #OAsyncWorkerTask to add
+ * @returns: the task_id
+ *
+ * Add a task to the queue
+ *
+ * <informalexample><programlisting>
+ * #include <oasyncworker/oasyncworker.h>
+ * int main (int argc, char **argv) 
+ * {
+ *   GMainLoop *loop = g_main_loop_new (NULL, FALSE);
+ *   OAsyncWorker *queue = o_async_worker_new ();
+ *   OAsyncWorkerTask *task = o_async_worker_task_new ();
+ *   o_async_worker_task_set_func (task, ...);
+ *   o_async_worker_task_set_callback (task, ...);
+ *   o_async_worker_add (queue, task);
+ *   g_object_unref (task);
+ *   g_main_loop_run (loop);
+ *   o_async_worker_join (queue);
+ *   g_object_unref (queue);
+ * }
+ * </programlisting></informalexample>
+ *
+ * Since: 1.0
+ **/
+gint
+o_async_worker_add (OAsyncWorker *queue, OAsyncWorkerTask *task)
+{
+	gint retval = -3;
+
+	if (IS_VALID_OBJECT (queue))
+	{
+		gboolean start_new = FALSE;
+		gint len = -1;
+		LOCK_OBJECT (queue);
+		LOCK_OBJECT (task);
+
+		task->priv->queue = queue;
+
+		G_LOCK (tasks);
+		queue->priv->tasks = g_list_insert_sorted (queue->priv->tasks, 
+				g_object_ref (task), 
+				o_async_worker_list_sort_tasks);
+
+		task->priv->id = ++queue->priv->idseed;
+		retval = task->priv->id;
+
+		start_new = !queue->priv->thread;
+		G_UNLOCK (tasks);
+
+		if (start_new)
+			o_async_worker_start (queue);
+
+		UNLOCK_OBJECT (task);
+		UNLOCK_OBJECT (queue);
+
+		if (retval != -3 && retval != -2)
+			g_signal_emit (queue, queue_signals[TASK_ADDED], 
+					0, retval);
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(queue);
+	}
+
+	return retval;
+}
+
+/**
+ * o_async_worker_remove:
+ * @queue: a #OAsyncWorker
+ * @task_id: the id of the task to remove
+ * @run_callback: whether or not still to run the callback function
+ *
+ * Removes a task from the queue. Note that trying to remove the current 
+ * task will fail. If removal succeeded, the @task-removed signal will be 
+ * emitted.
+ *
+ * Once removed, the task will get the state of being cancelled. If the 
+ * @run_callback argument is TRUE, the callback will still run (for cleaning
+ * up).
+ *
+ * For more information about this callback, refer to @OAsyncWorkerTaskCallback
+ * and @o_async_worker_task_set_callback.
+ *
+ * Since: 1.0
+ **/
+void
+o_async_worker_remove (OAsyncWorker *queue, gint task_id, gboolean run_callback)
+{
+	if (IS_VALID_OBJECT (queue))
+	{
+		gboolean cont = TRUE;
+		gint id = -1;
+		LOCK_OBJECT (queue);
+		
+		G_LOCK(tasks);
+		if (queue->priv->current->priv->id != task_id)
+		{
+			OAsyncWorkerTask *task = NULL;
+			gboolean cont = TRUE;
+			GList *copy = g_list_copy (queue->priv->tasks);
+			while (copy && cont)
+			{
+				OAsyncWorkerTask *cur = copy->data;
+				if (IS_VALID_OBJECT(cur) && cur->priv->id == task_id)
+				{
+					task = cur;
+					cont = FALSE;
+				}
+				copy = g_list_next (copy);
+			}
+			g_list_free (copy);
+			
+			if (task && IS_VALID_OBJECT(task))
+			{
+				task->priv->removed = TRUE;
+				id = task->priv->id;
+				
+				if (run_callback)
+				{
+					task->priv->cancelled = CANCEL_DO_CALLBACK;
+				} else {
+					task->priv->cancelled = CANCEL_NO_CALLBACK;
+				}
+				
+			}
+		} else {
+			g_warning ("Can't remove currently "
+					"active task from the queue\n");
+		}
+		G_UNLOCK(tasks);
+
+		UNLOCK_OBJECT (queue);
+
+		if (id != -1)
+			g_signal_emit (queue, queue_signals[TASK_REMOVED], 
+					0, id);
+
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(queue);
+	}
+
+	return;
+}
+
+/**
+ * o_async_worker_get_current:
+ * @queue: a #OAsyncWorker
+ * @returns: (caller-owns) (null-ok): the current task or NULL
+ *
+ * Returns the task that is currently being processed by 
+ * the queue or NULL if none.
+ *
+ * Since: 1.0
+ */
+OAsyncWorkerTask*
+o_async_worker_get_current (OAsyncWorker *queue)
+{
+	OAsyncWorkerTask *retval = NULL;
+
+	if (IS_VALID_OBJECT (queue))
+	{
+		G_LOCK(tasks);
+		retval = queue->priv->current;
+		if (retval)
+			g_object_ref (retval);
+		G_UNLOCK(tasks);
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(queue);
+	}
+
+	return retval;
+}
+
+/**
+ * o_async_worker_get_with_id:
+ * @queue: a #OAsyncWorker
+ * @task_id: the id of the task as returned by @o_async_worker_add
+ * @returns: (caller-owns) (null-ok): the current task or NULL
+ *
+ * Returns the task that has been identified by @task_id or NULL 
+ * if none is identified with @task_id.
+ *
+ * Since: 1.0
+ **/
+OAsyncWorkerTask*
+o_async_worker_get_with_id (OAsyncWorker *queue, gint task_id)
+{
+	OAsyncWorkerTask *retval = NULL;
+
+	if (IS_VALID_OBJECT (queue))
+	{
+		gboolean cont = TRUE;
+		GList *copy = NULL;
+		G_LOCK(tasks);
+		copy = g_list_copy (queue->priv->tasks);
+		while (copy && cont)
+		{
+			OAsyncWorkerTask *cur = copy->data;
+			if (cur && cur->priv->id == task_id)
+			{
+				retval = g_object_ref (cur);
+				cont = FALSE;
+			}
+			copy = g_list_next (copy);
+		}
+		g_list_free (copy);
+		
+		G_UNLOCK(tasks);
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(queue);
+		retval = NULL;
+	}
+	
+	return retval;
+}
+
+void
+_o_async_worker_sort_tasks (OAsyncWorker *queue)
+{
+	if (IS_VALID_OBJECT (queue))
+	{
+		G_LOCK(tasks);
+		queue->priv->tasks = g_list_sort (queue->priv->tasks, o_async_worker_list_sort_tasks);
+		G_UNLOCK(tasks);
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(queue);
+	}
+
+	return;
+}
+
+static gpointer
+o_async_worker_wait_func (OAsyncWorkerTask *task, gpointer arguments)
+{
+	gint micros = (gint)arguments;
+	gint piece = micros / 10;
+	gint rest = micros % 10;
+	gint t = 0;
+
+#ifdef DEBUG
+	g_print ("total=%d piece=%d rest=%d\n",micros, piece, rest);
+#endif
+
+	o_async_worker_task_cancel_point (task, TRUE);
+
+	for (t = 0; t < 10; t++)
+	{
+		o_async_worker_task_cancel_point (task, TRUE);
+		usleep (piece);
+		o_async_worker_task_cancel_point (task, TRUE);
+	}
+
+	o_async_worker_task_cancel_point (task, TRUE);
+	usleep (rest);
+	o_async_worker_task_cancel_point (task, TRUE);
+
+	return NULL;
+}
+
+static void
+o_async_worker_wait_callback (OAsyncWorkerTask *task, gpointer func_result)
+{
+	/* 
+	 * Callback is responsible for freeing both func_result and the 
+	 * arguments. However, they aren't allocated memory regions here. 
+	 * Setting it to NULL is indeed more or less useless. Yet it's 
+	 * clean to clean it up.
+	 */
+
+	o_async_worker_task_set_arguments (task, NULL);
+
+	return;
+}
+
+/**
+ * o_async_worker_add_wait:
+ * @queue: a #OAsyncWorker
+ * @micros: amount of microseconds the queue will have to wait
+ * @priority: the priority of the waiter task
+ * @returns: the @task_id of the waiter task
+ * 
+ * Will make the queue wait for at least @micros microseconds
+ *
+ * Since: 1.0
+ **/
+gint
+o_async_worker_add_wait (OAsyncWorker *queue, gint micros, gint priority)
+{
+	gint retval = -1;
+
+	if (IS_VALID_OBJECT (queue))
+	{
+		OAsyncWorkerTask *wait = NULL;
+
+		wait = o_async_worker_task_new ();
+
+		o_async_worker_task_set_arguments (wait, (gpointer)micros);
+		o_async_worker_task_set_func (wait, o_async_worker_wait_func);
+		o_async_worker_task_set_callback (wait, 
+				o_async_worker_wait_callback);
+
+		o_async_worker_task_set_priority (wait, priority);
+
+		o_async_worker_add (queue, wait);
+
+		retval = _o_async_worker_task_get_id (wait);
+
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(queue);
+	}
+
+	return retval;
+}
+
+/**
+ * o_async_worker_join:
+ * @queue: a #OAsyncWorker
+ *
+ * Blocks @queue until all tasks are finished.
+ *
+ * Since: 1.0
+ **/
+void
+o_async_worker_join (OAsyncWorker *queue)
+{
+	if (IS_VALID_OBJECT (queue))
+	{
+		if (queue->priv->thread)
+		{
+			g_thread_join (queue->priv->thread);
+			queue->priv->thread = NULL;
+		}
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(queue);
+	}
+
+	return;
+}
+
+/**
+ * o_async_worker_sched_setaffinity:
+ * @queue: a #OAsyncWorker
+ * @mask: the mask parameter for the @sched_setaffinity function
+ *
+ * Sets the CPU affinity of the thread that will process the tasks.
+ * This will only work on platforms that have support for the 
+ * @sched_setaffinity function (for example Linux).
+ *
+ * For more information: man sched_setaffinity
+ *
+ * Since: 1.0
+ **/
+void
+o_async_worker_sched_setaffinity (OAsyncWorker *queue, unsigned long *mask)
+{
+#ifdef HAVE_SCHED_H
+	LOCK_OBJECT(queue);
+	queue->priv->affinity_mask = mask;
+	queue->priv->affinity_is_set = TRUE;
+	UNLOCK_OBJECT(queue);
+#else
+	g_warning ("This platform doesn't support sched_setaffinity\n");
+#endif
+	return;
+}
+
+/**
+ * o_async_worker_sched_getaffinity:
+ * @queue: a #OAsyncWorker
+ * @returns: the mask parameter for the @sched_setaffinity function
+ *
+ * Get the CPU affinity of the thread that will process the tasks
+ * This will only work on platforms that have support for the 
+ * @sched_setaffinity function (for example Linux).
+ *
+ * For more information: man sched_setaffinity
+ *
+ * Since: 1.0
+ */
+unsigned long*
+o_async_worker_sched_getaffinity (OAsyncWorker *queue)
+{
+	unsigned long *retval = NULL;
+#ifdef HAVE_SCHED_H	
+	LOCK_OBJECT(queue);
+	retval = queue->priv->affinity_mask;
+	UNLOCK_OBJECT(queue);
+#else
+	g_warning ("This platform doesn't support sched_getaffinity\n");
+#endif
+	return retval;
+}
+
+/**
+ * o_async_worker_sched_setscheduler:
+ * @queue: a #OAsyncWorker
+ * @policy: the policy of the @sched_setscheduler function
+ * @param: The const struct sched_param *p of the sched_setscheduler function
+ *
+ * This will only work on platforms that have support for the 
+ * @sched_setscheduler function (for example Linux).
+ *
+ * For more information: man sched_setscheduler
+ *
+ * Since: 1.0
+ **/
+void
+o_async_worker_sched_setscheduler(OAsyncWorker *queue, int policy, gpointer param)
+{
+#ifdef HAVE_SCHED_H
+	LOCK_OBJECT(queue);
+	queue->priv->scheduler_policy = policy;
+	queue->priv->scheduler_param = param;
+	queue->priv->scheduler_is_set = TRUE;
+	UNLOCK_OBJECT(queue);
+#else
+	g_warning ("This platform doesn't support sched_setscheduler\n");
+#endif
+
+	return;
+}
+
+
+/**
+ * o_async_worker_sched_getscheduler:
+ * @queue: a #OAsyncWorker
+ * @returns: the policy
+ *
+ * This will only work on platforms that have support for the 
+ * @sched_getscheduler function (for example Linux).
+ *
+ * For more information: man sched_setscheduler
+ *
+ * Since: 1.0
+ **/
+int
+o_async_worker_sched_getscheduler(OAsyncWorker *queue)
+{
+	int retval = -1;
+#ifdef HAVE_SCHED_H
+	LOCK_OBJECT(queue);
+	retval = queue->priv->scheduler_policy = policy;
+	UNLOCK_OBJECT(queue);
+#else
+	g_warning ("This platform doesn't support sched_setscheduler\n");
+#endif
+	return retval;
+}
+
+
+typedef struct
+{
+	OAsyncWorker *queue;
+	gint task_id;
+}restart_thread_info_t;
+
+static gboolean
+restart_thread_idle_func (gpointer user_data)
+{
+	restart_thread_info_t *info = user_data;
+	OAsyncWorker *queue = info->queue;;
+				
+	if (IS_VALID_OBJECT (queue))
+	{
+		g_signal_emit (queue, queue_signals[TASK_CANCELLED], 
+			0, info->task_id);
+		
+		o_async_worker_join (queue);
+		queue->priv->thread = NULL;
+		o_async_worker_start (queue);
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(queue);
+	}
+	
+	return FALSE;
+}
+
+void
+_o_async_worker_try_cancel (OAsyncWorker *queue, OAsyncWorkerTask *task, gboolean run_callback)
+{
+	gboolean contin = TRUE;
+	
+	if (task->priv->imincallback)
+		contin = FALSE;
+	
+	if (g_thread_self () != queue->priv->thread)
+		contin = FALSE;
+		
+	if (contin)
+	{
+		restart_thread_info_t *info = g_new(restart_thread_info_t,1);
+		
+		info->queue = queue;
+		info->task_id = task->priv->id;
+		
+		if (run_callback)
+		{
+			task->priv->cancelled = CANCEL_DO_CALLBACK;
+		} else {
+			task->priv->cancelled = CANCEL_NO_CALLBACK;
+		}
+
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+			restart_thread_idle_func, info, 
+			signal_idle_destroy_data);
+
+		g_thread_exit (0);
+
+	} else {
+		O_ASYNC_WORKER_CANCEL_INVALID;
+	}
+
+	return;
+}

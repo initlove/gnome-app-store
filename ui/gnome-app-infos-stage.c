@@ -15,8 +15,6 @@ Author: David Liang <dliang@novell.com>
 #include <math.h>
 #include <clutter/clutter.h>
 #include "st.h"
-#include "open-services.h"
-#include "open-request.h"
 #include "gnome-app-store.h"
 #include "gnome-app-info-icon.h"
 #include "gnome-app-infos-stage.h"
@@ -35,7 +33,6 @@ struct _GnomeAppInfosStagePrivate
 	gint icon_width;
 	gint icon_height;
 
-	AppRequest *request;
 };
 
 G_DEFINE_TYPE (GnomeAppInfosStage, gnome_app_infos_stage, CLUTTER_TYPE_GROUP)
@@ -103,7 +100,6 @@ gnome_app_infos_stage_init (GnomeAppInfosStage *infos_stage)
 	priv->cols = 7; //FIXME: should be calculated
 	priv->icon_width = 96;
 	priv->icon_height = 96;
-	priv->request = NULL;
 
 	priv->viewport = clutter_box_new (clutter_box_layout_new ());
 	clutter_container_add_actor (CLUTTER_CONTAINER (infos_stage), priv->viewport);
@@ -137,8 +133,6 @@ gnome_app_infos_stage_finalize (GObject *object)
 	GnomeAppInfosStage *infos_stage = GNOME_APP_INFOS_STAGE (object);
 	GnomeAppInfosStagePrivate *priv = infos_stage->priv;
 
-	if (priv->request)
-		g_object_unref (priv->request);
 //TODO: any other thing to finalize ?
 	
 	G_OBJECT_CLASS (gnome_app_infos_stage_parent_class)->finalize (object);
@@ -177,7 +171,11 @@ gnome_app_infos_stage_clean (GnomeAppInfosStage *infos_stage)
 gint
 gnome_app_infos_stage_get_pagesize (GnomeAppInfosStage *infos_stage)
 {
-	return infos_stage->priv->rows * infos_stage->priv->cols;
+	gint pagesize;
+	
+	pagesize = infos_stage->priv->rows * infos_stage->priv->cols;
+
+	return pagesize;
 }
 
 void
@@ -197,13 +195,12 @@ gnome_app_infos_stage_add_actor (GnomeAppInfosStage *infos_stage, ClutterActor *
 void
 gnome_app_infos_stage_load (GnomeAppInfosStage *infos_stage, const GList *data)
 {
-	AppInfo *info;
+	OpenResult *info;
 	GnomeAppInfoIcon *info_icon;
 	GList *l;
-
 	gnome_app_infos_stage_clean (infos_stage);
 	for (l = (GList *)data; l; l = l->next) {
-		info = APP_INFO (l->data);
+		info = OPEN_RESULT (l->data);
 		info_icon = gnome_app_info_icon_new_with_app (info);
 		gnome_app_infos_stage_add_actor (infos_stage, CLUTTER_ACTOR (info_icon));
 	}

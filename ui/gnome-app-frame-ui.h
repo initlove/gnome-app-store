@@ -24,6 +24,8 @@
 #define __GNOME_APP_FRAME_UI_H__
 
 #include <clutter/clutter.h>
+#include "open-results.h"
+#include "gnome-app-store.h"
 #include "gnome-app-infos-stage.h"
 #include "gnome-app-info-page.h"
 
@@ -54,8 +56,9 @@ struct _GnomeAppFrameUIClass
 
 GType  		        gnome_app_frame_ui_get_type		(void);
 GnomeAppFrameUI *      	gnome_app_frame_ui_new			(void);
-void			gnome_app_frame_ui_load_request		(GnomeAppFrameUI *ui);
-void			gnome_app_frame_ui_set_default_request  (GnomeAppFrameUI *ui, OpenRequest *request);
+GnomeAppFrameUI *	gnome_app_frame_ui_new_with_store 	(GnomeAppStore *store);
+
+void			gnome_app_frame_ui_load_results 	(GnomeAppFrameUI *ui, OpenResults *results);
 
 G_END_DECLS
 

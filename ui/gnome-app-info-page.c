@@ -18,7 +18,6 @@ Author: Lance Wang <lzwang@suse.com>
 
 #include <clutter/clutter.h>
 
-#include "open-services.h"
 #include "open-app-utils.h"
 
 #include "gnome-app-store-ui.h"
@@ -26,7 +25,7 @@ Author: Lance Wang <lzwang@suse.com>
 
 struct _GnomeAppInfoPagePrivate
 {
-	AppInfo *info;
+	OpenResult *info;
 };
 
 G_DEFINE_TYPE (GnomeAppInfoPage, gnome_app_info_page, CLUTTER_TYPE_GROUP)
@@ -91,7 +90,7 @@ on_info_page_event (ClutterActor *actor,
 }
 
 GnomeAppInfoPage *
-gnome_app_info_page_new_with_app (AppInfo *info)
+gnome_app_info_page_new_with_app (OpenResult *info)
 {
 	GnomeAppInfoPage *page;
 
@@ -130,7 +129,7 @@ gnome_app_info_page_new_with_app (AppInfo *info)
 		clutter_script_get_objects (script, prop [i], &actor, NULL);
 		if (!actor)
 			continue;
-		val = app_info_get (info, prop [i]);
+		val = open_result_get (info, prop [i]);
 		if (CLUTTER_IS_TEXTURE (actor)) {
 			local_uri = open_app_get_local_icon (val);
 /*FIXME: tmp for no network debug */
@@ -160,7 +159,7 @@ g_debug ("not pp no truth !\n");
 	}
 
 	gchar *scores [] = { "score-1", "score-2", "score-3", "score-4", "score-5", NULL};
-	gint app_score = atoi (app_info_get (info, "score")) / 20;
+	gint app_score = atoi (open_result_get (info, "score")) / 20;
 	for (i = 0; scores [i]; i++) {
 		clutter_script_get_objects (script, scores [i], &actor, NULL);
 		if (!actor)
@@ -175,7 +174,8 @@ g_debug ("not pp no truth !\n");
 	gchar *comment_count;
 	clutter_script_get_objects (script, "comments-details", &actor, NULL);
 	if (actor) {
-		id = app_info_get (info, "id");
+#if 0
+		id = open_result_get (info, "id");
 		CommentRequest *request;
         	request = comment_request_new ();
 	        comment_request_set (request, "type", "1");
@@ -183,6 +183,7 @@ g_debug ("not pp no truth !\n");
 	        comment_request_set (request, "contentid2", "0");
         	comment_request_set (request, "pagesize", "35");
 	        comment_request_set (request, "page", "0");
+#endif
 
 	}
 

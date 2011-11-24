@@ -16,7 +16,7 @@ Author: Liang chenye <liangchenye@gmail.com>
 #include <glib/gi18n.h>
 #include <clutter/clutter.h>
 
-#include "open-services.h"
+#include "gnome-app-store.h"
 #include "gnome-app-store-ui.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-frame-ui.h"
@@ -25,6 +25,8 @@ struct _GnomeAppStoreUIPrivate
 {
 	GnomeAppInfoPage *info_page;
 	GnomeAppFrameUI *frame_ui;
+	GnomeAppStore *store;
+	GMainLoop *loop;
 };
 
 G_DEFINE_TYPE (GnomeAppStoreUI, gnome_app_store_ui, CLUTTER_TYPE_STAGE)
@@ -33,22 +35,19 @@ static void
 gnome_app_store_ui_init (GnomeAppStoreUI *ui)
 {
 	GnomeAppStoreUIPrivate *priv;
-	AppRequest *request;
 
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
 							 GNOME_APP_TYPE_STORE_UI,
 							 GnomeAppStoreUIPrivate);
 	clutter_stage_set_title (CLUTTER_STAGE (ui), _("AppStore"));
-        clutter_actor_set_size (CLUTTER_ACTOR (ui), 900, 660);
+	clutter_actor_set_size (CLUTTER_ACTOR (ui), 1000, 800);
         g_signal_connect (ui, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
+	priv->loop = NULL;
 	priv->info_page = NULL;
-	priv->frame_ui = gnome_app_frame_ui_new ();
-	request = app_request_new ();
-	app_request_set (request, "sortmode", "new");
-	gnome_app_frame_ui_set_default_request (priv->frame_ui, request);
-	gnome_app_frame_ui_load_request (priv->frame_ui);
-
+	priv->store = gnome_app_store_new ();
+	priv->frame_ui = gnome_app_frame_ui_new_with_store (priv->store);
+	
 	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (priv->frame_ui));
 }
 
@@ -68,6 +67,8 @@ gnome_app_store_ui_finalize (GObject *object)
 		g_object_unref (priv->frame_ui);
 	if (priv->info_page)
 		g_object_unref (priv->info_page);
+	if (priv->store)
+		g_object_unref (priv->store);
 
 	G_OBJECT_CLASS (gnome_app_store_ui_parent_class)->finalize (object);
 }
@@ -100,7 +101,7 @@ gnome_app_store_ui_get_default ()
 
 //TODO: here, we can implement some animation when click between frame and page
 void
-gnome_app_store_ui_load_app_info (GnomeAppStoreUI *ui, AppInfo *info)
+gnome_app_store_ui_load_app_info (GnomeAppStoreUI *ui, OpenResult *info)
 {
 	GnomeAppStoreUIPrivate *priv = ui->priv;
 
@@ -142,3 +143,12 @@ gnome_app_store_ui_load_frame_ui (GnomeAppStoreUI *ui)
 
 	clutter_actor_show (CLUTTER_ACTOR (priv->frame_ui));
 }
+
+void
+gnome_app_store_ui_set_mainloop (GnomeAppStoreUI *ui, GMainLoop *loop)
+{
+	ui->priv->loop = loop;
+	gnome_app_store_set_mainloop (ui->priv->store, loop);
+	gnome_app_frame_ui_set_mainloop (ui->priv->frame_ui, loop);
+}
+

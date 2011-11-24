@@ -26,7 +26,7 @@
 #include <glib.h>
 #include <glib-object.h>
 #include "common/open-results.h"
-#include "common/open-request.h"
+#include "liboasyncworker/oasyncworker.h"
 
 G_BEGIN_DECLS
 
@@ -55,7 +55,9 @@ struct _GnomeAppStoreClass
 
 GType			gnome_app_store_get_type			(void);
 GnomeAppStore *		gnome_app_store_new				(void);
-OpenResults *		gnome_app_store_get_results			(GnomeAppStore *store, OpenRequest *request);
+const gchar *		gnome_app_store_get_url				(GnomeAppStore *store);
+const gchar *		gnome_app_store_get_cids_by_name		(GnomeAppStore *store, const gchar *name);
+//const RestProxy *	gnome_app_store_get_proxy 			(GnomeAppStore *store);
 
 G_END_DECLS
 

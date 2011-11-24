@@ -1,0 +1,634 @@
+/* OAsyncWorkerTask
+ * Copyright (C) 2005 - 2008 Philip Van Hoof <pvanhoof@gnome.org>.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+#include <glib.h>
+#include "oasyncworkertask.h"
+
+#include "oasyncworkertask-priv.h"
+#include "oasyncworker-priv.h"
+#include "shared-priv.h"
+
+static GObjectClass *parent_class = NULL;
+
+static void o_async_worker_task_dispose (GObject *obj);
+static void o_async_worker_task_finalize (GObject *obj);
+static void o_async_worker_task_class_init (OAsyncWorkerTaskClass *klass);
+static void o_async_worker_task_init (GTypeInstance *instance, gpointer g_class);
+static GObject* o_async_worker_task_constructor (GType type, guint n_construct_properties, GObjectConstructParam *construct_params);
+
+GType
+o_async_worker_task_get_type (void)
+{
+	static GType type = 0;
+
+	if (type == 0)
+	{
+	 static const GTypeInfo info = 
+	 {
+		sizeof (OAsyncWorkerTaskClass),
+		NULL,  					/* base_init */
+		NULL,  					/* base_finalize */
+		(GClassInitFunc) o_async_worker_task_class_init,/* class_init */
+		NULL,					/* class_finalize */
+		NULL,  					/* class_data */
+		sizeof (OAsyncWorkerTask),
+		0,      				/* n_preallocs */
+		(GInstanceInitFunc) o_async_worker_task_init /* instance_init */
+	 };
+
+	  type = g_type_register_static (G_TYPE_OBJECT,
+					 "OAsyncWorkerTask",
+					 &info, 0);
+	}
+	return type;
+}
+
+static void
+o_async_worker_task_dispose (GObject *obj)
+{
+	OAsyncWorkerTask *self = (OAsyncWorkerTask *)obj;
+
+	if (!self->priv || self->priv->dispose_has_run)
+		return;
+
+	LOCK_OBJECT(self);
+	self->priv->dispose_has_run = TRUE;
+	UNLOCK_OBJECT(self);
+
+	G_OBJECT_CLASS (parent_class)->dispose (obj);
+
+	return;
+}
+
+static void
+o_async_worker_task_finalize (GObject *obj)
+{
+	OAsyncWorkerTask *self = (OAsyncWorkerTask *)obj;
+
+	if (self->priv)
+	{
+		LOCK_FREE(self);
+		g_free (self->priv);
+		self->priv = NULL;
+	}
+
+	G_OBJECT_CLASS (parent_class)->finalize (obj);
+
+	return;
+}
+
+static void
+o_async_worker_task_class_init (OAsyncWorkerTaskClass *klass)
+{
+	GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+	gobject_class->constructor = o_async_worker_task_constructor;
+	gobject_class->dispose = o_async_worker_task_dispose;
+	gobject_class->finalize = o_async_worker_task_finalize;
+	
+	parent_class = g_type_class_peek_parent (klass);
+
+	g_type_class_add_private (klass, sizeof (OAsyncWorkerTaskPrivate));
+
+	return;
+}
+
+static void
+o_async_worker_task_init (GTypeInstance *instance, gpointer g_class)
+{
+	return;
+}
+
+
+static GObject*
+o_async_worker_task_constructor (GType type, guint n_construct_properties, GObjectConstructParam *construct_params)
+{
+	GObject *object;
+	OAsyncWorkerTask *self;
+
+	object = (* G_OBJECT_CLASS (parent_class)->constructor) (type,
+				n_construct_properties,
+				construct_params);
+
+	self = O_ASYNC_WORKER_TASK (object);
+
+	if (!IS_VALID_OBJECT(self))
+	{
+		self->priv = g_new0 (OAsyncWorkerTaskPrivate, 1);
+		self->priv->dispose_has_run = FALSE;
+		self->priv->id = -2;
+		self->priv->cancelled = CANCEL_NOT_CANCELLED;
+		self->priv->imincallback = FALSE;
+		self->priv->iwanttocancel = FALSE;
+		self->priv->removed = FALSE;
+
+		self->priv->queue = NULL;
+
+		LOCK_INIT(self);
+	}
+
+	return object;
+}
+
+ 
+/**
+ * OAsyncWorkerTaskFunc
+ * @task: a #OAsyncWorkerTask
+ * @arguments: the arguments that have been set with @o_async_worker_task_set_arguments
+ * @returns: a pointer that is also the second argument of the #OAsyncWorkerTaskCallback
+ *
+ * Using @o_async_worker_task_set_func you can assign a function to a task.
+ * This function is the body of the task. It's what needs to be performed in order
+ * to complete the task successfully.
+ *
+ * You can launch new functions from this function. If you don't start a thread
+ * in it, they still belong to the body of the task. If you do start a thread,
+ * the code running in the thread is not part of the body of this task. A 
+ * @g_thread_join works of course as expected on this thread. The body of your 
+ * tasks runs in a internal thread too. You can join the internal thread using 
+ * @o_async_worker_join. Note that all tasks in the worker need to finish for 
+ * @o_async_worker_join to return.
+ *
+ * Cancellation points only trigger a cancel within the body of a task.
+ * That body stops when you return this function, or when a cancellation
+ * point triggered a cancel.
+ *
+ * If you let it return an allocated pointer, you need to free this as a resource
+ * in the callback of the task. When a cancellation point triggers a cancellation, 
+ * that argument is always NULL (thus unallocated).
+ *
+ * Since: 1.0
+ **/
+
+/**
+ * OAsyncWorkerTaskCallback
+ * @task: a #OAsyncWorkerTask
+ * @func_result : a pointer to the result of the #OAsyncWorkerTaskFunc
+ *
+ * In this function you need to free all the resources that were allocated
+ * for the task.
+ *
+ * If you returned an allocated pointer in the #OAsyncWorkerTaskFunc, you need 
+ * to free it here. The returned value of the #OAsyncWorkerTaskFunc is the
+ * @func_result argument. You can, of course, use @func_result argument to pass
+ * information from the body of the task to the callback.
+ *
+ * Note that if the #OAsyncWorkerTaskFunc returned due to a cancellation, that
+ * @func_result is NULL.
+ *
+ * As this callback happens in the #GMainLoop, you should refrain from doing
+ * CPU intensive tasks in it. Stick to freeing up resources and notifying UI,
+ * for example.
+ *
+ * If if you want to use the Gdk or Gtk+ subsystems, you have to acquire the 
+ * Gdk lock yourself in your handlers. Read http://live.gnome.org/GdkLock for 
+ * more information.
+ *
+ * Since: 1.0
+ **/
+
+/**
+ * o_async_worker_task_new:
+ * @returns: a #OAsyncWorkerTask
+ *
+ * Creates a new #OAsyncWorkerTask
+ *
+ * Since: 1.0
+ **/
+OAsyncWorkerTask *
+o_async_worker_task_new (void)
+{
+	OAsyncWorkerTask *retval = NULL;
+
+	retval = g_object_new (O_ASYNC_WORKER_TASK_TYPE, NULL);
+
+	return retval;
+}
+
+/**
+ * o_async_worker_task_new_with_arguments:
+ * @returns: a #OAsyncWorkerTask
+ * @arguments: a pointer to the arguments
+ * @callback: the callback where you need to free the arguments
+ *
+ * Creates a new #OAsyncWorkerTask and sets its arguments property
+ *
+ * You need to free the arguments in the callback. This is why you need to give
+ * the @callback too: If you're not planning to use a @callback, you shouldn't set 
+ * the arguments to an allocated resource.
+ *
+ * Since: 1.0
+ **/
+OAsyncWorkerTask*
+o_async_worker_task_new_with_arguments (gpointer arguments, OAsyncWorkerTaskCallback callback)
+{
+	OAsyncWorkerTask *retval = NULL;
+
+	retval = o_async_worker_task_new ();
+	o_async_worker_task_set_arguments (retval, arguments);
+	o_async_worker_task_set_callback (retval, callback);
+
+	return retval;
+}
+
+/**
+ * o_async_worker_task_set_arguments:
+ * @task: a #OAsyncWorkerTask
+ * @arguments: a pointer to the arguments
+ *
+ * Set the arguments of the @task. The arguments are passed to the launcher
+ * function. You need to free it in the callback function which you must
+ * set with @o_async_worker_task_set_callback.
+ *
+ * It allows you to transfer data to the launcher function to the callback. 
+ *
+ * Since: 1.0
+ **/
+void
+o_async_worker_task_set_arguments (OAsyncWorkerTask *task, gpointer arguments)
+{
+	if (IS_VALID_OBJECT(task))
+	{
+		LOCK_OBJECT(task);
+		task->priv->arguments = arguments;
+		UNLOCK_OBJECT(task);
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return;
+}
+
+/**
+ * o_async_worker_task_set_func:
+ * @task: a #OAsyncWorkerTask
+ * @func: a reference to the launcher function
+ *
+ * Sets the laucher function of @task.
+ *
+ * If if you want to use the Gdk or Gtk+ subsystems, you have to acquire the 
+ * Gdk lock yourself in @func. Read http://live.gnome.org/GdkLock for 
+ * more information. The execution itself occurs in an internal thread.
+ *
+ * Therefore, if you're planning to use non-threadsafe functions and/or objects,
+ * make sure that you have proper locking in place.
+ *
+ * There's more information at the #OAsyncWorkerTaskFunc section
+ *
+ * Since: 1.0
+ **/
+void
+o_async_worker_task_set_func (OAsyncWorkerTask *task, OAsyncWorkerTaskFunc func)
+{
+	if (IS_VALID_OBJECT(task))
+	{
+		LOCK_OBJECT(task);
+		task->priv->func = func;
+		UNLOCK_OBJECT(task);
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return;
+}
+
+/**
+ * o_async_worker_task_set_callback:
+ * @task: a #OAsyncWorkerTask
+ * @callback: a reference to the callback function
+ *
+ * Sets the callback function of a task. The callback function is called after
+ * the laucher function. It gets as argument a pointer to the result of that
+ * launcher function.
+ *
+ * As this callback happens in the #GMainLoop, you should refrain from doing
+ * CPU intensive tasks in it. Stick to freeing up resources and notifying UI,
+ * for example.
+ *
+ * If if you want to use the Gdk or Gtk+ subsystems, you have to acquire the 
+ * Gdk lock yourself in your handlers. Read http://live.gnome.org/GdkLock for 
+ * more information.
+ *
+ * You can't make a cancellation point trigger a cancel in the @callback.
+ * Therefore the callback always runs. It can't be preempted. You can
+ * instruct a cancellation point to launch the callback after cancelling.
+ * This way you can free the resources of a finished, removed or cancelled 
+ * task in the callback. Check out @o_async_worker_task_cancel_point for
+ * more information about this.
+ *
+ * If you're not setting the arguments property and you returned NULL in the 
+ * launcher func, you can leave the callback unassigned.
+ *
+ * There's more information at the #OAsyncWorkerTaskCallback section
+ *
+ * Since: 1.0
+ **/
+void
+o_async_worker_task_set_callback (OAsyncWorkerTask *task, OAsyncWorkerTaskCallback callback)
+{
+	if (IS_VALID_OBJECT(task))
+	{
+		LOCK_OBJECT(task);
+		task->priv->callback = callback;
+		UNLOCK_OBJECT(task);
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return;
+}
+
+/**
+ * o_async_worker_task_get_arguments:
+ * @task: a #OAsyncWorkerTask
+ * @returns: a pointer to the arguments
+ *
+ * Since: 1.0
+ **/
+gpointer
+o_async_worker_task_get_arguments (OAsyncWorkerTask *task)
+{
+	gpointer retval = NULL;
+
+	if (IS_VALID_OBJECT(task))
+	{
+		retval = task->priv->arguments;
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return retval;
+}
+
+/**
+ * o_async_worker_task_get_func:
+ * @task: a #OAsyncWorkerTask
+ * @returns: a reference to the function
+ *
+ * Since: 1.0
+ **/
+OAsyncWorkerTaskFunc
+o_async_worker_task_get_func (OAsyncWorkerTask *task)
+{
+	OAsyncWorkerTaskFunc retval;
+
+	if (IS_VALID_OBJECT(task))
+	{
+		retval = task->priv->func;
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return retval;
+}
+
+/**
+ * o_async_worker_task_get_callback:
+ * @task: a #OAsyncWorkerTask
+ * @returns: a reference to the callback function
+ *
+ * Since: 1.0
+ **/
+OAsyncWorkerTaskCallback
+o_async_worker_task_get_callback (OAsyncWorkerTask *task)
+{
+	OAsyncWorkerTaskCallback retval;
+
+	if (IS_VALID_OBJECT(task))
+	{
+		retval = task->priv->callback;
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return retval;
+}
+
+/**
+ * o_async_worker_task_get_queue:
+ * @task: a #OAsyncWorkerTask
+ * @returns: (caller-owns) (null-ok): a pointer to the #OAsyncWorker or NULL
+ *
+ * Returns a pointer to the queue that is assigned to process the task. It 
+ * returns NULL if no queue has been assigned.
+ * 
+ * Since: 1.0
+ **/
+OAsyncWorker*
+o_async_worker_task_get_queue (OAsyncWorkerTask *task)
+{
+	OAsyncWorker* retval = NULL;
+
+	if (IS_VALID_OBJECT(task))
+	{
+		if (task->priv->queue)
+			retval = g_object_ref (task->priv->queue);
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return retval;
+}
+
+/**
+ * o_async_worker_task_get_priority:
+ * @task: a #OAsyncWorkerTask
+ * @returns: the priority
+ *
+ * Since: 1.0
+ **/
+gint
+o_async_worker_task_get_priority (OAsyncWorkerTask *task)
+{
+	gint retval = -1;
+
+	if (IS_VALID_OBJECT(task))
+	{
+		retval = task->priv->priority;
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return retval;
+}
+
+/**
+ * o_async_worker_task_set_priority:
+ * @task: a #OAsyncWorkerTask
+ * @priority: the priority
+ *
+ * Sets the priority @task. A task with a high priority will be processed 
+ * before a task with a low priority. Note that setting the priority won't 
+ * preempt the task that's currently being processed. Not even when the 
+ * current task has a lower priority than the task whose priority is being 
+ * set.
+ *
+ * Since: 1.0
+ **/
+void
+o_async_worker_task_set_priority (OAsyncWorkerTask *task, gint priority)
+{
+	if (IS_VALID_OBJECT(task))
+	{
+		LOCK_OBJECT(task);
+		{
+			OAsyncWorker *queue = o_async_worker_task_get_queue (task);
+			task->priv->priority = priority;
+			if (queue) {
+				_o_async_worker_sort_tasks (queue);
+				g_object_unref (queue);
+			}
+		}
+		UNLOCK_OBJECT(task);
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return;
+}
+
+gint
+_o_async_worker_task_get_id (OAsyncWorkerTask *task)
+{
+	gint retval = -1;
+
+	if (IS_VALID_OBJECT(task))
+	{
+		retval = task->priv->id;
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return retval;
+}
+
+void
+_o_async_worker_task_set_id (OAsyncWorkerTask *task, gint id)
+{
+	if (IS_VALID_OBJECT(task))
+	{
+		LOCK_OBJECT(task);
+		{
+			task->priv->id = id;
+		}
+		UNLOCK_OBJECT(task);
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return;
+}
+
+/**
+ * o_async_worker_task_is_cancelled:
+ * @task: a #OAsyncWorkerTask
+ * @returns: whether or not the task was cancelled
+ * 
+ * This can be useful in a callback to know whether or not you need to free
+ * the result of the launcher function. For example in case you've been using
+ * the cancellation features.
+ *
+ * Note that to be cancelled, the task really needed to get cancelled. The
+ * @o_async_worker_task_cancel method only requests a cancellation. The task then
+ * still needs to get at a cancellation point. Only then this property is set.
+ *
+ * Since: 1.0
+ **/
+gboolean
+o_async_worker_task_is_cancelled (OAsyncWorkerTask *task)
+{
+	gboolean retval = -1;
+
+	if (IS_VALID_OBJECT(task))
+	{
+		retval = (task->priv->cancelled==CANCEL_NOT_CANCELLED)?TRUE:FALSE;
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return retval;
+}
+
+
+/**
+ * o_async_worker_task_cancel_point:
+ * @task: a #OAsyncWorkerTask
+ * @run_callback: whether to run the callback after cancellation
+ * 
+ * Define a location where the processing of the task may cancel. You can choose
+ * on a per-point basis whether the callback of the task must still be called.
+ * If you choose not to, you won't get the chance to free the arguments pointer
+ * or other resources being used by the task!
+ *
+ * The return value of the launcher function is set automatically to NULL in case
+ * of an actual cancellation.
+ *
+ * Since: 1.0
+ **/
+void
+o_async_worker_task_cancel_point (OAsyncWorkerTask *task, gboolean run_callback)
+{
+	if (IS_VALID_OBJECT(task))
+	{	
+		if (task->priv->iwanttocancel && !task->priv->imincallback)
+		{
+			OAsyncWorker *queue = task->priv->queue;
+			
+			if (IS_VALID_OBJECT (queue))
+			{
+				if (g_thread_self () != queue->priv->thread)
+				{
+					O_ASYNC_WORKER_CANCEL_INVALID;
+					return;
+				}
+			}
+			_o_async_worker_try_cancel (queue, task, run_callback);
+		}
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return;
+}
+
+/**
+ * o_async_worker_task_request_cancel:
+ * @task: a #OAsyncWorkerTask
+ * 
+ * Set a task to be cancelled. The cancellation itself only triggers when
+ * during the processing of the task-body, a cancellation point is found.
+ * Also see the information about @o_async_worker_task_cancel_point.
+ *
+ * Note that you need to run a #GMainLoop for this to work correctly. All
+ * Gtk+ applications (after doing gtk_main) have this.
+ *
+ * Since: 1.0
+ **/
+void
+o_async_worker_task_request_cancel (OAsyncWorkerTask *task)
+{
+	if (IS_VALID_OBJECT(task))
+	{
+		task->priv->iwanttocancel = TRUE;
+	} else {
+		O_ASYNC_WORKER_OBJECT_NOT_READY(task);
+	}
+
+	return;
+}

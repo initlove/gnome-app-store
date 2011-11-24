@@ -1,4 +1,4 @@
-SUBDIRS = common backend lib ui po
+SUBDIRS = common lib liboasyncworker ui po
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 

@@ -25,7 +25,7 @@
 #include <glib.h>
 #include <clutter/clutter.h>
 
-#include "open-services.h"
+#include "open-result.h"
 
 G_BEGIN_DECLS
 
@@ -53,7 +53,7 @@ struct _GnomeAppInfoPageClass
 };
 
 GType				gnome_app_info_page_get_type		(void);
-GnomeAppInfoPage *		gnome_app_info_page_new_with_app 	(AppInfo *app);
+GnomeAppInfoPage *		gnome_app_info_page_new_with_app 	(OpenResult *app);
 
 G_END_DECLS
 

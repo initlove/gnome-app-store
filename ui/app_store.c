@@ -4,7 +4,6 @@
 #include <clutter/clutter.h>
 #include <glib/gi18n.h>
 
-#include "open-services.h"
 #include "gnome-app-store.h"
 #include "gnome-app-store-ui.h"
 #include "gnome-app-info-page.h"
@@ -16,12 +15,23 @@ main (int argc, char *argv[])
 	ClutterActor *stage;
 	GnomeAppStoreUI *store_ui;
 
+  	g_type_init ();
+	g_thread_init (NULL);
 	if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
 	  return 1;
 
-	stage = CLUTTER_ACTOR (gnome_app_store_ui_get_default ());
+
+	GMainLoop *loop;
+	loop = g_main_loop_new (NULL, FALSE);
+
+	store_ui = gnome_app_store_ui_get_default ();
+	stage = CLUTTER_ACTOR (store_ui);
 	clutter_actor_show_all (stage);
-	clutter_main ();
+
+	gnome_app_store_ui_set_mainloop (store_ui, loop);
+
+	g_main_loop_run (loop);
+  	g_main_loop_unref (loop);
 
 	return EXIT_SUCCESS;
 }

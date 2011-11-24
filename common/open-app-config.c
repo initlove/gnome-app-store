@@ -134,6 +134,9 @@ open_app_config_new (void)
 	return g_object_new (OPEN_APP_TYPE_CONFIG, NULL);
 }
 
+/*TODO: make the cache to 
+ ~/.cache 
+*/
 gchar *
 open_app_config_get_cache_dir (OpenAppConfig *config)
 {
@@ -141,7 +144,7 @@ open_app_config_get_cache_dir (OpenAppConfig *config)
 
         GError  *error = NULL;
 	gchar *val;
-	gchar *type;
+	const gchar *type;
 
 	type = open_app_config_get_server_type (config);
 	val = g_key_file_get_value (config->priv->key_file, "Local", "CacheDir", &error);
@@ -163,7 +166,7 @@ open_app_config_get_cache_dir (OpenAppConfig *config)
 	return val;
 }
 
-gchar *
+const gchar *
 open_app_config_get_server_uri (OpenAppConfig *config)
 {
 	g_return_val_if_fail (config->priv->key_file != NULL, NULL);
@@ -179,10 +182,10 @@ open_app_config_get_server_uri (OpenAppConfig *config)
 		return NULL;
 	}
 
-	return g_strdup (val);
+	return (const gchar *) val;
 }
 
-gchar *
+const gchar *
 open_app_config_get_server_type (OpenAppConfig *config)
 {
         GError  *error = NULL;
@@ -196,10 +199,10 @@ open_app_config_get_server_type (OpenAppConfig *config)
 		return NULL;
 	}
 
-	return g_strdup (val);
+	return (const gchar *) val;
 }
 
-gchar *
+const gchar *
 open_app_config_get_username (OpenAppConfig *config)
 {
         GError  *error = NULL;
@@ -213,10 +216,10 @@ open_app_config_get_username (OpenAppConfig *config)
 		return NULL;
 	}
 
-	return g_strdup (val);
+	return (const gchar *) val;
 }
 
-gchar *
+const gchar *
 open_app_config_get_password (OpenAppConfig *config)
 {
         GError  *error = NULL;
@@ -230,7 +233,7 @@ open_app_config_get_password (OpenAppConfig *config)
 		return NULL;
 	}
 
-	return g_strdup (val);
+	return (const gchar *) val;
 }
 
 

@@ -1,0 +1,12 @@
+stamp-h1
+config.h.in
+stamp-h
+stamp-h.in
+config.h
+.deps
+.libs
+Makefile
+Makefile.in
+oasyncworker.lo
+oasyncworkeritem.lo
+liboasyncworker-1.0.la

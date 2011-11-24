@@ -54,11 +54,11 @@ struct _OpenAppConfigClass
 GType                   open_app_config_get_type               (void);
 OpenAppConfig *         open_app_config_new                    (void);
 
-gchar 	*		open_app_config_get_server_type 	(OpenAppConfig *config);
-gchar   *		open_app_config_get_server_uri		(OpenAppConfig *conf);
-gchar	*		open_app_config_get_cache_dir		(OpenAppConfig *conf);
-gchar	*		open_app_config_get_username		(OpenAppConfig *conf);
-gchar	*		open_app_config_get_password		(OpenAppConfig *conf);
+const gchar *		open_app_config_get_server_type 	(OpenAppConfig *config);
+const gchar *		open_app_config_get_server_uri		(OpenAppConfig *conf);
+const gchar *		open_app_config_get_username		(OpenAppConfig *conf);
+const gchar *		open_app_config_get_password		(OpenAppConfig *conf);
+gchar *			open_app_config_get_cache_dir		(OpenAppConfig *conf);
 
 G_END_DECLS
 

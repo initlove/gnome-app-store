@@ -24,7 +24,6 @@
 #define __GNOME_APP_INFOS_STAGE_H__
 
 #include <clutter/clutter.h>
-#include "open-request.h"
 
 G_BEGIN_DECLS
 

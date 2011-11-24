@@ -19,6 +19,7 @@
 
    Author: Liang chenye <liangchenye@gmail.com>
 */
+
 #include <libsoup/soup.h>
 #include <libsoup/soup-address.h>
 #include <libsoup/soup-auth-domain-basic.h>
@@ -150,7 +151,6 @@ open_app_get_data_by_request (SoupSession *session, const gchar *request)
 
 	return buf;
 }
-
 static gboolean
 download_file (const gchar *source, const gchar *dest)
 {

@@ -1,0 +1,18 @@
+
+DEFS = @DEFS@ -DLIBOASYNCWORKER_COMPILATION
+INCLUDES = $(LIBOASYNCWORKER_CFLAGS) -I$(top_srcdir)/include
+
+lib_LTLIBRARIES = liboasyncworker-1.0.la
+
+liboasyncworker_1_0_la_LIBADD = $(LIBOASYNCWORKER_LIBS)
+liboasyncworker_1_0_la_LDFLAGS = -avoid-version -module
+
+noinst_HEADERS = \
+	oasyncworker-priv.h	 \
+	oasyncworkertask-priv.h  \
+	shared-priv.h
+
+liboasyncworker_1_0_la_SOURCES = \
+	oasyncworker.c		 \
+	oasyncworkertask.c
+

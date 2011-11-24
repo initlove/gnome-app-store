@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/asyncworker/!svn/ver/89/trunk/liboasyncworker
+END
+oasyncworker.c
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/asyncworker/!svn/ver/89/trunk/liboasyncworker/oasyncworker.c
+END
+Makefile.am
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/asyncworker/!svn/ver/56/trunk/liboasyncworker/Makefile.am
+END
+oasyncworker-priv.h
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/asyncworker/!svn/ver/64/trunk/liboasyncworker/oasyncworker-priv.h
+END
+oasyncworkertask.c
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/asyncworker/!svn/ver/88/trunk/liboasyncworker/oasyncworkertask.c
+END
+shared-priv.h
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/asyncworker/!svn/ver/17/trunk/liboasyncworker/shared-priv.h
+END
+.cvsignore
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/asyncworker/!svn/ver/20/trunk/liboasyncworker/.cvsignore
+END
+oasyncworkertask-priv.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/asyncworker/!svn/ver/56/trunk/liboasyncworker/oasyncworkertask-priv.h
+END
