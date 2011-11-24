@@ -1,4 +1,4 @@
-SUBDIRS = common lib liboasyncworker ui po
+SUBDIRS = common liboasyncworker lib ui po
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
