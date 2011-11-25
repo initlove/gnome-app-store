@@ -12,6 +12,7 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
+#include <stdio.h>
 #include <rest/rest-proxy.h>
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
@@ -24,6 +25,7 @@ Author: David Liang <dliang@novell.com>
 
 struct _GnomeAppTaskPrivate
 {
+	gchar *url;
         RestProxyCall *call;
 	OAsyncWorkerTask *async;
 
@@ -48,6 +50,7 @@ gnome_app_task_init (GnomeAppTask *task)
                                                    GNOME_APP_TYPE_TASK,
                                                    GnomeAppTaskPrivate);
 	priv->async = NULL;
+	priv->url = NULL;
 }
 
 static void
@@ -62,6 +65,8 @@ gnome_app_task_finalize (GObject *object)
 	GnomeAppTask *task = GNOME_APP_TASK (object);
 	GnomeAppTaskPrivate *priv = task->priv;
 
+	if (priv->url)
+		g_free (priv->url);
 	if (priv->async)
 	        g_object_unref (priv->async);
 
@@ -119,6 +124,19 @@ async_func (OAsyncWorkerTask *task, gpointer arguments)
 	return results;
 }
 
+static gpointer
+async_download_func (OAsyncWorkerTask *task, gpointer arguments)
+{
+	GnomeAppTask *app_task;
+	GError *error = NULL;
+
+	app_task = GNOME_APP_TASK (arguments);
+
+	gchar *dest_url;
+        dest_url = open_app_get_local_icon (app_task->priv->url);
+
+	return dest_url;
+}
 
 GnomeAppTask *
 gnome_app_task_new_with_valist (GnomeAppStore *store, gpointer userdata, const gchar *method, const gchar *function, va_list params)
@@ -138,7 +156,6 @@ gnome_app_task_new_with_valist (GnomeAppStore *store, gpointer userdata, const g
         rest_proxy_call_set_function (task->priv->call, function);
 	rest_proxy_call_set_method (task->priv->call, method);
 
-
         while ((param = va_arg (params, const gchar *)) != NULL) {
                 value = va_arg (params, const gchar *);
                 rest_proxy_call_add_param (task->priv->call, param, value);
@@ -151,6 +168,25 @@ gnome_app_task_new_with_valist (GnomeAppStore *store, gpointer userdata, const g
         o_async_worker_task_set_func (task->priv->async, async_func);
 
 //        o_async_worker_task_set_priority (priv->async, prio);
+
+	return task;
+}
+
+GnomeAppTask *
+gnome_download_task_new (gpointer userdata, const gchar *url)
+{
+        GnomeAppTask *task;
+	RestProxy *proxy;
+
+	task = g_object_new (GNOME_APP_TYPE_TASK, NULL);
+        task->priv->url = g_strdup (url);
+	task->priv->userdata = userdata;
+	task->priv->async = o_async_worker_task_new ();
+
+        o_async_worker_task_set_arguments (task->priv->async, task);
+        o_async_worker_task_set_func (task->priv->async, async_download_func);
+
+	g_object_unref (proxy);
 
 	return task;
 }
@@ -176,4 +212,10 @@ OAsyncWorkerTask *
 gnome_app_task_get_task (GnomeAppTask *task)
 {
 	return task->priv->async;
+}
+
+void            
+gnome_app_task_add_param (GnomeAppTask *task, const gchar *param, const gchar *value)
+{
+	rest_proxy_call_add_param (task->priv->call, param, value);
 }
