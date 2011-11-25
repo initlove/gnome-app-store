@@ -12,14 +12,12 @@ Boston, MA 02111-1307, USA.
 Author: Lance Wang <lzwang@suse.com>
 
 */
-#include <gio/gio.h>
-#include <gdesktop-enums.h>
 #include <string.h>
-
 #include <clutter/clutter.h>
 
 #include "open-app-utils.h"
-
+#include "gnome-app-store.h"
+#include "gnome-app-task.h"
 #include "gnome-app-store-ui.h"
 #include "gnome-app-info-page.h"
 
@@ -89,8 +87,22 @@ on_info_page_event (ClutterActor *actor,
         return TRUE;
 }
 
+static void
+set_pic_callback (gpointer userdata, gpointer func_re)
+{
+        ClutterActor *actor;
+        gchar *dest_url;
+
+        actor = CLUTTER_ACTOR (userdata);
+        dest_url = (gchar *) func_re;
+/*TODO: why should use this thread? */
+        clutter_threads_enter ();
+        clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), dest_url, NULL);
+        clutter_threads_leave ();
+}
+
 GnomeAppInfoPage *
-gnome_app_info_page_new_with_app (OpenResult *info)
+gnome_app_info_page_new_with_app (GnomeAppStore *store, OpenResult *info)
 {
 	GnomeAppInfoPage *page;
 
@@ -130,16 +142,15 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 		if (!actor)
 			continue;
 		val = open_result_get (info, prop [i]);
+		if (!val)
+			continue;
 		if (CLUTTER_IS_TEXTURE (actor)) {
-			local_uri = open_app_get_local_icon (val);
-/*FIXME: tmp for no network debug */
-if (!local_uri)
-{
-g_debug ("not pp no truth !\n");
-} else {
-			clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), local_uri, NULL);
-			g_free (local_uri);
-}
+	                GnomeAppTask *task;
+
+        	        task = gnome_download_task_new (actor, val);
+                	gnome_app_task_set_callback (task, set_pic_callback);
+	                gnome_app_store_add_task (store, task);
+
 		} else if (CLUTTER_IS_TEXT (actor)) {
 			if ((strcmp (prop [i], "comments") == 0) || (strcmp (prop [i], "downloads") == 0)) {
 				gchar *val_label;

@@ -26,7 +26,6 @@ struct _GnomeAppStoreUIPrivate
 	GnomeAppInfoPage *info_page;
 	GnomeAppFrameUI *frame_ui;
 	GnomeAppStore *store;
-	GMainLoop *loop;
 };
 
 G_DEFINE_TYPE (GnomeAppStoreUI, gnome_app_store_ui, CLUTTER_TYPE_STAGE)
@@ -43,7 +42,6 @@ gnome_app_store_ui_init (GnomeAppStoreUI *ui)
 	clutter_actor_set_size (CLUTTER_ACTOR (ui), 1000, 800);
         g_signal_connect (ui, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
-	priv->loop = NULL;
 	priv->info_page = NULL;
 	priv->store = gnome_app_store_new ();
 	priv->frame_ui = gnome_app_frame_ui_new_with_store (priv->store);
@@ -107,7 +105,7 @@ gnome_app_store_ui_load_app_info (GnomeAppStoreUI *ui, OpenResult *info)
 
 	if (priv->info_page)
 		g_object_unref (priv->info_page);
-	priv->info_page = gnome_app_info_page_new_with_app (info);
+	priv->info_page = gnome_app_info_page_new_with_app (priv->store, info);
 
 #if 0
 	ClutterAnimation *animation;
@@ -143,12 +141,3 @@ gnome_app_store_ui_load_frame_ui (GnomeAppStoreUI *ui)
 
 	clutter_actor_show (CLUTTER_ACTOR (priv->frame_ui));
 }
-
-void
-gnome_app_store_ui_set_mainloop (GnomeAppStoreUI *ui, GMainLoop *loop)
-{
-	ui->priv->loop = loop;
-	gnome_app_store_set_mainloop (ui->priv->store, loop);
-	gnome_app_frame_ui_set_mainloop (ui->priv->frame_ui, loop);
-}
-

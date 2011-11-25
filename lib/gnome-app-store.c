@@ -12,9 +12,8 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
-#include <gio/gio.h>
-#include <glib/gdir.h>
 #include <rest/rest-proxy.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "gnome-app-task.h"
@@ -31,7 +30,6 @@ struct _GnomeAppStorePrivate
 	OpenAppConfig *config;
 	gchar	*url;
         GHashTable *categories;
-	GMainLoop *loop;
 
 	RestProxy *proxy;
 	OAsyncWorker *queue;
@@ -42,6 +40,18 @@ struct _GnomeAppStorePrivate
 };
 
 G_DEFINE_TYPE (GnomeAppStore, gnome_app_store, G_TYPE_OBJECT)
+
+void
+gnome_app_store_add_task (GnomeAppStore *store, GnomeAppTask *task)
+{
+        o_async_worker_add (store->priv->queue, gnome_app_task_get_task (task));
+}
+
+const RestProxy *
+gnome_app_store_get_proxy (GnomeAppStore *store)
+{
+	return (const RestProxy *) store->priv->proxy;
+}
 
 static void
 setup_category (GnomeAppStore *store, GList *results_data)
@@ -107,51 +117,29 @@ setup_category (GnomeAppStore *store, GList *results_data)
 }
 
 static void
-proxy_call_raw_async_cb (RestProxyCall *call,
-                         const GError  *error,
-                         GObject       *weak_object,
-                         gpointer       userdata)
+category_task_callback (gpointer userdata, gpointer func_result)
 {
-	GnomeAppStore *store;
-        const gchar *payload;
-        goffset len;
+    	GnomeAppStore *store;
         OpenResults *results;
 	GList *list;
 
-	store = GNOME_APP_STORE (userdata);
-        payload = rest_proxy_call_get_payload (call);
-        len = rest_proxy_call_get_payload_length (call);
-        results = (OpenResults *) ocs_get_results (payload, len);
-                
+        store = GNOME_APP_STORE (userdata);
+
+        results = OPEN_RESULTS (func_result);
 	if (ocs_results_get_status (results)) {
 		list = open_results_get_data (results);
 		setup_category (store, list);
 	}
-
-	g_object_unref (results);
-        g_main_loop_quit (store->priv->loop);
 }
 
 static void
 init_category (GnomeAppStore *store)
 {
-        OpenResults *results;
-        RestProxy *proxy;
-        RestProxyCall *call;
+	GnomeAppTask *task;
 
-        proxy = rest_proxy_new (store->priv->url, FALSE);
-        call = rest_proxy_new_call (proxy);
-        rest_proxy_call_set_function (call, "/v1/content/categories");
-        rest_proxy_call_set_method (call, "GET");
-        rest_proxy_call_async (call,
-                         proxy_call_raw_async_cb,
-                         NULL,
-                         store,
-                         NULL);
-        g_main_loop_run (store->priv->loop);
-
-        g_object_unref (call);
-        g_object_unref (proxy);
+	task = gnome_app_task_new (store, store, "GET", "/v1/content/categories", NULL);
+        gnome_app_task_set_callback (task, category_task_callback);
+        gnome_app_store_add_task (store, task);
 }
 
 static void
@@ -186,6 +174,7 @@ gnome_app_store_init (GnomeAppStore *store)
 
 	priv->proxy = rest_proxy_new (priv->url, FALSE);
 	priv->queue = o_async_worker_new ();
+	init_category (store);
 //FIXME: ?        o_async_worker_join (queue);
 }
 
@@ -236,13 +225,6 @@ gnome_app_store_new (void)
 	return g_object_new (GNOME_APP_TYPE_STORE, NULL);
 }
 
-void
-gnome_app_store_set_mainloop (GnomeAppStore *store, GMainLoop *loop)
-{
-	store->priv->loop = loop;
-	init_category (store);
-}
-
 const gchar *
 gnome_app_store_get_url (GnomeAppStore *store)
 {
@@ -265,16 +247,3 @@ gnome_app_store_get_cids_by_name (GnomeAppStore *store, const gchar *category_na
 
         return val;
 }
-
-void
-gnome_app_store_add_task (GnomeAppStore *store, GnomeAppTask *task)
-{
-        o_async_worker_add (store->priv->queue, gnome_app_task_get_task (task));
-}
-
-const RestProxy *
-gnome_app_store_get_proxy (GnomeAppStore *store)
-{
-	return store->priv->proxy;
-}
-
