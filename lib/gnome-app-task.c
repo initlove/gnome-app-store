@@ -119,6 +119,7 @@ async_func (OAsyncWorkerTask *task, gpointer arguments)
 
         payload = rest_proxy_call_get_payload (app_task->priv->call);
         len = rest_proxy_call_get_payload_length (app_task->priv->call);
+//printf ("payload %s\n", payload);
         results = (OpenResults *) ocs_get_results (payload, len);
 
 	return results;
@@ -176,7 +177,6 @@ GnomeAppTask *
 gnome_download_task_new (gpointer userdata, const gchar *url)
 {
         GnomeAppTask *task;
-	RestProxy *proxy;
 
 	task = g_object_new (GNOME_APP_TYPE_TASK, NULL);
         task->priv->url = g_strdup (url);
@@ -185,8 +185,6 @@ gnome_download_task_new (gpointer userdata, const gchar *url)
 
         o_async_worker_task_set_arguments (task->priv->async, task);
         o_async_worker_task_set_func (task->priv->async, async_download_func);
-
-	g_object_unref (proxy);
 
 	return task;
 }
