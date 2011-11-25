@@ -188,7 +188,7 @@ gnome_app_infos_stage_add_actor (GnomeAppInfosStage *infos_stage, ClutterActor *
 	col = priv->count / priv->rows;
 	row = priv->count % priv->rows;
 	priv->count ++;
-
+printf ("col %d row %d\n", col, row);
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), actor, col, row);
 }
 

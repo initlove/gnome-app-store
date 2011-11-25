@@ -42,8 +42,6 @@ struct _GnomeAppFrameUIPrivate
         GnomeAppInfosStage *infos_stage;
         ClutterScript	*script;
 
-	GMainLoop	*loop;
-
 	GnomeAppStore	*store;
 
 	gint		pagesize;
@@ -68,17 +66,13 @@ printf ("task callback\n");
 static void
 gnome_app_frame_ui_send_request (GnomeAppFrameUI *ui)
 {
-	OpenResults *results;
-
-	RestProxy *proxy;
-	RestProxyCall *call;
+	GnomeAppTask *task;
 	gchar *pagesize;
 	gchar *page;
 
 	pagesize = g_strdup_printf ("%d", ui->priv->pagesize);
 	page = g_strdup_printf ("%d", ui->priv->current_page);
 
-	GnomeAppTask *task;
 /*TODO where to final the task */
         task = gnome_app_task_new (ui->priv->store, ui, "GET", "/v1/content/data",
 				"pagesize", pagesize,
@@ -207,14 +201,13 @@ on_search_entry_activate (ClutterActor *actor,
 	if (is_blank_text (search))
 		return;
 
-	OpenResults *results;
+	GnomeAppTask *task;
 	gchar *pagesize;
 	gchar *page;
 
 	pagesize = g_strdup_printf ("%d", ui->priv->pagesize);
 	page = g_strdup_printf ("%d", ui->priv->current_page);
 
-	GnomeAppTask *task;
 /*TODO where to final the task */
         task = gnome_app_task_new (ui->priv->store, ui, "GET", "/v1/content/data",
 				"search", search,
@@ -275,9 +268,6 @@ on_category_event (ClutterActor *actor,
                 gpointer      data)
 {
 	GnomeAppFrameUI *ui;
-	OpenResults *results;
-	RestProxy *proxy;
-	RestProxyCall *call;
 	const gchar *name;
 	const gchar *cids;
 	gchar *pagesize;
@@ -405,7 +395,6 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	ui->priv->is_search_hint_enabled = TRUE;
 	ui->priv->store = NULL;
 	ui->priv->current_page = 0;
-	ui->priv->loop = NULL;
 
         const gchar *filename;
 	GError *error;
@@ -492,29 +481,15 @@ gnome_app_frame_ui_new (void)
 	return g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
 }
 
-GnomeAppFrameUI *
-gnome_app_frame_ui_new_with_store (GnomeAppStore *store)
-{
-	GnomeAppFrameUI *ui;
-
-	ui = g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
-	ui->priv->store = g_object_ref (store);
-
-	return ui;
-}
 void
-gnome_app_frame_ui_set_mainloop (GnomeAppFrameUI *ui, GMainLoop *loop)
+gnome_app_frame_ui_set_default_task (GnomeAppFrameUI *ui)
 {
-	OpenResults *results;
-	RestProxy *proxy;
-	RestProxyCall *call;
+	GnomeAppTask *task;
 	gchar *pagesize;
 	gchar *page;
 
 	pagesize = g_strdup_printf ("%d", ui->priv->pagesize);
 	page = g_strdup_printf ("%d", ui->priv->current_page);
-
-	GnomeAppTask *task;
         task = gnome_app_task_new (ui->priv->store, ui, "GET", "/v1/content/data",
 				"sortmode", "new",
 				"pagesize", pagesize,
@@ -526,3 +501,16 @@ gnome_app_frame_ui_set_mainloop (GnomeAppFrameUI *ui, GMainLoop *loop)
 	g_free (pagesize);
 	g_free (page);
 }
+
+GnomeAppFrameUI *
+gnome_app_frame_ui_new_with_store (GnomeAppStore *store)
+{
+	GnomeAppFrameUI *ui;
+
+	ui = g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
+	ui->priv->store = g_object_ref (store);
+	gnome_app_frame_ui_set_default_task (ui);
+
+	return ui;
+}
+
