@@ -119,6 +119,7 @@ async_func (OAsyncWorkerTask *task, gpointer arguments)
 	return results;
 }
 
+
 GnomeAppTask *
 gnome_app_task_new_with_valist (GnomeAppStore *store, gpointer userdata, const gchar *method, const gchar *function, va_list params)
 {
@@ -129,8 +130,9 @@ gnome_app_task_new_with_valist (GnomeAppStore *store, gpointer userdata, const g
         const gchar *param = NULL;
         const gchar *value = NULL;
 
-	task = g_object_new (GNOME_APP_TYPE_TASK, NULL);
+	extern const RestProxy * gnome_app_store_get_proxy (GnomeAppStore *store);
 
+	task = g_object_new (GNOME_APP_TYPE_TASK, NULL);
         proxy = gnome_app_store_get_proxy (store);
         task->priv->call = rest_proxy_new_call ((RestProxy *)proxy);
         rest_proxy_call_set_function (task->priv->call, function);

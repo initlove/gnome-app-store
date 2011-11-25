@@ -27,6 +27,8 @@
 #include <glib-object.h>
 #include "common/open-results.h"
 #include "liboasyncworker/oasyncworker.h"
+//#include <rest/rest-proxy.h"
+//#include "gnome-app-task.h"
 
 G_BEGIN_DECLS
 
@@ -57,6 +59,8 @@ GType			gnome_app_store_get_type			(void);
 GnomeAppStore *		gnome_app_store_new				(void);
 const gchar *		gnome_app_store_get_url				(GnomeAppStore *store);
 const gchar *		gnome_app_store_get_cids_by_name		(GnomeAppStore *store, const gchar *name);
+//FIXME: why ??
+//void			gnome_app_store_add_task 			(GnomeAppStore *store, GnomeAppTask *task);
 //const RestProxy *	gnome_app_store_get_proxy 			(GnomeAppStore *store);
 
 G_END_DECLS
