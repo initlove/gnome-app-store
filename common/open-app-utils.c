@@ -151,6 +151,7 @@ open_app_get_data_by_request (SoupSession *session, const gchar *request)
 
 	return buf;
 }
+
 static gboolean
 download_file (const gchar *source, const gchar *dest)
 {
