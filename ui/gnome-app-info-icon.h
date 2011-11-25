@@ -25,6 +25,7 @@
 #include <glib.h>
 #include <clutter/clutter.h>
 #include "open-result.h"
+#include "gnome-app-store.h"
 
 G_BEGIN_DECLS
 
@@ -54,7 +55,7 @@ struct _GnomeAppInfoIconClass
 };
 
 GType  		          gnome_app_info_icon_get_type		(void);
-GnomeAppInfoIcon *        gnome_app_info_icon_new_with_app 	(OpenResult *app);
+GnomeAppInfoIcon *        gnome_app_info_icon_new_with_app 	(GnomeAppStore *store, OpenResult *app);
 
 G_END_DECLS
 

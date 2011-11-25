@@ -9,7 +9,7 @@ License along with this program; if not, write to the
 Free Software Foundation, Inc., 59 Temple Place - Sinfo_iconte 330,
 Boston, MA 02111-1307, USA.
 
-Author: Lance Wang <lzwang@suse.com>
+Author: David Liang <dliang@suse.com>
 
 */
 #include <gio/gio.h>
@@ -18,6 +18,8 @@ Author: Lance Wang <lzwang@suse.com>
 
 #include <clutter/clutter.h>
 #include "open-app-utils.h"
+#include "gnome-app-store.h"
+#include "gnome-app-task.h"
 #include "gnome-app-info-icon.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-store-ui.h"
@@ -111,8 +113,22 @@ on_info_icon_event (ClutterActor *actor,
 	return TRUE;
 }
 
+void
+set_pic_callback (gpointer userdata, gpointer func_re)
+{
+	ClutterActor *actor;
+	gchar *dest_url;
+
+	actor = CLUTTER_ACTOR (userdata);
+	dest_url = (gchar *) func_re;
+/*TODO: why should use this thread? */
+	clutter_threads_enter ();
+	clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), dest_url, NULL);
+	clutter_threads_leave ();
+}
+
 GnomeAppInfoIcon *
-gnome_app_info_icon_new_with_app (OpenResult *info)
+gnome_app_info_icon_new_with_app (GnomeAppStore *store, OpenResult *info)
 {
 	GnomeAppInfoIcon *info_icon;
 
@@ -145,7 +161,6 @@ gnome_app_info_icon_new_with_app (OpenResult *info)
                 "license", NULL};
 
         const gchar *val;
-        gchar *local_uri;
 
 	clutter_script_get_objects (script, "name", &actor, NULL);
 	val = open_result_get (info, "name");
@@ -153,9 +168,16 @@ gnome_app_info_icon_new_with_app (OpenResult *info)
 
 	clutter_script_get_objects (script, "smallpreviewpic1", &actor, NULL);
 	val = open_result_get (info, "smallpreviewpic1");
-	local_uri = open_app_get_local_icon (val);
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), local_uri, NULL);
-	g_free (local_uri);
+	
+	GnomeAppTask *task;
+/*TODO when final the task */
+	if (val) {
+		task = gnome_download_task_new (actor, val);
+		gnome_app_task_set_callback (task, set_pic_callback);
+		gnome_app_store_add_task (store, task);
+	} else {
+//TODO
+	}
 
 	g_signal_connect (actor, "event", G_CALLBACK (on_info_icon_event), info);
 

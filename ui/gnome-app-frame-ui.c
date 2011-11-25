@@ -15,7 +15,6 @@ Author: Liang chenye <liangchenye@gmail.com>
 #include "st.h"
 #include <stdio.h>
 #include <string.h>
-#include <rest/rest-proxy.h>
 #include <clutter/clutter.h>
 #include "open-results.h"
 #include "open-app-utils.h"
@@ -424,9 +423,8 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (priv->ui_group));
 	priv->categories = create_category_list (ui);
 	clutter_container_add_actor (CLUTTER_CONTAINER (priv->categories_group), priv->categories);
-	priv->infos_stage = gnome_app_infos_stage_new ();
-	priv->pagesize = gnome_app_infos_stage_get_pagesize (priv->infos_stage);
-	clutter_container_add_actor (CLUTTER_CONTAINER (priv->infos_stage_group), CLUTTER_ACTOR (priv->infos_stage));
+	priv->infos_stage = NULL;
+	priv->pagesize = -1;
 
 //script connect did not work?
         g_signal_connect (priv->search_entry, "event", G_CALLBACK (on_search_entry_event), ui);
@@ -460,6 +458,8 @@ gnome_app_frame_ui_finalize (GObject *object)
 
 	if (priv->store)
 		g_object_unref (priv->store);
+	if (priv->infos_stage)
+		g_object_unref (priv->infos_stage);
 
 	G_OBJECT_CLASS (gnome_app_frame_ui_parent_class)->finalize (object);
 }
@@ -509,6 +509,9 @@ gnome_app_frame_ui_new_with_store (GnomeAppStore *store)
 
 	ui = g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
 	ui->priv->store = g_object_ref (store);
+	ui->priv->infos_stage = gnome_app_infos_stage_new_with_store (store);
+	ui->priv->pagesize = gnome_app_infos_stage_get_pagesize (ui->priv->infos_stage);
+	clutter_container_add_actor (CLUTTER_CONTAINER (ui->priv->infos_stage_group), CLUTTER_ACTOR (ui->priv->infos_stage));
 	gnome_app_frame_ui_set_default_task (ui);
 
 	return ui;

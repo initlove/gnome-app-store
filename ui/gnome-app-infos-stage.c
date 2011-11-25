@@ -21,6 +21,8 @@ Author: David Liang <dliang@novell.com>
 
 struct _GnomeAppInfosStagePrivate
 {
+	GnomeAppStore *store;
+
 	ClutterActor *viewport;
 	ClutterAction *action;
 	ClutterLayoutManager *layout;
@@ -94,6 +96,7 @@ gnome_app_infos_stage_init (GnomeAppInfosStage *infos_stage)
 	                                                 GNOME_APP_TYPE_INFOS_STAGE,
 	                                                 GnomeAppInfosStagePrivate);
 
+	priv->store = NULL;
 	priv->app_actors = NULL;
 	priv->count = 0;
 	priv->rows = 5;	//FIXME: should be calculated
@@ -134,7 +137,9 @@ gnome_app_infos_stage_finalize (GObject *object)
 	GnomeAppInfosStagePrivate *priv = infos_stage->priv;
 
 //TODO: any other thing to finalize ?
-	
+	if (priv->store)
+		g_object_unref (priv->store);
+
 	G_OBJECT_CLASS (gnome_app_infos_stage_parent_class)->finalize (object);
 }
 
@@ -153,6 +158,17 @@ GnomeAppInfosStage *
 gnome_app_infos_stage_new (void)
 {
 	return g_object_new (GNOME_APP_TYPE_INFOS_STAGE, NULL);
+}
+
+GnomeAppInfosStage *
+gnome_app_infos_stage_new_with_store (GnomeAppStore *store)
+{
+	GnomeAppInfosStage *stage;
+
+	stage = g_object_new (GNOME_APP_TYPE_INFOS_STAGE, NULL);
+	stage->priv->store = g_object_ref (store);
+
+	return stage;
 }
 
 void
@@ -188,7 +204,7 @@ gnome_app_infos_stage_add_actor (GnomeAppInfosStage *infos_stage, ClutterActor *
 	col = priv->count / priv->rows;
 	row = priv->count % priv->rows;
 	priv->count ++;
-printf ("col %d row %d\n", col, row);
+
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), actor, col, row);
 }
 
@@ -201,7 +217,7 @@ gnome_app_infos_stage_load (GnomeAppInfosStage *infos_stage, const GList *data)
 	gnome_app_infos_stage_clean (infos_stage);
 	for (l = (GList *)data; l; l = l->next) {
 		info = OPEN_RESULT (l->data);
-		info_icon = gnome_app_info_icon_new_with_app (info);
+		info_icon = gnome_app_info_icon_new_with_app (infos_stage->priv->store, info);
 		gnome_app_infos_stage_add_actor (infos_stage, CLUTTER_ACTOR (info_icon));
 	}
 }
