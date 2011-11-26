@@ -6,6 +6,7 @@
 *.pc
 *.so
 *.swp
+*o
 *~
 .libs
 /m4/libtool.m4
