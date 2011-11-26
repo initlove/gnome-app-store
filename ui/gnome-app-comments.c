@@ -15,11 +15,14 @@ Author: David Liang <dliang@novell.com>
 #include <math.h>
 #include <clutter/clutter.h>
 #include "st.h"
+#include "gnome-app-store.h"
 #include "gnome-app-info-icon.h"
-#include "gnome-app-infos-stage.h"
+#include "gnome-app-comments.h"
 
-struct _GnomeAppInfosStagePrivate
+struct _GnomeAppCommentsPrivate
 {
+	GnomeAppStore *store;
+
 	ClutterActor *viewport;
 	ClutterAction *action;
 	ClutterLayoutManager *layout;
@@ -34,7 +37,7 @@ struct _GnomeAppInfosStagePrivate
 
 };
 
-G_DEFINE_TYPE (GnomeAppInfosStage, gnome_app_infos_stage, CLUTTER_TYPE_GROUP)
+G_DEFINE_TYPE (GnomeAppComments, gnome_app_comments, CLUTTER_TYPE_GROUP)
 
 static void
 on_drag_end (ClutterDragAction   *action,
@@ -42,14 +45,14 @@ on_drag_end (ClutterDragAction   *action,
 	           gfloat               event_x,
 	           gfloat               event_y,
 	           ClutterModifierType  modifiers,
-		GnomeAppInfosStage *infos_stage)
+		GnomeAppComments *comments)
 {
-	GnomeAppInfosStagePrivate *priv;
+	GnomeAppCommentsPrivate *priv;
 	gfloat viewport_x;
 	gfloat offset_x;
 	gint child_visible;
 
-	priv = infos_stage->priv;
+	priv = comments->priv;
 	viewport_x = clutter_actor_get_x (priv->viewport);
 	/* check if we're at the viewport edges */
 	if (viewport_x > 0) {
@@ -85,14 +88,15 @@ on_drag_end (ClutterDragAction   *action,
 }
 
 static void
-gnome_app_infos_stage_init (GnomeAppInfosStage *infos_stage)
+gnome_app_comments_init (GnomeAppComments *comments)
 {
-	GnomeAppInfosStagePrivate *priv;
+	GnomeAppCommentsPrivate *priv;
 
-	infos_stage->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (infos_stage,
-	                                                 GNOME_APP_TYPE_INFOS_STAGE,
-	                                                 GnomeAppInfosStagePrivate);
+	comments->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (comments,
+	                                                 GNOME_APP_TYPE_COMMENTS,
+	                                                 GnomeAppCommentsPrivate);
 
+	priv->store = NULL;
 	priv->app_actors = NULL;
 	priv->count = 0;
 	priv->rows = 5;	//FIXME: should be calculated
@@ -101,14 +105,14 @@ gnome_app_infos_stage_init (GnomeAppInfosStage *infos_stage)
 	priv->icon_height = 96;
 
 	priv->viewport = clutter_box_new (clutter_box_layout_new ());
-	clutter_container_add_actor (CLUTTER_CONTAINER (infos_stage), priv->viewport);
+	clutter_container_add_actor (CLUTTER_CONTAINER (comments), priv->viewport);
 	clutter_actor_set_anchor_point (CLUTTER_ACTOR (priv->viewport), -60, 20);
 #if 0
 	priv->action = clutter_drag_action_new ();
 	clutter_actor_add_action (priv->viewport, priv->action);
 	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (priv->action),
 	                                   CLUTTER_DRAG_X_AXIS);
-	g_signal_connect (priv->action, "drag-end", G_CALLBACK (on_drag_end), infos_stage);
+	g_signal_connect (priv->action, "drag-end", G_CALLBACK (on_drag_end), comments);
 	clutter_actor_set_reactive (priv->viewport, TRUE);
 #endif
 	priv->layout = clutter_table_layout_new ();
@@ -121,43 +125,45 @@ gnome_app_infos_stage_init (GnomeAppInfosStage *infos_stage)
 }
 
 static void
-gnome_app_infos_stage_dispose (GObject *object)
+gnome_app_comments_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (gnome_app_infos_stage_parent_class)->dispose (object);
+	G_OBJECT_CLASS (gnome_app_comments_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_infos_stage_finalize (GObject *object)
+gnome_app_comments_finalize (GObject *object)
 {
-	GnomeAppInfosStage *infos_stage = GNOME_APP_INFOS_STAGE (object);
-	GnomeAppInfosStagePrivate *priv = infos_stage->priv;
+	GnomeAppComments *comments = GNOME_APP_COMMENTS (object);
+	GnomeAppCommentsPrivate *priv = comments->priv;
 
 //TODO: any other thing to finalize ?
+	if (priv->store)
+		g_object_unref (priv->store);
 
-	G_OBJECT_CLASS (gnome_app_infos_stage_parent_class)->finalize (object);
+	G_OBJECT_CLASS (gnome_app_comments_parent_class)->finalize (object);
 }
 
 static void
-gnome_app_infos_stage_class_init (GnomeAppInfosStageClass *klass)
+gnome_app_comments_class_init (GnomeAppCommentsClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = gnome_app_infos_stage_dispose;
-	object_class->finalize = gnome_app_infos_stage_finalize;
+	object_class->dispose = gnome_app_comments_dispose;
+	object_class->finalize = gnome_app_comments_finalize;
 	 
-	g_type_class_add_private (object_class, sizeof (GnomeAppInfosStagePrivate));
+	g_type_class_add_private (object_class, sizeof (GnomeAppCommentsPrivate));
 }
 
-GnomeAppInfosStage *
-gnome_app_infos_stage_new (void)
+GnomeAppComments *
+gnome_app_comments_new (void)
 {
-	return g_object_new (GNOME_APP_TYPE_INFOS_STAGE, NULL);
+	return g_object_new (GNOME_APP_TYPE_COMMENTS, NULL);
 }
 
 void
-gnome_app_infos_stage_clean (GnomeAppInfosStage *infos_stage)
+gnome_app_comments_clean (GnomeAppComments *comments)
 {
-	GnomeAppInfosStagePrivate *priv = infos_stage->priv;
+	GnomeAppCommentsPrivate *priv = comments->priv;
 
 	if (priv->count) {
 		GList *l;
@@ -168,19 +174,19 @@ gnome_app_infos_stage_clean (GnomeAppInfosStage *infos_stage)
 }
 
 gint
-gnome_app_infos_stage_get_pagesize (GnomeAppInfosStage *infos_stage)
+gnome_app_comments_get_pagesize (GnomeAppComments *comments)
 {
 	gint pagesize;
 	
-	pagesize = infos_stage->priv->rows * infos_stage->priv->cols;
+	pagesize = comments->priv->rows * comments->priv->cols;
 
 	return pagesize;
 }
 
 void
-gnome_app_infos_stage_add_actor (GnomeAppInfosStage *infos_stage, ClutterActor *actor)
+gnome_app_comments_add_actor (GnomeAppComments *comments, ClutterActor *actor)
 {
-	GnomeAppInfosStagePrivate *priv = infos_stage->priv;
+	GnomeAppCommentsPrivate *priv = comments->priv;
 	int col, row;
 
 	priv->app_actors = g_list_prepend (priv->app_actors, actor);
@@ -192,17 +198,17 @@ gnome_app_infos_stage_add_actor (GnomeAppInfosStage *infos_stage, ClutterActor *
 }
 
 void
-gnome_app_infos_stage_load (GnomeAppInfosStage *infos_stage, const GList *data)
+gnome_app_comments_load (GnomeAppComments *comments, const GList *data)
 {
 	OpenResult *info;
 	GnomeAppInfoIcon *info_icon;
 	GList *l;
 
-	gnome_app_infos_stage_clean (infos_stage);
+	gnome_app_comments_clean (comments);
 	for (l = (GList *)data; l; l = l->next) {
 		info = OPEN_RESULT (l->data);
-		info_icon = gnome_app_info_icon_new_with_app (info);
-		gnome_app_infos_stage_add_actor (infos_stage, CLUTTER_ACTOR (info_icon));
+		info_icon = gnome_app_info_icon_new_with_app (comments->priv->store, info);
+		gnome_app_comments_add_actor (comments, CLUTTER_ACTOR (info_icon));
 	}
 }
 

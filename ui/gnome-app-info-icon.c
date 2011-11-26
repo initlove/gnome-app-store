@@ -112,7 +112,7 @@ set_pic_callback (gpointer userdata, gpointer func_re)
 }
 
 GnomeAppInfoIcon *
-gnome_app_info_icon_new_with_app (GnomeAppStore *store, OpenResult *info)
+gnome_app_info_icon_new_with_app (OpenResult *info)
 {
 	GnomeAppInfoIcon *info_icon;
 
@@ -155,7 +155,10 @@ gnome_app_info_icon_new_with_app (GnomeAppStore *store, OpenResult *info)
 	
 /*TODO when final the task */
 	if (val) {
+		GnomeAppStore *store;
 		GnomeAppTask *task;
+
+		store = gnome_app_store_get_default ();
 		task = gnome_download_task_new (actor, val);
 		gnome_app_task_set_callback (task, set_pic_callback);
 		gnome_app_store_add_task (store, task);

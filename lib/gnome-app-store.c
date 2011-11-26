@@ -133,16 +133,6 @@ category_task_callback (gpointer userdata, gpointer func_result)
 }
 
 static void
-init_category (GnomeAppStore *store)
-{
-	GnomeAppTask *task;
-
-	task = gnome_app_task_new (store, store, "GET", "/v1/content/categories", NULL);
-        gnome_app_task_set_callback (task, category_task_callback);
-        gnome_app_store_add_task (store, task);
-}
-
-static void
 gnome_app_store_init (GnomeAppStore *store)
 {
 	GnomeAppStorePrivate *priv;
@@ -174,7 +164,6 @@ gnome_app_store_init (GnomeAppStore *store)
 
 	priv->proxy = rest_proxy_new (priv->url, FALSE);
 	priv->queue = o_async_worker_new ();
-	init_category (store);
 //FIXME: ?        o_async_worker_join (queue);
 }
 
@@ -225,6 +214,17 @@ gnome_app_store_new (void)
 	return g_object_new (GNOME_APP_TYPE_STORE, NULL);
 }
 
+GnomeAppStore *
+gnome_app_store_get_default (void)
+{
+	static GnomeAppStore *store = NULL;
+
+	if (!store)
+		store = g_object_new (GNOME_APP_TYPE_STORE, NULL);
+
+	return store;
+}
+
 const gchar *
 gnome_app_store_get_url (GnomeAppStore *store)
 {
@@ -247,3 +247,14 @@ gnome_app_store_get_cids_by_name (GnomeAppStore *store, const gchar *category_na
 
         return val;
 }
+
+void
+gnome_app_store_init_category (GnomeAppStore *store)
+{
+	GnomeAppTask *task;
+
+	task = gnome_app_task_new (store, "GET", "/v1/content/categories", NULL);
+        gnome_app_task_set_callback (task, category_task_callback);
+        gnome_app_task_push (task);
+}
+

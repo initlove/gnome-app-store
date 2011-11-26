@@ -141,10 +141,9 @@ parse_data (xmlNodePtr data_node)
 	gchar *name;
 	
         for (node = data_node->xmlChildrenNode; node; node = node->next) {
-		name = (gchar *)node->name;
-		if (!name || (strcmp (name, "text") == 0))
+		if (node->type == XML_TEXT_NODE)
 			continue;
-			
+		name = (gchar *)node->name;
 		result = ocs_result_new_with_node (node);
                 list = g_list_prepend (list, result);
         }
@@ -180,9 +179,12 @@ ocs_get_results (const gchar *ocs, gint len)
 		g_debug ("Error in get meta node!\n");
 		return NULL;
 	}
+
 	data_node = ocs_find_node (doc_ptr, "data");
-	list = parse_data (data_node);
-	ocs_results_set_data (results, list);
+	if (data_node) {
+		list = parse_data (data_node);
+		ocs_results_set_data (results, list);
+	}
 
 	return results;
 }

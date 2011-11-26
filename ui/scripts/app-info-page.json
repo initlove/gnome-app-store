@@ -166,19 +166,9 @@
       },
       {
         "id" : "comments-details",
-        "type" : "ClutterText",
-        "x" : 50,
-        "y" : 200,
-        "text" : "comments-details",
-        "font-name" : "Sans 13px",
-        "color" : "black",
-        "line-alignment" : "center",
-        "line-wrap" : false,
-        "ellipsize" : "none",
-        "rotation" : [
-          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
-          { "z-axis" : [ 45.0, [  75,  75 ] ] }
-        ]
+	"type" : "ClutterGroup",
+        "x" : 10,
+        "y" : 200
       },
       {
         "id" : "previewpic1",

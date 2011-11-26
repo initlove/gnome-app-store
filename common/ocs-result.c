@@ -82,7 +82,10 @@ get (OpenResult *result, const gchar *prop)
 
 	ocs_result = OCS_RESULT (result);
 	val = NULL;
+
 	for (node = ocs_result->priv->data->xmlChildrenNode; node; node = node->next) {
+		if (node->type == XML_TEXT_NODE)
+			continue;
 		if (strcmp (node->name, prop) == 0) {
 			val = (const char *) xmlNodeGetContent (node);
 			break;

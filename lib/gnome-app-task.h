@@ -57,10 +57,12 @@ struct _GnomeAppTaskClass
 };
 
 GType			gnome_app_task_get_type			(void);
-GnomeAppTask *		gnome_app_task_new (GnomeAppStore *store, gpointer userdata, const gchar *method, const gchar *function, ...);
-GnomeAppTask *		gnome_download_task_new (gpointer userdata, const gchar *url);
+GnomeAppTask *		gnome_app_task_new 			(gpointer userdata, const gchar *method, const gchar *function, ...);
+GnomeAppTask *		gnome_download_task_new 		(gpointer userdata, const gchar *url);
+void			gnome_app_task_push			(GnomeAppTask *task);
+void			gnome_app_task_add_param 		(GnomeAppTask *task, const gchar *param, const gchar *value);
+
 OAsyncWorkerTask *	gnome_app_task_get_task			(GnomeAppTask *task);
-void			gnome_app_task_add_param (GnomeAppTask *task, const gchar *param, const gchar *value);
 
 G_END_DECLS
 

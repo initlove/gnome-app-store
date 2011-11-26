@@ -24,7 +24,6 @@
 #define __GNOME_APP_INFOS_STAGE_H__
 
 #include <clutter/clutter.h>
-#include "gnome-app-store.h"
 
 G_BEGIN_DECLS
 
@@ -52,7 +51,6 @@ struct _GnomeAppInfosStageClass
 
 GType			gnome_app_infos_stage_get_type              	(void);
 GnomeAppInfosStage *    gnome_app_infos_stage_new                   	(void);
-GnomeAppInfosStage *	gnome_app_infos_stage_new_with_store		(GnomeAppStore *store);
 void			gnome_app_infos_stage_clean			(GnomeAppInfosStage *infos_stage);
 void			gnome_app_infos_stage_add_actor			(GnomeAppInfosStage *infos_stage, ClutterActor *actor);
 void			gnome_app_infos_stage_load			(GnomeAppInfosStage *infos_stage, const GList *data);

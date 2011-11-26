@@ -35,8 +35,7 @@ struct _GnomeAppTaskPrivate
 
 G_DEFINE_TYPE (GnomeAppTask, gnome_app_task, G_TYPE_OBJECT)
 
-static GnomeAppTask *gnome_app_task_new_with_valist (GnomeAppStore *store, 
-						gpointer userdata,
+static GnomeAppTask *gnome_app_task_new_with_valist (gpointer userdata,
 						const gchar *method, 
 						const gchar *function, 
 						va_list params);
@@ -85,7 +84,7 @@ gnome_app_task_class_init (GnomeAppTaskClass *klass)
 }
 
 GnomeAppTask *
-gnome_app_task_new (GnomeAppStore *store, gpointer userdata, const gchar *method, const gchar *function, ...)
+gnome_app_task_new (gpointer userdata, const gchar *method, const gchar *function, ...)
 {
         g_return_val_if_fail (function, NULL);
 
@@ -93,7 +92,7 @@ gnome_app_task_new (GnomeAppStore *store, gpointer userdata, const gchar *method
         va_list params;
 
         va_start (params, function);
-        task = gnome_app_task_new_with_valist (store, userdata, method, function, params);
+        task = gnome_app_task_new_with_valist (userdata, method, function, params);
         va_end (params);
 
         return task;
@@ -119,7 +118,6 @@ async_func (OAsyncWorkerTask *task, gpointer arguments)
 
         payload = rest_proxy_call_get_payload (app_task->priv->call);
         len = rest_proxy_call_get_payload_length (app_task->priv->call);
-//printf ("payload %s\n", payload);
         results = (OpenResults *) ocs_get_results (payload, len);
 
 	return results;
@@ -140,10 +138,11 @@ async_download_func (OAsyncWorkerTask *task, gpointer arguments)
 }
 
 GnomeAppTask *
-gnome_app_task_new_with_valist (GnomeAppStore *store, gpointer userdata, const gchar *method, const gchar *function, va_list params)
+gnome_app_task_new_with_valist (gpointer userdata, const gchar *method, const gchar *function, va_list params)
 {
         g_return_val_if_fail (function, NULL);
 
+	GnomeAppStore *store;
         GnomeAppTask *task;
 	const RestProxy *proxy;
         const gchar *param = NULL;
@@ -151,6 +150,7 @@ gnome_app_task_new_with_valist (GnomeAppStore *store, gpointer userdata, const g
 
 	extern const RestProxy * gnome_app_store_get_proxy (GnomeAppStore *store);
 
+	store = gnome_app_store_get_default ();
 	task = g_object_new (GNOME_APP_TYPE_TASK, NULL);
         proxy = gnome_app_store_get_proxy (store);
         task->priv->call = rest_proxy_new_call ((RestProxy *)proxy);
@@ -216,4 +216,10 @@ void
 gnome_app_task_add_param (GnomeAppTask *task, const gchar *param, const gchar *value)
 {
 	rest_proxy_call_add_param (task->priv->call, param, value);
+}
+
+void
+gnome_app_task_push (GnomeAppTask *task)
+{
+	gnome_app_store_add_task (gnome_app_store_get_default (), task);
 }
