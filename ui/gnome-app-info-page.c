@@ -16,8 +16,8 @@ Author: Lance Wang <lzwang@suse.com>
 #include <clutter/clutter.h>
 
 #include "open-app-utils.h"
-#include "gnome-app-store.h"
 #include "gnome-app-task.h"
+#include "gnome-app-comment.h"
 #include "gnome-app-store-ui.h"
 #include "gnome-app-info-page.h"
 
@@ -101,8 +101,36 @@ set_pic_callback (gpointer userdata, gpointer func_re)
         clutter_threads_leave ();
 }
 
+static void
+set_comments_callback (gpointer userdata, gpointer func_result)
+{
+	ClutterActor *comment;
+	ClutterActor *comment_group;
+	OpenResults *results;
+	OpenResult *result;
+	GList *list, *l;
+
+	results = OPEN_RESULTS (func_result);
+	comment_group = CLUTTER_ACTOR (userdata);
+
+	/* TODO: in fact, I don't know why the position is no longer in use, we should confirm to set it .. */
+	/* Do it later */
+
+	list = open_results_get_data (results);
+
+        clutter_threads_enter ();
+	for (l = list; l; l = l->next) {
+		result = l->data;
+//		open_result_debug (result);
+		comment = gnome_app_comment_new_with_comment (result);
+		clutter_container_add_actor (CLUTTER_CONTAINER (comment_group), comment);
+break;
+	}
+        clutter_threads_leave ();
+}
+
 GnomeAppInfoPage *
-gnome_app_info_page_new_with_app (GnomeAppStore *store, OpenResult *info)
+gnome_app_info_page_new_with_app (OpenResult *info)
 {
 	GnomeAppInfoPage *page;
 
@@ -149,8 +177,7 @@ gnome_app_info_page_new_with_app (GnomeAppStore *store, OpenResult *info)
 
         	        task = gnome_download_task_new (actor, val);
                 	gnome_app_task_set_callback (task, set_pic_callback);
-	                gnome_app_store_add_task (store, task);
-
+	                gnome_app_task_push (task);
 		} else if (CLUTTER_IS_TEXT (actor)) {
 			if ((strcmp (prop [i], "comments") == 0) || (strcmp (prop [i], "downloads") == 0)) {
 				gchar *val_label;
@@ -180,22 +207,24 @@ gnome_app_info_page_new_with_app (GnomeAppStore *store, OpenResult *info)
 		else
 			clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), "/home/novell/gnome-app-store/pixmaps/non-starred.png", NULL);
 	}
-
-	const gchar *id;
+/*TODO: how many comments shoude merge to comments .. */
 	gchar *comment_count;
 	clutter_script_get_objects (script, "comments-details", &actor, NULL);
 	if (actor) {
-#if 0
-		id = open_result_get (info, "id");
-		CommentRequest *request;
-        	request = comment_request_new ();
-	        comment_request_set (request, "type", "1");
-        	comment_request_set (request, "contentid", id);
-	        comment_request_set (request, "contentid2", "0");
-        	comment_request_set (request, "pagesize", "35");
-	        comment_request_set (request, "page", "0");
-#endif
+		GnomeAppTask *task;
+		const gchar *id;
+		gchar *function;
 
+		id = open_result_get (info, "id");
+		function = g_strdup_printf ("/v1/comments/data/1/%s/0", id);
+		task = gnome_app_task_new (actor, "GET", function,
+                                "pagesize", "10",
+                                "page", "0",
+                                NULL);
+		gnome_app_task_set_callback (task, set_comments_callback);
+		gnome_app_task_push (task);
+
+		g_free (function);
 	}
 
         g_signal_connect (page, "event", G_CALLBACK (on_info_page_event), NULL);

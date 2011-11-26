@@ -43,9 +43,10 @@ gnome_app_store_ui_init (GnomeAppStoreUI *ui)
         g_signal_connect (ui, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
 	priv->info_page = NULL;
-	priv->store = gnome_app_store_new ();
-	priv->frame_ui = gnome_app_frame_ui_new_with_store (priv->store);
-	
+	priv->store = gnome_app_store_get_default ();
+	gnome_app_store_init_category (priv->store);
+/*TODO: as we should add task every ui, it might be better to use this.. */
+	priv->frame_ui = gnome_app_frame_ui_new ();
 	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (priv->frame_ui));
 }
 
@@ -65,6 +66,8 @@ gnome_app_store_ui_finalize (GObject *object)
 		g_object_unref (priv->frame_ui);
 	if (priv->info_page)
 		g_object_unref (priv->info_page);
+
+/*TODO: potencial issue: get_default may not be used again */
 	if (priv->store)
 		g_object_unref (priv->store);
 
@@ -105,7 +108,7 @@ gnome_app_store_ui_load_app_info (GnomeAppStoreUI *ui, OpenResult *info)
 
 	if (priv->info_page)
 		g_object_unref (priv->info_page);
-	priv->info_page = gnome_app_info_page_new_with_app (priv->store, info);
+	priv->info_page = gnome_app_info_page_new_with_app (info);
 
 #if 0
 	ClutterAnimation *animation;

@@ -55,7 +55,7 @@ struct _GnomeAppInfoIconClass
 };
 
 GType  		          gnome_app_info_icon_get_type		(void);
-GnomeAppInfoIcon *        gnome_app_info_icon_new_with_app 	(GnomeAppStore *store, OpenResult *app);
+GnomeAppInfoIcon *        gnome_app_info_icon_new_with_app 	(OpenResult *app);
 
 G_END_DECLS
 
