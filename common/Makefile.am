@@ -4,7 +4,7 @@ lib_LTLIBRARIES = libopen-app-common.la
 
 AM_CPPFLAGS =							\
 	-I$(top_srcdir)						\
-	-DCONFIGDIR=\""/etc/open-app-store\""                  \
+	-DCONFIGDIR=\""/etc/gnome-app-store\""                  \
 	$(LIBSOUP_CFLAGS)					\
 	$(COMMON_CFLAGS)					\
 	$(DEBUG_CFLAGS) 					\

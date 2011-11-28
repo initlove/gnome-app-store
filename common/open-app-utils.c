@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "config.h"
 #include "open-app-config.h"
 #include "open-app-utils.h"
 
@@ -199,13 +200,12 @@ open_app_get_local_icon (const gchar *uri)
 
 	OpenAppConfig *config;
 	gchar *md5;
-	gchar *cache_dir;
 	gchar *img_dir;
 	gchar *local_uri;
+
 	config = open_app_config_new ();
-	cache_dir = open_app_config_get_cache_dir (config);
 	md5 = open_app_get_md5 (uri);
-	img_dir = g_build_filename (cache_dir, "img", NULL);
+	img_dir = g_build_filename (g_get_user_cache_dir (), PACKAGE_NAME, "img", NULL);
 	local_uri = g_build_filename (img_dir, md5, NULL);
 
 	if (!g_file_test (img_dir, G_FILE_TEST_EXISTS))
@@ -220,7 +220,6 @@ open_app_get_local_icon (const gchar *uri)
 
 	g_object_unref (config);
 	g_free (md5);
-	g_free (cache_dir);
 	g_free (img_dir);
 
 	return local_uri;

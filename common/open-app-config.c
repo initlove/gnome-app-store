@@ -13,6 +13,7 @@ Author: David Liang <dliang@novell.com>
 
 */
 #include <stdio.h>
+#include "config.h"
 #include "open-app-config.h"
 
 /* TODO maybe we should make it an abstruct */
@@ -65,23 +66,23 @@ open_app_config_init (OpenAppConfig *config)
 	                                                 OPEN_APP_TYPE_CONFIG,
 	                                                 OpenAppConfigPrivate);
 
-        filename = g_build_filename (g_get_home_dir (), ".open-app-store", "open-app-store.conf", NULL);
+        filename = g_build_filename (g_get_user_config_dir (), PACKAGE_NAME, "config", NULL);
 	if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
                 g_free (filename);
-                filename = g_build_filename (CONFIGDIR, "open-app-store.conf", NULL);
+                filename = g_build_filename (CONFIGDIR, "config", NULL);
         }
 
 	if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
 		gchar *dir, *cmd;
 
-		dir = g_build_filename (g_get_home_dir (), ".open-app-store", NULL);
+        	dir = g_build_filename (g_get_user_config_dir (), PACKAGE_NAME, NULL);
 		if (!g_file_test (dir, G_FILE_TEST_EXISTS)) {
 			g_mkdir (dir, 0755);
 		}
 		g_free (dir);
 
                 g_free (filename);
-                filename = g_build_filename (g_get_home_dir (), ".open-app-store", "open-app-store.conf", NULL);
+        	filename = g_build_filename (g_get_user_config_dir (), PACKAGE_NAME, "config", NULL);
 		priv->key_file = create_default_key_file (filename);
         } else {
 		priv->key_file = g_key_file_new ();
@@ -132,38 +133,6 @@ OpenAppConfig *
 open_app_config_new (void)
 {
 	return g_object_new (OPEN_APP_TYPE_CONFIG, NULL);
-}
-
-/*TODO: make the cache to 
- ~/.cache 
-*/
-gchar *
-open_app_config_get_cache_dir (OpenAppConfig *config)
-{
-	g_return_val_if_fail (config && OPEN_APP_IS_CONFIG (config), NULL);
-
-        GError  *error = NULL;
-	gchar *val;
-	const gchar *type;
-
-	type = open_app_config_get_server_type (config);
-	val = g_key_file_get_value (config->priv->key_file, "Local", "CacheDir", &error);
-
-	if (error) {
-		g_error_free (error);
-		if (type) {
-			val = g_build_filename (g_get_home_dir (), ".open-app-store", "cache", type, NULL);
-		} else {
-			val = g_build_filename (g_get_home_dir (), ".open-app-store", "cache", "failsave", NULL);
-		}
-	} else
-		val = g_strdup (val);
-	
-	if (!g_file_test (val, G_FILE_TEST_EXISTS)) {
-		g_mkdir_with_parents (val, 0755);
-	}
-
-	return val;
 }
 
 const gchar *
