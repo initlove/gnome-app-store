@@ -384,11 +384,11 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	ui->priv->is_search_hint_enabled = TRUE;
 	ui->priv->current_page = 0;
 
-        const gchar *filename;
+        gchar *filename;
 	GError *error;
         gint i;
 
-        filename = "/home/novell/gnome-app-store/ui/scripts/frame-ui.json";
+        filename = open_app_get_ui_uri ("frame-ui");
 
         priv->script = clutter_script_new ();
 	error = NULL;
@@ -397,7 +397,7 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
                 printf ("error in load script %s!\n", error->message);
                 g_error_free (error);
         }
-
+	g_free (filename);
 	clutter_script_get_objects (priv->script, "frame-ui", &priv->ui_group,
 					"search-icon", &priv->search_icon,
 					"search-hint", &priv->search_hint,
@@ -416,7 +416,21 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	priv->pagesize = -1;
 	priv->task = NULL;
 
-//script connect did not work?
+//TODO can we define icon name in script? or other configure place ? 
+	filename = open_app_get_pixmap_uri ("search");
+	clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->search_icon), filename, NULL);
+	g_free (filename);
+
+	filename = open_app_get_pixmap_uri ("go-previous");
+	clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->prev), filename, NULL);
+	g_free (filename);
+
+	filename = open_app_get_pixmap_uri ("go-next");
+	clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->next), filename, NULL);
+	g_free (filename);
+
+//TODO script connect did not work?
+//
         g_signal_connect (priv->search_entry, "event", G_CALLBACK (on_search_entry_event), ui);
 	g_signal_connect (priv->search_entry, "activate", G_CALLBACK (on_search_entry_activate), ui);
 	g_signal_connect (priv->search_entry, "text_changed", G_CALLBACK (on_search_entry_text_changed), ui);

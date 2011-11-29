@@ -9,7 +9,6 @@ AM_CPPFLAGS =							\
 	$(COMMON_CFLAGS)					\
 	$(LIBOASYNCWORKER_CFLAGS)				\
 	$(LIBREST_CFLAGS)					\
-	-DCONFIGDIR=\""/etc/gnome-app-store\""                  \
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"			\
 	$(NULL)
 

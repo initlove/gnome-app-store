@@ -32,7 +32,8 @@ gchar *		open_app_get_md5 (const gchar *str);
 SoupBuffer *	open_app_get_data_by_request (SoupSession *session, const gchar *request);
 SoupSession *	open_app_soup_session_new (gboolean sync, gchar *cafile);
 gchar *		open_app_get_local_icon (const gchar *uri);
-
+gchar *		open_app_get_pixmap_uri (const gchar *name);
+gchar *		open_app_get_ui_uri 	(const gchar *name);
 const gchar **	open_app_get_default_categories ();
 
 G_END_DECLS

@@ -239,3 +239,46 @@ open_app_get_default_categories ()
 	return defaults;
 }
 
+gchar *
+open_app_get_pixmap_uri (const gchar *name)
+{
+	g_return_val_if_fail (name, NULL);
+
+	gchar *uri;
+	gchar *real_name;
+
+	if (strchr (name, '.')) {
+		real_name = g_strdup (name);
+	} else {
+		real_name = g_strconcat (name, ".png", NULL);
+	}
+	uri = g_build_filename (PIXMAPSDIR, real_name, NULL);
+
+	g_free (real_name);
+
+	return uri;
+}
+
+gchar *
+open_app_get_ui_uri (const gchar *name)
+{
+	g_return_val_if_fail (name, NULL);
+
+	gchar *uri;
+	gchar *real_name;
+
+	if (strchr (name, '.')) {
+		real_name = g_strdup (name);
+	} else {
+		real_name = g_strconcat (name, ".json", NULL);
+	}
+	uri = g_build_filename (g_get_user_data_dir (), PACKAGE, real_name, NULL);
+	if (!g_file_test (uri, G_FILE_TEST_EXISTS)) {
+		g_free (uri);
+		uri = g_build_filename (UIDIR, real_name, NULL);
+	}
+
+	g_free (real_name);
+
+	return uri;
+}

@@ -69,8 +69,9 @@ _set_user_icon_1 (gpointer userdata, gpointer func_result)
 	}
 
 /*TODO */
-	const gchar *user_icon = "/home/novell/gnome-app-store/ui/scripts/person.png";
+	gchar *user_icon = open_app_get_pixmap_uri ("person");
         clutter_texture_set_from_file (CLUTTER_TEXTURE (userdata), user_icon, NULL);
+	g_free (user_icon);
 }
 
 static void			
@@ -138,13 +139,13 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 	app_comment = g_object_new (GNOME_APP_TYPE_COMMENT, NULL);
 	app_comment->priv->comment = g_object_ref (comment);
 
-        const gchar *filename;
+        gchar *filename;
         GError *error;
         ClutterScript *script;
         ClutterActor *actor;
 
         error = NULL;
-        filename = "/home/novell/gnome-app-store/ui/scripts/app-comment.json";
+        filename = open_app_get_ui_uri ("app-comment");
         script = clutter_script_new ();
         clutter_script_load_from_file (script, filename, &error);
         if (error) {
@@ -210,6 +211,8 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 		if (val)
 			set_user_icon (actor, val);
 	}
+
+	g_free (filename);
 
 	return app_comment;
 }

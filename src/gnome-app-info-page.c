@@ -139,13 +139,13 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 	page = g_object_new (GNOME_APP_TYPE_INFO_PAGE, NULL);
 	page->priv->info = g_object_ref (info);
 
-	const gchar *filename;
+	gchar *filename;
 	GError *error;
 	ClutterScript *script;
 	ClutterActor *actor;
 	gint i;
 
-	filename = "/home/novell/gnome-app-store/ui/scripts/app-info-page.json";
+	filename = open_app_get_ui_uri ("app-info-page");
 	error = NULL;
 
 	script = clutter_script_new ();
@@ -154,6 +154,7 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 		printf ("error in load script %s\n", error->message);
 		g_error_free (error);
 	}
+	g_free (filename);
 	clutter_script_get_objects (script, "info-page", &page, NULL);
         
 	gchar *prop [] = {
@@ -203,9 +204,9 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 		if (!actor)
 			continue;
 		if (i < app_score)
-			clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), "/home/novell/gnome-app-store/pixmaps/starred.png", NULL);
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), "/home/dliang/gnome-app-store/pixmaps/starred.png", NULL);
 		else
-			clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), "/home/novell/gnome-app-store/pixmaps/non-starred.png", NULL);
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), "/home/dliang/gnome-app-store/pixmaps/non-starred.png", NULL);
 	}
 /*TODO: how many comments shoude merge to comments .. */
 	gchar *comment_count;

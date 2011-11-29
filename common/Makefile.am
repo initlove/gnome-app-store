@@ -4,7 +4,9 @@ lib_LTLIBRARIES = libopen-app-common.la
 
 AM_CPPFLAGS =							\
 	-I$(top_srcdir)						\
-	-DCONFIGDIR=\""/etc/gnome-app-store\""                  \
+	-DCONFIGDIR=\""/etc/@PACKAGE@\""                  \
+	-DPIXMAPSDIR=\""$(datadir)/pixmaps/@PACKAGE@\""		\
+	-DUIDIR=\""$(datadir)/@PACKAGE@/ui\""			\
 	$(LIBSOUP_CFLAGS)					\
 	$(COMMON_CFLAGS)					\
 	$(DEBUG_CFLAGS) 					\

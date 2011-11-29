@@ -37,16 +37,21 @@ ui_score_load (GnomeAppUIScore *ui)
 	layout = clutter_box_new (clutter_box_layout_new ());
 	clutter_container_add_actor (CLUTTER_CONTAINER (ui), layout);
 
+	gchar *filename;
 	gint i, score;
 	
 	score = ui->priv->score / 20;
 	for (i = 0; i < score; i++) {
-		actor = clutter_texture_new_from_file ("/home/novell/gnome-app-store/pixmaps/starred.png", NULL);
+		filename = open_app_get_ui_uri ("starred");
+		actor = clutter_texture_new_from_file (filename, NULL);
 	        clutter_container_add_actor (CLUTTER_CONTAINER (layout), actor);
+		g_free (filename);
 	}
 	for (; i < 5; i++) {
-		actor = clutter_texture_new_from_file ("/home/novell/gnome-app-store/pixmaps/non-starred.png", NULL);
+		filename = open_app_get_ui_uri ("non-starred");
+		actor = clutter_texture_new_from_file (filename, NULL);
 	        clutter_container_add_actor (CLUTTER_CONTAINER (layout), actor);
+		g_free (filename);
 	}
 }
 

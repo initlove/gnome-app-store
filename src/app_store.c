@@ -20,7 +20,6 @@ main (int argc, char *argv[])
 	if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
 	  return 1;
 	clutter_threads_init ();
-
 	GMainLoop *loop;
 	loop = g_main_loop_new (NULL, FALSE);
 

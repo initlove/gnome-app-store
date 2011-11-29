@@ -107,10 +107,12 @@ GOBJECT_INTROSPECTION_CHECK([0.9.7])
 
 AC_CONFIG_FILES([
 Makefile
+pixmaps/Makefile
+ui/Makefile
 common/Makefile
 liboasyncworker/Makefile
 lib/Makefile
-ui/Makefile
+src/Makefile
 lib/gnome-app-store-0.1.pc
 po/Makefile.in
 ])

@@ -121,14 +121,14 @@ gnome_app_info_icon_new_with_app (OpenResult *info)
 	info_icon = g_object_new (GNOME_APP_TYPE_INFO_ICON, NULL);
 	info_icon->priv->info = g_object_ref (info);
 
-        const gchar *filename;
+        gchar *filename;
 	GError *error;
         ClutterScript *script;
         ClutterActor *actor;
         gint i;
 
 	error = NULL;
-        filename = "/home/novell/gnome-app-store/ui/scripts/app-info-icon.json";
+        filename = open_app_get_ui_uri ("app-info-icon");
 
         script = clutter_script_new ();
         clutter_script_load_from_file (script, filename, &error);
@@ -136,6 +136,7 @@ gnome_app_info_icon_new_with_app (OpenResult *info)
 		printf ("error in load script %s!\n", error->message);
 		g_error_free (error);
 	}
+	g_free (filename);
         clutter_script_get_objects (script, "info-icon", &info_icon, NULL);
 
         gchar *prop [] = {
