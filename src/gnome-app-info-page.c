@@ -19,6 +19,7 @@ Author: Lance Wang <lzwang@suse.com>
 #include "gnome-app-task.h"
 #include "gnome-app-comment.h"
 #include "gnome-app-store-ui.h"
+#include "gnome-app-score-ui.h"
 #include "gnome-app-info-page.h"
 
 struct _GnomeAppInfoPagePrivate
@@ -197,17 +198,12 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 #endif
 	}
 
-	gchar *scores [] = { "score-1", "score-2", "score-3", "score-4", "score-5", NULL};
-	gint app_score = atoi (open_result_get (info, "score")) / 20;
-	for (i = 0; scores [i]; i++) {
-		clutter_script_get_objects (script, scores [i], &actor, NULL);
-		if (!actor)
-			continue;
-		if (i < app_score)
-			clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), "/home/dliang/gnome-app-store/pixmaps/starred.png", NULL);
-		else
-			clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), "/home/dliang/gnome-app-store/pixmaps/non-starred.png", NULL);
-	}
+	ClutterActor *score_actor;
+
+	clutter_script_get_objects (script, "score", &actor, NULL);
+	score_actor = gnome_app_score_ui_new_with_score (open_result_get (info, "score"));
+	clutter_container_add_actor (CLUTTER_CONTAINER (actor), score_actor);
+
 /*TODO: how many comments shoude merge to comments .. */
 	gchar *comment_count;
 	clutter_script_get_objects (script, "comments-details", &actor, NULL);

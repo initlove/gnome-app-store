@@ -12,98 +12,96 @@ Boston, MA 02111-1307, USA.
 Author: liangchenye <liangchenye@gmail.com>
 
 */
-#include <gio/gio.h>
-#include <gdesktop-enums.h>
+#include <stdlib.h>
 #include <string.h>
-
 #include <clutter/clutter.h>
 
 #include "open-app-utils.h"
-#include "gnome-app-ui-score.h"
+#include "gnome-app-score-ui.h"
 
-struct _GnomeAppUIScorePrivate
+struct _GnomeAppScoreUIPrivate
 {
 	gint score;
 };
 
-G_DEFINE_TYPE (GnomeAppUIScore, gnome_app_ui_score, CLUTTER_TYPE_GROUP)
+G_DEFINE_TYPE (GnomeAppScoreUI, gnome_app_score_ui, CLUTTER_TYPE_GROUP)
 
 static void
-ui_score_load (GnomeAppUIScore *ui)
+score_ui_load (GnomeAppScoreUI *ui)
 {
 	ClutterActor *layout;
 	ClutterActor *actor;
+	gchar *filename;
+	gint i, score;
 
 	layout = clutter_box_new (clutter_box_layout_new ());
 	clutter_container_add_actor (CLUTTER_CONTAINER (ui), layout);
 
-	gchar *filename;
-	gint i, score;
-	
+	/* the score is between 0 -- 100 */
 	score = ui->priv->score / 20;
 	for (i = 0; i < score; i++) {
-		filename = open_app_get_ui_uri ("starred");
+		filename = open_app_get_pixmap_uri ("starred");
 		actor = clutter_texture_new_from_file (filename, NULL);
+		/*TODO: the size issue will be done much later */
+		clutter_actor_set_size (actor, 15, 15);
 	        clutter_container_add_actor (CLUTTER_CONTAINER (layout), actor);
 		g_free (filename);
 	}
 	for (; i < 5; i++) {
-		filename = open_app_get_ui_uri ("non-starred");
+		filename = open_app_get_pixmap_uri ("non-starred");
 		actor = clutter_texture_new_from_file (filename, NULL);
+		clutter_actor_set_size (actor, 15, 15);
 	        clutter_container_add_actor (CLUTTER_CONTAINER (layout), actor);
 		g_free (filename);
 	}
 }
 
 static void
-gnome_app_ui_score_init (GnomeAppUIScore *ui)
+gnome_app_score_ui_init (GnomeAppScoreUI *ui)
 {
-	GnomeAppUIScorePrivate *priv;
+	GnomeAppScoreUIPrivate *priv;
 
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
-							 GNOME_APP_TYPE_UI_SCORE,
-							 GnomeAppUIScorePrivate);
+							 GNOME_APP_TYPE_SCORE_UI,
+							 GnomeAppScoreUIPrivate);
 	priv->score = 0;
-	ui_score_load (ui);
 }
 
 static void
-gnome_app_ui_score_dispose (GObject *object)
+gnome_app_score_ui_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (gnome_app_ui_score_parent_class)->dispose (object);
+	G_OBJECT_CLASS (gnome_app_score_ui_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_ui_score_finalize (GObject *object)
+gnome_app_score_ui_finalize (GObject *object)
 {
-	GnomeAppUIScore *ui = GNOME_APP_UI_SCORE (object);
-	GnomeAppUIScorePrivate *priv = ui->priv;
+	GnomeAppScoreUI *ui = GNOME_APP_SCORE_UI (object);
+	GnomeAppScoreUIPrivate *priv = ui->priv;
 
-	G_OBJECT_CLASS (gnome_app_ui_score_parent_class)->finalize (object);
+	G_OBJECT_CLASS (gnome_app_score_ui_parent_class)->finalize (object);
 }
 
 static void
-gnome_app_ui_score_class_init (GnomeAppUIScoreClass *klass)
+gnome_app_score_ui_class_init (GnomeAppScoreUIClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = gnome_app_ui_score_dispose;
-	object_class->finalize = gnome_app_ui_score_finalize;
+	object_class->dispose = gnome_app_score_ui_dispose;
+	object_class->finalize = gnome_app_score_ui_finalize;
 	 
-	g_type_class_add_private (object_class, sizeof (GnomeAppUIScorePrivate));
+	g_type_class_add_private (object_class, sizeof (GnomeAppScoreUIPrivate));
 }
 
-GnomeAppUIScore *
-gnome_app_ui_score_new (void)
+GnomeAppScoreUI *
+gnome_app_score_ui_new_with_score (const gchar *score)
 {
-	return g_object_new (GNOME_APP_TYPE_UI_SCORE, NULL);
-}
+	GnomeAppScoreUI *ui;
 
-void
-gnome_app_ui_score_set_score (GnomeAppUIScore *ui, gchar *score)
-{
+	ui = g_object_new (GNOME_APP_TYPE_SCORE_UI, NULL);
 	if (score)
 		ui->priv->score = atoi (score);
+	score_ui_load (ui);
 
-	ui_score_load (ui);
+	return ui;
 }
