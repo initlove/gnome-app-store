@@ -20,52 +20,6 @@
         "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
       },
       {
-	"id" : "container", 
-	"type" : "ClutterGroup",
-	"children" : [
-	  {
-        	"id" : "score-1",
-	        "type" : "ClutterTexture",
-	        "x" : 20,
-        	"y" : 110,
-        	"width" : 15,
-	        "height" : 15
-          },
-	  {
-        	"id" : "score-2",
-	        "type" : "ClutterTexture",
-	        "x" : 35,
-        	"y" : 110,
-        	"width" : 15,
-	        "height" : 15
-          },
-	  {
-        	"id" : "score-3",
-	        "type" : "ClutterTexture",
-	        "x" : 50,
-        	"y" : 110,
-        	"width" : 15,
-	        "height" : 15
-          },
-	  {
-        	"id" : "score-4",
-	        "type" : "ClutterTexture",
-	        "x" : 65,
-        	"y" : 110,
-        	"width" : 15,
-	        "height" : 15
-          },
-	  {
-        	"id" : "score-5",
-	        "type" : "ClutterTexture",
-	        "x" : 80,
-        	"y" : 110,
-        	"width" : 15,
-	        "height" : 15
-          }
-    	]
-      },
-      {
         "id" : "name",
         "type" : "ClutterText",
         "x" : 150,
@@ -169,6 +123,12 @@
 	"type" : "ClutterGroup",
         "x" : 10,
         "y" : 200
+      },
+      {
+        "id" : "score",
+	"type" : "ClutterGroup",
+        "x" : 20,
+        "y" : 110
       },
       {
         "id" : "previewpic1",
