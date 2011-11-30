@@ -48,7 +48,7 @@ struct _GnomeAppFrameUIPrivate
 
 G_DEFINE_TYPE (GnomeAppFrameUI, gnome_app_frame_ui, CLUTTER_TYPE_GROUP)
 
-static void
+static gpointer
 task_callback (gpointer userdata, gpointer func_result)
 {
 	GnomeAppFrameUI *ui;
@@ -60,6 +60,8 @@ task_callback (gpointer userdata, gpointer func_result)
 	clutter_threads_enter ();
 	gnome_app_frame_ui_load_results (ui, results);
 	clutter_threads_leave ();
+
+	return NULL;
 }
 
 void
@@ -80,7 +82,6 @@ gnome_app_frame_ui_load_results (GnomeAppFrameUI *ui, OpenResults *results)
 		clutter_text_set_text (CLUTTER_TEXT (ui->priv->status), message);
 
 		g_free (message);
-		g_object_unref (results);
 		return ;
 	}
 
@@ -187,7 +188,8 @@ on_search_entry_activate (ClutterActor *actor,
 
 	if (ui->priv->task)
 		g_object_unref (ui->priv->task);
-        ui->priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data",
+        ui->priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+	gnome_app_task_add_params (ui->priv->task,
 				"search", search,
 				"pagesize", pagesize,
 				"page", page,
@@ -267,7 +269,8 @@ printf ("click on %s\n", name);
 /*TODO where to final the task */
 		if (ui->priv->task)
 			g_object_unref (ui->priv->task);
-        	ui->priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data",
+        	ui->priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+		gnome_app_task_add_params (ui->priv->task,
 				"categories", cids,
 				"pagesize", pagesize,
 				"page", page,
@@ -490,7 +493,8 @@ gnome_app_frame_ui_set_default_task (GnomeAppFrameUI *ui)
 		
 	if (ui->priv->task)
 		g_object_unref (ui->priv->task);
-        ui->priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data",
+        ui->priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+	gnome_app_task_add_params (ui->priv->task,
 				"sortmode", "new",
 				"pagesize", pagesize,
 				"page", page,

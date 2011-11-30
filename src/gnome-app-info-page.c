@@ -88,7 +88,7 @@ on_info_page_event (ClutterActor *actor,
         return TRUE;
 }
 
-static void
+static gpointer
 set_pic_callback (gpointer userdata, gpointer func_re)
 {
         ClutterActor *actor;
@@ -100,9 +100,11 @@ set_pic_callback (gpointer userdata, gpointer func_re)
         clutter_threads_enter ();
         clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), dest_url, NULL);
         clutter_threads_leave ();
+
+	NULL;
 }
 
-static void
+static gpointer
 set_comments_callback (gpointer userdata, gpointer func_result)
 {
 	ClutterActor *comment;
@@ -123,11 +125,13 @@ set_comments_callback (gpointer userdata, gpointer func_result)
 	for (l = list; l; l = l->next) {
 		result = l->data;
 //		open_result_debug (result);
-		comment = gnome_app_comment_new_with_comment (result);
+		comment = CLUTTER_ACTOR (gnome_app_comment_new_with_comment (result));
 		clutter_container_add_actor (CLUTTER_CONTAINER (comment_group), comment);
 break;
 	}
         clutter_threads_leave ();
+
+	return NULL;
 }
 
 GnomeAppInfoPage *
@@ -201,7 +205,7 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 	ClutterActor *score_actor;
 
 	clutter_script_get_objects (script, "score", &actor, NULL);
-	score_actor = gnome_app_score_ui_new_with_score (open_result_get (info, "score"));
+	score_actor = CLUTTER_ACTOR (gnome_app_score_ui_new_with_score (open_result_get (info, "score")));
 	clutter_container_add_actor (CLUTTER_CONTAINER (actor), score_actor);
 
 /*TODO: how many comments shoude merge to comments .. */
@@ -214,7 +218,8 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 
 		id = open_result_get (info, "id");
 		function = g_strdup_printf ("/v1/comments/data/1/%s/0", id);
-		task = gnome_app_task_new (actor, "GET", function,
+		task = gnome_app_task_new (actor, "GET", function);
+		gnome_app_task_add_params (task,
                                 "pagesize", "10",
                                 "page", "0",
                                 NULL);

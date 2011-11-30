@@ -83,8 +83,7 @@ set_user_icon (ClutterActor *actor, const gchar *user)
 
 	store = gnome_app_store_get_default ();
 	function = g_strdup_printf ("/v1/person/data/%s", user);
-	task = gnome_app_task_new (actor, "GET", function,
-                                NULL);
+	task = gnome_app_task_new (actor, "GET", function);
 	gnome_app_task_set_callback (task, _set_user_icon_1);
 	gnome_app_task_push (task);
 

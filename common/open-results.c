@@ -12,6 +12,7 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
+#include <time.h>
 #include "open-results.h"
 
 G_DEFINE_ABSTRACT_TYPE (OpenResults, open_results, G_TYPE_OBJECT)
@@ -41,6 +42,14 @@ open_results_get_data (OpenResults *results)
 	g_return_val_if_fail (results && IS_OPEN_RESULTS (results), NULL);
 
 	return OPEN_RESULTS_GET_CLASS (results)->get_data (results);
+}
+
+time_t
+open_results_get_timestamps (OpenResults *results)
+{
+	g_return_val_if_fail (results && IS_OPEN_RESULTS (results), 0);
+
+	return OPEN_RESULTS_GET_CLASS (results)->get_timestamps (results);
 }
 
 gboolean

@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "ocs-result.h"
 #include "ocs-results.h"
@@ -32,6 +33,7 @@ struct _OcsResultsPrivate
 {
 	xmlNodePtr meta;
 	GList *data;
+	time_t timestamps;
 };
 
 G_DEFINE_TYPE (OcsResults, ocs_results, TYPE_OPEN_RESULTS)
@@ -66,6 +68,7 @@ ocs_results_init (OcsResults *info)
 						OcsResultsPrivate);
 	priv->meta = NULL;
 	priv->data = NULL;
+	priv->timestamps = 0;
 }
 
 static void
@@ -101,6 +104,7 @@ ocs_results_class_init (OcsResultsClass *klass)
 
 	parent_class->get_meta = ocs_results_get_meta;
 	parent_class->get_data = ocs_results_get_data;
+	parent_class->get_timestamps = ocs_results_get_timestamps;
 	parent_class->get_status = ocs_results_get_status;
 	parent_class->get_total_items = ocs_results_get_total_items;
 
@@ -159,7 +163,7 @@ ocs_get_results (const gchar *ocs, gint len)
 	g_return_val_if_fail (ocs, NULL);
 
 	xmlDocPtr doc_ptr;
-	OpenResults *results;
+	OcsResults *results;
 	GList *list;
 	const gchar *list_node_name;
 	xmlNodePtr meta_node, data_node;
@@ -173,8 +177,8 @@ ocs_get_results (const gchar *ocs, gint len)
 	results = NULL;
 	meta_node = ocs_find_node (doc_ptr, "meta");
 	if (meta_node) {
-		results = OPEN_RESULTS (ocs_results_new ());
-		ocs_results_set_meta (results, meta_node);
+		results = ocs_results_new ();
+		ocs_results_set_meta (OPEN_RESULTS (results), meta_node);
 	} else {
 		g_debug ("Error in get meta node!\n");
 		return NULL;
@@ -183,10 +187,12 @@ ocs_get_results (const gchar *ocs, gint len)
 	data_node = ocs_find_node (doc_ptr, "data");
 	if (data_node) {
 		list = parse_data (data_node);
-		ocs_results_set_data (results, list);
+		ocs_results_set_data (OPEN_RESULTS (results), list);
 	}
 
-	return results;
+	results->priv->timestamps = time (NULL);
+
+	return OPEN_RESULTS (results);
 }
 
 void
@@ -242,6 +248,16 @@ ocs_results_get_data (OpenResults *open_results)
 	results = OCS_RESULTS (open_results);
 
 	return results->priv->data;
+}
+
+time_t
+ocs_results_get_timestamps (OpenResults *open_results)
+{
+	OcsResults *results;
+
+	results = OCS_RESULTS (open_results);
+
+	return results->priv->timestamps;
 }
 
 gboolean
