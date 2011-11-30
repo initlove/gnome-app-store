@@ -13,6 +13,7 @@ AM_CPPFLAGS =							\
 	$(NULL)
 
 libgnome_app_store_la_SOURCES = \
+	gnome-app-proxy.c gnome-app-proxy.h	\
 	gnome-app-task.c gnome-app-task.h	\
 	gnome-app-store.c gnome-app-store.h	\
 	$(NULL)

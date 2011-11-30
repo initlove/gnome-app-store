@@ -16,6 +16,7 @@ Author: David Liang <dliang@novell.com>
 #include <stdio.h>
 #include <string.h>
 
+#include "gnome-app-proxy.h"
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
 #include "liboasyncworker/oasyncworker.h"
@@ -31,7 +32,8 @@ struct _GnomeAppStorePrivate
 	gchar	*url;
         GHashTable *categories;
 
-	RestProxy *proxy;
+	GnomeAppProxy *proxy;
+	RestProxy *rest_proxy;
 	OAsyncWorker *queue;
 
 	/*FIXME: Donnot use this at present */
@@ -47,10 +49,16 @@ gnome_app_store_add_task (GnomeAppStore *store, GnomeAppTask *task)
         o_async_worker_add (store->priv->queue, gnome_app_task_get_task (task));
 }
 
-const RestProxy *
+RestProxy *
+gnome_app_store_get_rest_proxy (GnomeAppStore *store)
+{
+	return store->priv->rest_proxy;
+}
+
+GnomeAppProxy *
 gnome_app_store_get_proxy (GnomeAppStore *store)
 {
-	return (const RestProxy *) store->priv->proxy;
+	return store->priv->proxy;
 }
 
 static void
@@ -116,7 +124,7 @@ setup_category (GnomeAppStore *store, GList *results_data)
 
 }
 
-static void
+static gpointer
 category_task_callback (gpointer userdata, gpointer func_result)
 {
     	GnomeAppStore *store;
@@ -130,6 +138,8 @@ category_task_callback (gpointer userdata, gpointer func_result)
 		list = open_results_get_data (results);
 		setup_category (store, list);
 	}
+
+	return NULL;
 }
 
 static void
@@ -145,6 +155,7 @@ gnome_app_store_init (GnomeAppStore *store)
 	priv->app_id = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 	priv->config = open_app_config_new ();
         priv->categories = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	priv->proxy = gnome_app_proxy_new ();
 
 	const gchar *user;
 	const gchar *password;
@@ -162,7 +173,7 @@ gnome_app_store_init (GnomeAppStore *store)
 	else
 		priv->url = g_strdup_printf ("http://%s", server_url);
 
-	priv->proxy = rest_proxy_new (priv->url, FALSE);
+	priv->rest_proxy = rest_proxy_new (priv->url, FALSE);
 	priv->queue = o_async_worker_new ();
 //FIXME: ?        o_async_worker_join (queue);
 }
@@ -189,6 +200,8 @@ gnome_app_store_finalize (GObject *object)
 		g_free (priv->url);
         if (priv->categories)
                 g_hash_table_destroy (priv->categories);
+	if (priv->rest_proxy)
+		g_object_unref (priv->rest_proxy);
 	if (priv->proxy)
 		g_object_unref (priv->proxy);
 	if (priv->queue)
@@ -253,7 +266,7 @@ gnome_app_store_init_category (GnomeAppStore *store)
 {
 	GnomeAppTask *task;
 
-	task = gnome_app_task_new (store, "GET", "/v1/content/categories", NULL);
+	task = gnome_app_task_new (store, "GET", "/v1/content/categories");
         gnome_app_task_set_callback (task, category_task_callback);
         gnome_app_task_push (task);
 }

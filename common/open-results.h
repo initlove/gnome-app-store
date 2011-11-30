@@ -23,6 +23,7 @@
 #ifndef __OPEN_RESULTS_H__
 #define __OPEN_RESULTS_H__
 
+#include <time.h>
 #include <glib-object.h>
 #include <glib.h>
 
@@ -53,6 +54,8 @@ struct _OpenResultsClass
 	/* virtual */
 	const gchar	*(*get_meta)		(OpenResults *results, const gchar *prop);
 	GList		*(*get_data)		(OpenResults *results);
+	/*TODO: local time or server time? now it is local time */
+	time_t		(*get_timestamps)	(OpenResults *results);
 	/*get status and get total items can be done by get_meta, but different spec may have diffent 'name' */
 	gboolean	(*get_status)		(OpenResults *results);
 	gint		(*get_total_items)	(OpenResults *results);
@@ -62,7 +65,7 @@ GType			open_results_get_type		(void);
 OpenResults *		open_results_new		(void);
 const gchar *		open_results_get_meta		(OpenResults *results, const gchar *prop);
 GList *			open_results_get_data		(OpenResults *results);
-
+time_t			open_results_get_timestamps	(OpenResults *results);
 gboolean		open_results_get_status		(OpenResults *results);
 gint			open_results_get_total_items	(OpenResults *results);
 
