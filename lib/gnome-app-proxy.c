@@ -79,6 +79,7 @@ gnome_app_proxy_new ()
 void
 gnome_app_proxy_add (GnomeAppProxy *proxy, gchar *str, OpenResults *results)
 {
+/*TODO we should make the cache stronger. */
 	if (g_hash_table_lookup (proxy->priv->cache, str))
 		g_hash_table_replace (proxy->priv->cache, g_strdup (str), g_object_ref (results));
 	else
@@ -90,14 +91,80 @@ OpenResults *
 gnome_app_proxy_find (GnomeAppProxy *proxy, gchar *str)
 {
 	OpenResults *results;
-
+/*TODO if the proxy was in cache, but not done yet, make priority higher */
 	results = (OpenResults *) g_hash_table_lookup (proxy->priv->cache, str);
 
 	return results;
+}
+
+static gpointer
+proxy_task_callback (gpointer userdata, gpointer func_result)
+{
+	GnomeAppProxy *proxy;
+
+	proxy = GNOME_APP_PROXY (userdata);
+
+	return NULL;
+}
+
+static GnomeAppTask *
+next_page_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
+{
+	GnomeAppTask *next_task;
+	RestProxyCall *call;
+        RestParams *params;
+        RestParamsIter iter;
+        RestParam *param;
+	const gchar *name;
+	const gchar *content;
+
+	if (strcasecmp (gnome_app_task_get_method (task), "GET") != 0) {
+		g_critical ("No reason to predict next page in POST task!");
+		return NULL;
+	}
+
+	call = gnome_app_task_get_call (task);
+	if (!call)
+		return NULL;
+
+        params = rest_proxy_call_get_params (call);
+        rest_params_iter_init (&iter, params);
+	content = NULL;
+        while (rest_params_iter_next (&iter, &name, &param)) {
+		if (strcmp (name, "page") == 0) {
+                	content = rest_param_get_content (param);
+			break;
+		}
+        }
+	if (content) {
+		gint page_number;
+		gchar *next_page;
+
+		page_number = atoi (content);
+		next_page = g_strdup_printf ("%d", page_number++);
+
+	        next_task = gnome_app_task_new (proxy, "GET", gnome_app_task_get_function (task));
+		gnome_app_task_set_callback (next_task, proxy_task_callback);
+        	rest_params_iter_init (&iter, params);
+        	while (rest_params_iter_next (&iter, &name, &param)) {
+			if (strcmp (name, "page") == 0) {
+				gnome_app_task_add_param (next_task, "page", next_page);
+			} else {
+                		gnome_app_task_add_param (next_task, name, content);
+			}
+		}
+		gnome_app_task_set_priority (next_task, TASK_PRIORITY_PREDICT);
+		gnome_app_task_push (next_task);
+
+		g_free (next_page);
+	} else {
+		return NULL;
+	}
 }
 
 /*TODO: VIP, should do lots of works here.... */
 void
 gnome_app_proxy_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 {
+	next_page_predict (proxy, task);
 }

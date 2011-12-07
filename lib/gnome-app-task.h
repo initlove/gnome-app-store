@@ -25,6 +25,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <rest/rest-proxy.h>
+
 #include "gnome-app-store.h"
 #include "liboasyncworker/oasyncworker.h"
 #include "liboasyncworker/oasyncworkertask.h"
@@ -56,15 +58,28 @@ struct _GnomeAppTaskClass
         GObjectClass parent_class;
 };
 
+typedef enum {
+	TASK_PRIORITY_LOW = 10,
+	TASK_PRIORITY_PREDICT = 20,
+	TASK_PRIORITY_NORMAL = 30,
+	TASK_PRIORITY_HIGH = 40,
+	TASK_PRIORITY_INSANE = 100,
+} TaskPriority;
+
 GType			gnome_app_task_get_type			(void);
 GnomeAppTask *		gnome_app_task_new 			(gpointer userdata, const gchar *method, const gchar *function);
 GnomeAppTask *		gnome_download_task_new 		(gpointer userdata, const gchar *url);
 void			gnome_app_task_add_param 		(GnomeAppTask *task, const gchar *param, const gchar *value);
 void			gnome_app_task_add_params 		(GnomeAppTask *task, ...);
 void			gnome_app_task_set_callback		(GnomeAppTask *task, GnomeAppTaskFunc callback);
+void			gnome_app_task_set_priority		(GnomeAppTask *task, TaskPriority priority);
 void			gnome_app_task_push			(GnomeAppTask *task);
+
 gchar *			gnome_app_task_to_str			(GnomeAppTask *task);
+const gchar *		gnome_app_task_get_method		(GnomeAppTask *task);
+const gchar *		gnome_app_task_get_function		(GnomeAppTask *task);
 OAsyncWorkerTask *	gnome_app_task_get_task			(GnomeAppTask *task);
+RestProxyCall *		gnome_app_task_get_call			(GnomeAppTask *task);
 
 G_END_DECLS
 

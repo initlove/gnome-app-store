@@ -115,7 +115,7 @@ gnome_download_task_new (gpointer userdata, const gchar *url)
 }
 
 static gpointer
-async_func (OAsyncWorkerTask *task, gpointer arguments)
+async_func (OAsyncWorkerTask *oasync_task, gpointer arguments)
 {
 	GnomeAppTask *app_task;
 	GError *error = NULL;
@@ -163,7 +163,11 @@ async_func (OAsyncWorkerTask *task, gpointer arguments)
 		proxy = gnome_app_store_get_proxy (store);
 		str = gnome_app_task_to_str (app_task);
 		gnome_app_proxy_add (proxy, str, results);
-		gnome_app_proxy_predict (proxy, app_task);
+
+		if (strcasecmp (method, "GET") == 0) {
+			if (o_async_worker_task_get_priority (app_task->priv->async) >= TASK_PRIORITY_NORMAL)
+				gnome_app_proxy_predict (proxy, app_task);
+		}
 
 		g_free (str);
 	}
@@ -172,20 +176,14 @@ async_func (OAsyncWorkerTask *task, gpointer arguments)
 }
 
 static void
-task_callback (OAsyncWorkerTask *task, gpointer func_result)
+task_callback (OAsyncWorkerTask *oasync_task, gpointer func_result)
 {
 	GnomeAppTask *app_task;
 
-	app_task = o_async_worker_task_get_arguments (task); 
+	app_task = o_async_worker_task_get_arguments (oasync_task); 
 	app_task->priv->callback (app_task->priv->userdata, func_result);
 //TODO when to unref it ? 
 //	g_object_unref (func_result);
-}
-
-OAsyncWorkerTask *
-gnome_app_task_get_task (GnomeAppTask *task)
-{
-	return task->priv->async;
 }
 
 GnomeAppTask *
@@ -197,15 +195,15 @@ gnome_app_task_new (gpointer userdata, const gchar *method, const gchar *functio
         GnomeAppTask *task;
 	RestProxy *proxy;
 
-
-	store = gnome_app_store_get_default ();
 	task = g_object_new (GNOME_APP_TYPE_TASK, NULL);
+	store = gnome_app_store_get_default ();
         proxy = gnome_app_store_get_rest_proxy (store);
         task->priv->call = rest_proxy_new_call ((RestProxy *)proxy);
         rest_proxy_call_set_function (task->priv->call, function);
 	rest_proxy_call_set_method (task->priv->call, method);
 	task->priv->userdata = userdata;
 	task->priv->async = o_async_worker_task_new ();
+        o_async_worker_task_set_priority (task->priv->async, TASK_PRIORITY_NORMAL);
 
 	return task;
 }
@@ -238,9 +236,17 @@ gnome_app_task_set_callback (GnomeAppTask *task, GnomeAppTaskFunc callback)
 }
 
 void
-gnome_app_task_set_priority (GnomeAppTask *task, gint priority)
+gnome_app_task_set_priority (GnomeAppTask *task, TaskPriority priority)
 {
         o_async_worker_task_set_priority (task->priv->async, priority);
+}
+
+void
+gnome_app_task_push (GnomeAppTask *task)
+{
+        o_async_worker_task_set_arguments (task->priv->async, task);
+        o_async_worker_task_set_func (task->priv->async, async_func);
+	gnome_app_store_add_task (gnome_app_store_get_default (), task);
 }
 
 gchar *
@@ -273,10 +279,30 @@ gnome_app_task_to_str (GnomeAppTask *task)
 	return str;
 }
 
-void
-gnome_app_task_push (GnomeAppTask *task)
+const gchar *
+gnome_app_task_get_method (GnomeAppTask *task)
 {
-        o_async_worker_task_set_arguments (task->priv->async, task);
-        o_async_worker_task_set_func (task->priv->async, async_func);
-	gnome_app_store_add_task (gnome_app_store_get_default (), task);
+	g_return_val_if_fail (task && task->priv->call, NULL);
+
+	return rest_proxy_call_get_method (task->priv->call);
+}
+
+const gchar *
+gnome_app_task_get_function (GnomeAppTask *task)
+{
+	g_return_val_if_fail (task && task->priv->call, NULL);
+
+	return rest_proxy_call_get_function (task->priv->call);
+}
+
+OAsyncWorkerTask *
+gnome_app_task_get_task (GnomeAppTask *task)
+{
+	return task->priv->async;
+}
+
+RestProxyCall *
+gnome_app_task_get_call (GnomeAppTask *task)
+{
+	return task->priv->call;
 }
