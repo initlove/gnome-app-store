@@ -117,6 +117,17 @@ setup_category (GnomeAppStore *store, GList *results_data)
         }
         for (i = 0; default_categories [i]; i++) {
                 if (ids [i]) {
+			GnomeAppTask *task;
+			const gchar *pagesize = "35";	/*FIXME: */
+
+			task = gnome_app_task_new (NULL, "GET", "/v1/content/data");
+		        gnome_app_task_add_params (task,
+						   "categories", ids [i]->str,
+						   "pagesize", pagesize,
+						   "page", "0",
+						   NULL);
+			gnome_app_task_preload (task);
+
                         g_hash_table_insert (store->priv->categories, g_strdup (default_categories [i]), ids [i]->str);
                         g_string_free (ids [i], FALSE);
                 }

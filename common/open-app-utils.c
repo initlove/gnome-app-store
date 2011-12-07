@@ -92,7 +92,7 @@ open_app_get_data_by_request (SoupSession *session, const gchar *request)
 
 	g_return_val_if_fail (request != NULL, NULL);
 
-	g_debug ("open_app_get_data_by_request: %s\n", request);
+//	g_debug ("open_app_get_data_by_request: %s\n", request);
 
 	buf = NULL;
 	method = SOUP_METHOD_GET;
@@ -158,7 +158,7 @@ download_file (const gchar *source, const gchar *dest)
 {
 	g_return_val_if_fail (source && dest, FALSE);
 
-	g_debug ("download_file %s to %s\n", source, dest);
+//	g_debug ("download_file %s to %s\n", source, dest);
 
 	SoupSession *session;
 	SoupBuffer *buf;

@@ -101,8 +101,10 @@ static gpointer
 proxy_task_callback (gpointer userdata, gpointer func_result)
 {
 	GnomeAppProxy *proxy;
-
+	OpenResults *results;
+printf ("proxy task callback\n");
 	proxy = GNOME_APP_PROXY (userdata);
+	results = OPEN_RESULTS (func_result);
 
 	return NULL;
 }
@@ -141,8 +143,7 @@ next_page_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 		gchar *next_page;
 
 		page_number = atoi (content);
-		next_page = g_strdup_printf ("%d", page_number++);
-
+		next_page = g_strdup_printf ("%d", page_number + 1);
 	        next_task = gnome_app_task_new (proxy, "GET", gnome_app_task_get_function (task));
 		gnome_app_task_set_callback (next_task, proxy_task_callback);
         	rest_params_iter_init (&iter, params);
@@ -150,11 +151,17 @@ next_page_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 			if (strcmp (name, "page") == 0) {
 				gnome_app_task_add_param (next_task, "page", next_page);
 			} else {
+                		content = rest_param_get_content (param);
                 		gnome_app_task_add_param (next_task, name, content);
 			}
 		}
 		gnome_app_task_set_priority (next_task, TASK_PRIORITY_PREDICT);
 		gnome_app_task_push (next_task);
+
+		gchar *next_task_str;
+		next_task_str = gnome_app_task_to_str (next_task);
+		g_debug ("predict next page %s\n", next_task_str);
+		g_free (next_task_str);
 
 		g_free (next_page);
 	} else {
@@ -167,4 +174,18 @@ void
 gnome_app_proxy_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 {
 	next_page_predict (proxy, task);
+}
+
+void
+gnome_app_proxy_preload (GnomeAppProxy *proxy, GnomeAppTask *task)
+{
+	gchar *task_str;
+
+	task_str = gnome_app_task_to_str (task);
+	g_debug ("preload next page %s\n", task_str);
+	g_free (task_str);
+
+	gnome_app_task_set_callback (task, proxy_task_callback);
+	gnome_app_task_set_priority (task, TASK_PRIORITY_PRELOAD);
+	gnome_app_task_push (task);
 }

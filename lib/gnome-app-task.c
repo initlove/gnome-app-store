@@ -242,6 +242,18 @@ gnome_app_task_set_priority (GnomeAppTask *task, TaskPriority priority)
 }
 
 void
+gnome_app_task_preload (GnomeAppTask *task)
+{
+	GnomeAppStore *store;
+	GnomeAppProxy *proxy;
+
+	store = gnome_app_store_get_default ();
+	proxy = gnome_app_store_get_proxy (store);
+	task->priv->userdata = proxy;
+	gnome_app_proxy_preload (proxy, task);
+}
+
+void
 gnome_app_task_push (GnomeAppTask *task)
 {
         o_async_worker_task_set_arguments (task->priv->async, task);
