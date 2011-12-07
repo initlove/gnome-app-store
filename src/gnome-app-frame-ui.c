@@ -369,9 +369,9 @@ create_category_list (GnomeAppFrameUI *ui)
 		actor = (ClutterActor *)st_button_new_with_label (name);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), col, row);
 		row ++;
-
 		g_signal_connect (actor, "event", G_CALLBACK (on_category_event), ui);
 	}
+
 	return layout_box;
 }
 
