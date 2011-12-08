@@ -59,6 +59,7 @@ GnomeAppProxy *		gnome_app_proxy_new 				(void);
 OpenResults *		gnome_app_proxy_find				(GnomeAppProxy *proxy, gchar *str);
 void			gnome_app_proxy_add				(GnomeAppProxy *proxy, gchar *str, OpenResults *result);
 void			gnome_app_proxy_predict				(GnomeAppProxy *proxy, GnomeAppTask *task);
+void			gnome_app_proxy_preload				(GnomeAppProxy *proxy, GnomeAppTask *task);
 
 G_END_DECLS
 
