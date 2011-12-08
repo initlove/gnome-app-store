@@ -97,9 +97,11 @@ set_pic_callback (gpointer userdata, gpointer func_re)
         actor = CLUTTER_ACTOR (userdata);
         dest_url = (gchar *) func_re;
 /*TODO: why should use this thread? */
-        clutter_threads_enter ();
+//        clutter_threads_enter ();
+        tmp_thread_enter ();
         clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), dest_url, NULL);
-        clutter_threads_leave ();
+//        clutter_threads_leave ();
+	tmp_thread_leave ();
 
 	NULL;
 }
@@ -121,7 +123,8 @@ set_comments_callback (gpointer userdata, gpointer func_result)
 
 	list = open_results_get_data (results);
 
-        clutter_threads_enter ();
+//        clutter_threads_enter ();
+        tmp_thread_enter ();
 	for (l = list; l; l = l->next) {
 		result = l->data;
 //		open_result_debug (result);
@@ -129,7 +132,8 @@ set_comments_callback (gpointer userdata, gpointer func_result)
 		clutter_container_add_actor (CLUTTER_CONTAINER (comment_group), comment);
 break;
 	}
-        clutter_threads_leave ();
+//        clutter_threads_leave ();
+	tmp_thread_leave ();
 
 	return NULL;
 }

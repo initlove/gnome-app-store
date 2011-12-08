@@ -44,6 +44,8 @@ gnome_app_store_ui_init (GnomeAppStoreUI *ui)
 
 	priv->info_page = NULL;
 	priv->store = gnome_app_store_get_default ();
+	gnome_app_store_set_lock_function (priv->store, clutter_threads_enter);
+	gnome_app_store_set_unlock_function (priv->store, clutter_threads_leave);
 	gnome_app_store_init_category (priv->store);
 /*TODO: as we should add task every ui, it might be better to use this.. */
 	priv->frame_ui = gnome_app_frame_ui_new ();

@@ -77,34 +77,58 @@ gnome_app_proxy_new ()
 }
 
 void
-gnome_app_proxy_add (GnomeAppProxy *proxy, gchar *str, OpenResults *results)
+gnome_app_proxy_add (GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *results)
 {
 /*TODO we should make the cache stronger. */
-	if (g_hash_table_lookup (proxy->priv->cache, str))
-		g_hash_table_replace (proxy->priv->cache, g_strdup (str), g_object_ref (results));
-	else
-		g_hash_table_insert (proxy->priv->cache, g_strdup (str), g_object_ref (results));
+	const gchar *method;
+	gchar *key;
+
+	g_debug ("gnome_app_proxy_add!");
+
+	method = gnome_app_task_get_method (task);
+	if (strcasecmp (method, "GET") != 0)
+		return;
+
+        if (ocs_results_get_status (results)) {
+		key = gnome_app_task_to_str (task);
+		g_debug ("proxy add <%s> prio %d", key, gnome_app_task_get_priority (task));
+		g_hash_table_replace (proxy->priv->cache, key, g_object_ref (results));
+		                
+		if (gnome_app_task_get_priority (task) >= TASK_PRIORITY_NORMAL)			
+			gnome_app_proxy_predict (proxy, task);
+	}
 
 }
 
 OpenResults *
-gnome_app_proxy_find (GnomeAppProxy *proxy, gchar *str)
+gnome_app_proxy_find (GnomeAppProxy *proxy, GnomeAppTask *task)
 {
 	OpenResults *results;
+	gchar *key;
 /*TODO if the proxy was in cache, but not done yet, make priority higher */
-	results = (OpenResults *) g_hash_table_lookup (proxy->priv->cache, str);
+	key = gnome_app_task_to_str (task);
+	results = (OpenResults *) g_hash_table_lookup (proxy->priv->cache, key);
+	if (results)
+		g_debug ("proxy found <%s>", key);
+	g_free (key);
 
 	return results;
 }
 
+/*TODO REMOVE */
 static gpointer
 proxy_task_callback (gpointer userdata, gpointer func_result)
 {
 	GnomeAppProxy *proxy;
+	GnomeAppTask *task;
 	OpenResults *results;
 printf ("proxy task callback\n");
+
 	proxy = GNOME_APP_PROXY (userdata);
 	results = OPEN_RESULTS (func_result);
+
+        if (ocs_results_get_status (results)) {
+	}
 
 	return NULL;
 }
@@ -120,6 +144,7 @@ next_page_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 	const gchar *name;
 	const gchar *content;
 
+	g_debug ("Next page predict!");
 	if (strcasecmp (gnome_app_task_get_method (task), "GET") != 0) {
 		g_critical ("No reason to predict next page in POST task!");
 		return NULL;
@@ -145,7 +170,7 @@ next_page_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 		page_number = atoi (content);
 		next_page = g_strdup_printf ("%d", page_number + 1);
 	        next_task = gnome_app_task_new (proxy, "GET", gnome_app_task_get_function (task));
-		gnome_app_task_set_callback (next_task, proxy_task_callback);
+//		gnome_app_task_set_callback (next_task, proxy_task_callback);
         	rest_params_iter_init (&iter, params);
         	while (rest_params_iter_next (&iter, &name, &param)) {
 			if (strcmp (name, "page") == 0) {
@@ -160,7 +185,7 @@ next_page_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 
 		gchar *next_task_str;
 		next_task_str = gnome_app_task_to_str (next_task);
-		g_debug ("predict next page %s\n", next_task_str);
+		g_debug ("predict next page %s.", next_task_str);
 		g_free (next_task_str);
 
 		g_free (next_page);
@@ -174,18 +199,4 @@ void
 gnome_app_proxy_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 {
 	next_page_predict (proxy, task);
-}
-
-void
-gnome_app_proxy_preload (GnomeAppProxy *proxy, GnomeAppTask *task)
-{
-	gchar *task_str;
-
-	task_str = gnome_app_task_to_str (task);
-	g_debug ("preload next page %s\n", task_str);
-	g_free (task_str);
-
-	gnome_app_task_set_callback (task, proxy_task_callback);
-	gnome_app_task_set_priority (task, TASK_PRIORITY_PRELOAD);
-	gnome_app_task_push (task);
 }

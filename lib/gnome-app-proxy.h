@@ -56,10 +56,9 @@ struct _GnomeAppProxyClass
 
 GType			gnome_app_proxy_get_type			(void);
 GnomeAppProxy *		gnome_app_proxy_new 				(void);
-OpenResults *		gnome_app_proxy_find				(GnomeAppProxy *proxy, gchar *str);
-void			gnome_app_proxy_add				(GnomeAppProxy *proxy, gchar *str, OpenResults *result);
+OpenResults *		gnome_app_proxy_find				(GnomeAppProxy *proxy, GnomeAppTask *task);
+void			gnome_app_proxy_add				(GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *results);
 void			gnome_app_proxy_predict				(GnomeAppProxy *proxy, GnomeAppTask *task);
-void			gnome_app_proxy_preload				(GnomeAppProxy *proxy, GnomeAppTask *task);
 
 G_END_DECLS
 

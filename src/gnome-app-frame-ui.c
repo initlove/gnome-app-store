@@ -57,9 +57,11 @@ task_callback (gpointer userdata, gpointer func_result)
 	ui = GNOME_APP_FRAME_UI (userdata);
 	results = OPEN_RESULTS (func_result);
 
-	clutter_threads_enter ();
+	//clutter_threads_enter ();
+	tmp_thread_enter ();
 	gnome_app_frame_ui_load_results (ui, results);
-	clutter_threads_leave ();
+	//clutter_threads_leave ();
+	tmp_thread_leave ();
 
 	return NULL;
 }

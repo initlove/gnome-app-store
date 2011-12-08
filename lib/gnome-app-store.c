@@ -12,6 +12,8 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
+#include <glib.h>
+#include <glib/gthread.h>
 #include <rest/rest-proxy.h>
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +28,8 @@ Author: David Liang <dliang@novell.com>
 #include "common/open-result.h"
 #include "common/open-results.h"
 
+static GMutex *app_task_mutex;
+
 struct _GnomeAppStorePrivate
 {
 	OpenAppConfig *config;
@@ -39,9 +43,11 @@ struct _GnomeAppStorePrivate
 	/*FIXME: Donnot use this at present */
 	GList *appid_list;	/* should be reload every timestamp time */
 	GHashTable *app_id;
+
 };
 
 G_DEFINE_TYPE (GnomeAppStore, gnome_app_store, G_TYPE_OBJECT)
+
 
 void
 gnome_app_store_add_task (GnomeAppStore *store, GnomeAppTask *task)
@@ -126,7 +132,8 @@ setup_category (GnomeAppStore *store, GList *results_data)
 						   "pagesize", pagesize,
 						   "page", "0",
 						   NULL);
-			gnome_app_task_preload (task);
+			gnome_app_task_set_priority (task, TASK_PRIORITY_PRELOAD);
+			gnome_app_task_push (task);
 
                         g_hash_table_insert (store->priv->categories, g_strdup (default_categories [i]), ids [i]->str);
                         g_string_free (ids [i], FALSE);
@@ -228,7 +235,10 @@ gnome_app_store_class_init (GnomeAppStoreClass *klass)
 
 	object_class->dispose = gnome_app_store_dispose;
 	object_class->finalize = gnome_app_store_finalize;
-	 
+	
+        klass->lock = NULL;
+	klass->unlock = NULL;
+
 	g_type_class_add_private (object_class, sizeof (GnomeAppStorePrivate));
 }
 
@@ -282,3 +292,40 @@ gnome_app_store_init_category (GnomeAppStore *store)
         gnome_app_task_push (task);
 }
 
+void
+gnome_app_store_set_lock_function (GnomeAppStore *store, void (*callback))
+{
+	GnomeAppStoreClass *class;
+
+	class = GNOME_APP_STORE_GET_CLASS (store);
+	class->lock = callback;
+}
+
+void
+gnome_app_store_set_unlock_function (GnomeAppStore *store, void (*callback))
+{
+	GnomeAppStoreClass *class;
+
+	class = GNOME_APP_STORE_GET_CLASS (store);
+	class->unlock = callback;
+}
+
+void
+gnome_app_store_lock (GnomeAppStore *store)
+{
+	GnomeAppStoreClass *class;
+
+	class = GNOME_APP_STORE_GET_CLASS (store);
+	if (class->lock)
+		class->lock ();
+}
+
+void
+gnome_app_store_unlock (GnomeAppStore *store)
+{
+	GnomeAppStoreClass *class;
+
+	class = GNOME_APP_STORE_GET_CLASS (store);
+	if (class->unlock)
+		class->unlock ();
+}

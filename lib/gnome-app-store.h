@@ -54,6 +54,9 @@ struct _GnomeAppStore
 struct _GnomeAppStoreClass
 {
         GObjectClass parent_class;
+
+	void (*lock) (void);
+	void (*unlock) (void);
 };
 
 GType			gnome_app_store_get_type			(void);
@@ -66,6 +69,11 @@ const gchar *		gnome_app_store_get_cids_by_name		(GnomeAppStore *store, const gc
 //GnomeAppProxy *		gnome_app_store_get_proxy			(GnomeAppStore *store);
 //RestProxy *		gnome_app_store_get_rest_proxy 			(GnomeAppStore *store);
 //void			gnome_app_store_add_task 			(GnomeAppStore *store, GnomeAppTask *task);
+
+void			gnome_app_store_set_lock_function		(GnomeAppStore *store, void (*callback));
+void			gnome_app_store_set_unlock_function		(GnomeAppStore *store, void (*callback));
+void			gnome_app_store_lock				(GnomeAppStore *store);
+void			gnome_app_store_unlock				(GnomeAppStore *store);
 
 G_END_DECLS
 

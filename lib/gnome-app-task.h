@@ -59,6 +59,7 @@ struct _GnomeAppTaskClass
 };
 
 typedef enum {
+	TASK_PRIORITY_INVALID = 0,
 	TASK_PRIORITY_LOW = 10,
 	TASK_PRIORITY_PREDICT = 20,
 	TASK_PRIORITY_PRELOAD = 30,
@@ -80,6 +81,7 @@ void			gnome_app_task_push			(GnomeAppTask *task);
 gchar *			gnome_app_task_to_str			(GnomeAppTask *task);
 const gchar *		gnome_app_task_get_method		(GnomeAppTask *task);
 const gchar *		gnome_app_task_get_function		(GnomeAppTask *task);
+TaskPriority		gnome_app_task_get_priority		(GnomeAppTask *task);
 OAsyncWorkerTask *	gnome_app_task_get_task			(GnomeAppTask *task);
 RestProxyCall *		gnome_app_task_get_call			(GnomeAppTask *task);
 
