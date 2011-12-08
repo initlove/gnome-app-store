@@ -106,9 +106,11 @@ set_pic_callback (gpointer userdata, gpointer func_re)
 	actor = CLUTTER_ACTOR (userdata);
 	dest_url = (gchar *) func_re;
 /*TODO: why should use this thread? */
-	clutter_threads_enter ();
+//	clutter_threads_enter ();
+	tmp_thread_enter ();
 	clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), dest_url, NULL);
-	clutter_threads_leave ();
+//	clutter_threads_leave ();
+	tmp_thread_leave ();
 }
 
 GnomeAppInfoIcon *
@@ -162,7 +164,7 @@ gnome_app_info_icon_new_with_app (OpenResult *info)
 		store = gnome_app_store_get_default ();
 		task = gnome_download_task_new (actor, val);
 		gnome_app_task_set_callback (task, set_pic_callback);
-		gnome_app_store_add_task (store, task);
+		gnome_app_task_push (task);
 	} else {
 //TODO
 	}
