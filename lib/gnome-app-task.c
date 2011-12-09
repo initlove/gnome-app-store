@@ -138,6 +138,7 @@ async_func (OAsyncWorkerTask *oasync_task, gpointer arguments)
 		proxy = gnome_app_store_get_proxy (store);
 		results = gnome_app_proxy_find (proxy, app_task);
 		if (results) {
+			gnome_app_proxy_predict (proxy, app_task);
 			return results;
 		}
 	}

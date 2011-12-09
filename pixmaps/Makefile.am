@@ -1,5 +1,5 @@
 pixmapsdir = $(datadir)/pixmaps/@PACKAGE@
-	
+
 pixmaps_DATA =	\
 	clear.png \
 	emblem-new.png \
