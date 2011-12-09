@@ -89,24 +89,6 @@ on_info_page_event (ClutterActor *actor,
 }
 
 static gpointer
-set_pic_callback (gpointer userdata, gpointer func_re)
-{
-        ClutterActor *actor;
-        gchar *dest_url;
-
-        actor = CLUTTER_ACTOR (userdata);
-        dest_url = (gchar *) func_re;
-/*TODO: why should use this thread? */
-//        clutter_threads_enter ();
-        tmp_thread_enter ();
-        clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), dest_url, NULL);
-//        clutter_threads_leave ();
-	tmp_thread_leave ();
-
-	NULL;
-}
-
-static gpointer
 set_comments_callback (gpointer userdata, gpointer func_result)
 {
 	ClutterActor *comment;
@@ -123,8 +105,6 @@ set_comments_callback (gpointer userdata, gpointer func_result)
 
 	list = open_results_get_data (results);
 
-//        clutter_threads_enter ();
-        tmp_thread_enter ();
 	for (l = list; l; l = l->next) {
 		result = l->data;
 //		open_result_debug (result);
@@ -132,8 +112,6 @@ set_comments_callback (gpointer userdata, gpointer func_result)
 		clutter_container_add_actor (CLUTTER_CONTAINER (comment_group), comment);
 break;
 	}
-//        clutter_threads_leave ();
-	tmp_thread_leave ();
 
 	return NULL;
 }
@@ -183,11 +161,7 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 		if (!val)
 			continue;
 		if (CLUTTER_IS_TEXTURE (actor)) {
-	                GnomeAppTask *task;
-
-        	        task = gnome_download_task_new (actor, val);
-                	gnome_app_task_set_callback (task, set_pic_callback);
-	                gnome_app_task_push (task);
+			gnome_app_ui_set_icon (actor, val);
 		} else if (CLUTTER_IS_TEXT (actor)) {
 			if ((strcmp (prop [i], "comments") == 0) || (strcmp (prop [i], "downloads") == 0)) {
 				gchar *val_label;

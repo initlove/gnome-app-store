@@ -13,6 +13,7 @@ Author: David Liang <dliang@novell.com>
 
 */
 #include <clutter/clutter.h>
+
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
 #include "gnome-app-comment.h"
@@ -24,36 +25,16 @@ struct _GnomeAppCommentPrivate
 
 G_DEFINE_TYPE (GnomeAppComment, gnome_app_comment, CLUTTER_TYPE_GROUP)
 
-
-static void
-set_pic_callback (gpointer userdata, gpointer func_re)
-{
-        ClutterActor *actor;
-        gchar *dest_url;
-
-        actor = CLUTTER_ACTOR (userdata);
-        dest_url = (gchar *) func_re;
-/*TODO: why should use this thread? */
-//        clutter_threads_enter ();
-	tmp_thread_enter ();
-        clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), dest_url, NULL);
-//        clutter_threads_leave ();
-	tmp_thread_leave ();
-}
-
 static void
 _set_user_icon_1 (gpointer userdata, gpointer func_result)
 {
-	GnomeAppStore *store;
 	GnomeAppTask *task;
         OpenResults *results;
         OpenResult *result;
         GList *list;
 	const gchar *pic;
 
-	store = gnome_app_store_get_default ();
         results = OPEN_RESULTS (func_result);
-
 	list = open_results_get_data (results);
 	if (!open_results_get_status (results)) {
 		g_debug ("Fail to get the user info: %s\n", open_results_get_meta (results, "message"));
@@ -63,9 +44,7 @@ _set_user_icon_1 (gpointer userdata, gpointer func_result)
 /*TODO: check avatarpicfound first? */
 		pic = open_result_get (result, "avatarpic");
 		if (pic) {
-			task = gnome_download_task_new (userdata, pic);
-			gnome_app_task_set_callback (task, set_pic_callback);
-			gnome_app_task_push (task);
+			gnome_app_ui_set_icon (userdata, pic);
 			return;
 		}
 	}
@@ -79,11 +58,9 @@ _set_user_icon_1 (gpointer userdata, gpointer func_result)
 static void			
 set_user_icon (ClutterActor *actor, const gchar *user)
 {
-	GnomeAppStore *store;
 	GnomeAppTask *task;
 	gchar *function;
 
-	store = gnome_app_store_get_default ();
 	function = g_strdup_printf ("/v1/person/data/%s", user);
 	task = gnome_app_task_new (actor, "GET", function);
 	gnome_app_task_set_callback (task, _set_user_icon_1);

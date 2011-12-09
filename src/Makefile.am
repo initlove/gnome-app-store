@@ -23,7 +23,7 @@ noinst_PROGRAMS +=      \
 	$(NULL)
 
 app_store_SOURCES =        \
-	utils.c utils.h	\
+	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
 	gnome-app-store-ui.c gnome-app-store-ui.h \
 	gnome-app-frame-ui.c gnome-app-frame-ui.h \
 	gnome-app-score-ui.c gnome-app-score-ui.h \
