@@ -96,7 +96,7 @@ async_download_func (OAsyncWorkerTask *task, gpointer arguments)
 	app_task = GNOME_APP_TASK (arguments);
 
 	gchar *dest_url;
-        dest_url = open_app_get_local_icon (app_task->priv->url);
+        dest_url = open_app_get_local_icon (app_task->priv->url, TRUE);
 
 	return dest_url;
 }
@@ -267,6 +267,18 @@ gnome_app_task_push (GnomeAppTask *task)
 					g_debug ("Cannot find the callback ?");
 				return;
 			}
+		}
+	} else {
+		gchar *img_local_cache;
+
+		img_local_cache = open_app_get_local_icon (task->priv->url, FALSE);
+		if (img_local_cache) {
+			if (task->priv->callback) {
+				task->priv->callback (task->priv->userdata, img_local_cache);
+				g_free (img_local_cache);
+				return;
+			}
+			g_free (img_local_cache);
 		}
 	}
 

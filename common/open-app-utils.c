@@ -195,7 +195,7 @@ download_file (const gchar *source, const gchar *dest)
 }
 
 gchar *
-open_app_get_local_icon (const gchar *uri)
+open_app_get_local_icon (const gchar *uri, gboolean download)
 {
 	g_return_val_if_fail (uri != NULL, NULL);
 
@@ -213,9 +213,14 @@ open_app_get_local_icon (const gchar *uri)
 		g_mkdir_with_parents (img_dir, 0755);
 
 	if (!g_file_test (local_uri, G_FILE_TEST_EXISTS)) {
-		if (!download_file (uri, (const gchar *)local_uri)) {
+		if (download) {
+			if (!download_file (uri, (const gchar *)local_uri)) {
+				g_free (local_uri);
+				local_uri = NULL;
+			}
+		} else {
 			g_free (local_uri);
-			local_uri = NULL;	
+			local_uri = NULL;
 		}
 	}
 
