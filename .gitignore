@@ -31,3 +31,4 @@ Makefile
 Makefile.in
 tags
 src/app_store
+src/test_comments
