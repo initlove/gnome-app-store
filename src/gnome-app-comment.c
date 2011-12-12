@@ -20,7 +20,12 @@ Author: David Liang <dliang@novell.com>
 
 struct _GnomeAppCommentPrivate
 {
+	ClutterGroup    *ui_group;
+	ClutterActor *reply_entry;
+
 	OpenResult *comment;
+	gchar *content;
+	gchar *content2;
 };
 
 G_DEFINE_TYPE (GnomeAppComment, gnome_app_comment, CLUTTER_TYPE_GROUP)
@@ -49,10 +54,6 @@ _set_user_icon_1 (gpointer userdata, gpointer func_result)
 		}
 	}
 
-/*TODO */
-	gchar *user_icon = open_app_get_pixmap_uri ("person");
-        clutter_texture_set_from_file (CLUTTER_TEXTURE (userdata), user_icon, NULL);
-	g_free (user_icon);
 }
 
 static void			
@@ -78,6 +79,10 @@ gnome_app_comment_init (GnomeAppComment *comment)
 	                                                 GNOME_APP_TYPE_COMMENT,
 	                                                 GnomeAppCommentPrivate);
 	priv->comment = NULL;
+	priv->reply_entry = NULL;
+
+	priv->content = NULL;
+	priv->content2 = NULL;
 }
 
 static void
@@ -95,6 +100,11 @@ gnome_app_comment_finalize (GObject *object)
 	if (priv->comment)
 		g_object_unref (priv->comment);
 
+	if (priv->content)
+		g_free (priv->content);
+	if (priv->content2)
+		g_free (priv->content2);
+
 	G_OBJECT_CLASS (gnome_app_comment_parent_class)->finalize (object);
 }
 
@@ -107,6 +117,60 @@ gnome_app_comment_class_init (GnomeAppCommentClass *klass)
 	object_class->finalize = gnome_app_comment_finalize;
 	 
 	g_type_class_add_private (object_class, sizeof (GnomeAppCommentPrivate));
+}
+
+static gboolean
+on_reply_label_press (ClutterActor *actor,
+	             ClutterEvent *event,
+	             gpointer      data)
+{
+	GnomeAppComment *comment;
+
+	comment = GNOME_APP_COMMENT (data);
+	clutter_actor_show (comment->priv->reply_entry);
+
+	return TRUE;
+}
+
+static gpointer
+comment_reply_callback (gpointer userdata, gpointer func_result)
+{
+	GnomeAppComment *ui_comment;
+	OpenResults *results;
+
+	ui_comment = GNOME_APP_COMMENT (userdata);
+ 	results = OPEN_RESULTS (func_result);
+
+	printf ("result get %s, code %s, msg %s\n", open_results_get_meta (results, "status"),
+					open_results_get_meta (results, "statuscode"),
+					open_results_get_meta (results, "message"));
+	return NULL;
+}
+
+
+static void
+on_reply_entry_activate (ClutterActor *actor,
+	                 GnomeAppComment *ui_comment)
+{
+	GnomeAppTask *task;
+	gchar *content;
+	gchar *parent;
+
+	parent = open_result_get (ui_comment->priv->comment, "id");
+	printf ("parent is %s content 1 %s content 2 %s\n", parent, ui_comment->priv->content, ui_comment->priv->content2);
+	task = gnome_app_task_new (ui_comment, "POST", "/v1/comments/add");
+	gnome_app_task_add_params (task,
+				"type", "1",
+				"content", content,
+				"content2", "0",
+				"parent", parent,
+				"subject", "Replytothis",
+				"message", "sorryforspam",
+				"msg", "sorryforspam",
+				NULL);
+									        
+	gnome_app_task_set_callback (task, comment_reply_callback);
+	gnome_app_task_push (task);
 }
 
 GnomeAppComment *
@@ -131,7 +195,13 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
                 g_error_free (error);
         }
 
-        clutter_script_get_objects (script, "app-comment", &app_comment, NULL);
+        clutter_script_get_objects (script, "app-comment", &app_comment->priv->ui_group, NULL);
+	if (!app_comment->priv->ui_group) {
+		g_critical ("Cannot find 'app-comment' in %s!\n", filename);
+		g_free (filename);
+		return app_comment;
+	}
+	clutter_container_add_actor (CLUTTER_CONTAINER (app_comment), CLUTTER_ACTOR (app_comment->priv->ui_group));
 
         gchar *prop [] = {
                 "subject", "user", "date", "text", "usericon", "replybutton", 
@@ -185,12 +255,47 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 	if (!actor) {
 		g_critical ("Cannot find 'usericon' in %s!\n", filename);
 	} else {
+		gchar *user_icon;
+
+	        user_icon = open_app_get_pixmap_uri ("person");
+	        clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), user_icon, NULL);
+		g_free (user_icon);
+
 		val = open_result_get (comment, "user");
 		if (val)
 			set_user_icon (actor, val);
 	}
 
+	clutter_script_get_objects (script, "reply_label", &actor, NULL);
+	if (!actor) {
+		g_critical ("Cannot find 'reply_label' in %s!\n", filename);
+	} else {
+		g_signal_connect (actor, "button-press-event", G_CALLBACK (on_reply_label_press), app_comment);
+	}
+
+	clutter_script_get_objects (script, "reply_entry", &actor, NULL);
+	if (!actor) {
+		g_critical ("Cannot find 'reply_entry' in %s!\n", filename);
+	} else {
+		app_comment->priv->reply_entry = actor;
+		clutter_actor_hide (app_comment->priv->reply_entry);
+		g_signal_connect (app_comment->priv->reply_entry, "activate", G_CALLBACK (on_reply_entry_activate), app_comment);
+	}
+
 	g_free (filename);
 
 	return app_comment;
+}
+
+void
+gnome_app_comment_set_content (GnomeAppComment *ui_comment, gchar *content, gchar *content2)
+{
+	if (ui_comment->priv->content)
+		g_free (ui_comment->priv->content);
+	if (ui_comment->priv->content2)
+		g_free (ui_comment->priv->content2);
+	if (content)
+		ui_comment->priv->content = g_strdup (content);
+	if (content2)
+		ui_comment->priv->content2 = g_strdup (content2);
 }

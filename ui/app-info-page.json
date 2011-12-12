@@ -54,9 +54,9 @@
       {
         "id" : "description",
         "type" : "ClutterText",
-        "x" : 250,
+        "x" : 320,
         "y" : 80,
-	"width": 500, 
+	"width": 400, 
 	"height": 550,
         "text" : "app descriptioin",
         "font-name" : "Sans 12px",
@@ -122,7 +122,9 @@
         "id" : "comments-details",
 	"type" : "ClutterGroup",
         "x" : 10,
-        "y" : 200
+        "y" : 200,
+	"width" : 300,
+	"height" : 400
       },
       {
         "id" : "score",
@@ -135,15 +137,28 @@
       {
         "id" : "previewpic1",
         "type" : "ClutterTexture",
-        "x" : 250,
+        "x" : 320,
         "y" : 80,
-        "width" : 500,
+        "width" : 400,
         "height" : 550,
         "keep-aspect-ratio" : true,
         "anchor-x" : "5 em",
         "anchor-y" : "5 pt",
         "opacity" : 100,
         "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
+      },
+      {
+        "id" : "back",
+        "type" : "ClutterTexture",
+        "x" : 700,
+        "y" : 550,
+        "width" : 64,
+        "height" : 64,
+        "keep-aspect-ratio" : true,
+        "anchor-x" : "5 em",
+        "anchor-y" : "5 pt",
+        "opacity" : 100,
+        "reactive" : true
       }
     ]
   }

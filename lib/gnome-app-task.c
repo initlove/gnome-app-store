@@ -261,7 +261,10 @@ gnome_app_task_push (GnomeAppTask *task)
 			results = gnome_app_proxy_find (proxy, task);
 			if (results) {
 				g_debug ("we use the cached data");
-				task->priv->callback (task->priv->userdata, results);
+				if (task->priv->callback)
+					task->priv->callback (task->priv->userdata, results);
+				else 
+					g_debug ("Cannot find the callback ?");
 				return;
 			}
 		}

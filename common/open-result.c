@@ -53,6 +53,14 @@ open_result_get_props (OpenResult *result)
 	return OPEN_RESULT_GET_CLASS (result)->get_props (result);
 }
 
+GList *
+open_result_get_child (OpenResult *result)
+{
+	g_return_val_if_fail (result && IS_OPEN_RESULT (result), NULL);
+
+	return OPEN_RESULT_GET_CLASS (result)->get_child (result);
+}
+
 void
 open_result_debug (OpenResult *result)
 {
@@ -63,13 +71,13 @@ open_result_debug (OpenResult *result)
 	g_return_if_fail (result && IS_OPEN_RESULT (result));
 
 	props = open_result_get_props (result);
-	g_debug ("-----------result debug begin ---------\n");
+	g_debug ("-----------result debug begin ---------");
 	for (i = 0; props [i]; i++) {
 		val = open_result_get (result, props [i]);
 		if (val)
-			g_debug ("%s -- %s\n", props [i], val);
+			g_debug ("%s -- %s", props [i], val);
 	}
-	g_debug ("-----------result debug end   ---------\n");
+	g_debug ("-----------result debug end   ---------");
 
 	g_strfreev (props);
 }

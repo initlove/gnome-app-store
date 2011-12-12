@@ -20,6 +20,7 @@ AM_CPPFLAGS =                                                   \
 
 noinst_PROGRAMS +=      \
 	app_store	\
+	test_comments	\
 	$(NULL)
 
 app_store_SOURCES =        \
@@ -31,13 +32,25 @@ app_store_SOURCES =        \
 	gnome-app-info-page.c gnome-app-info-page.h \
 	gnome-app-info-icon.c gnome-app-info-icon.h \
 	gnome-app-comment.c gnome-app-comment.h \
+	gnome-app-comments.c gnome-app-comments.h \
 	app_store.c
 
 app_store_LDADD =          \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
-	$(LIBREST_LIBS)	\
 	libst-1.0.la	\
+	$(LIBREST_LIBS)	\
+	$(GNOME_APP_STORE_LIBS)
+
+test_comments_SOURCES = \
+	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
+	gnome-app-comment.c gnome-app-comment.h \
+	gnome-app-comments.c gnome-app-comments.h \
+	test_comments.c
+
+test_comments_LDADD =          \
+	$(top_srcdir)/common/libopen-app-common.la \
+	$(top_srcdir)/lib/libgnome-app-store.la \
 	$(GNOME_APP_STORE_LIBS)
 
 include Makefile-st.am
