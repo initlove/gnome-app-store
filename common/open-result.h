@@ -53,7 +53,8 @@ struct _OpenResultClass
 	/* virtual */
 	const gchar	*(*get)			(OpenResult *result, const gchar *prop);
 	const gchar 	*(*get_backend_type)	(OpenResult *result);
-	gchar	**(*get_props)			(OpenResult *result);
+	gchar		**(*get_props)		(OpenResult *result);
+	GList 		*(*get_child)		(OpenResult *result);
 };
 
 GType			open_result_get_type		(void);
@@ -61,6 +62,7 @@ OpenResult *		open_result_new			(void);
 const gchar *		open_result_get			(OpenResult *result, const gchar *prop);
 const gchar *		open_result_get_backend_type	(OpenResult *result);
 gchar **		open_result_get_props		(OpenResult *result);
+GList *			open_result_get_child		(OpenResult *result);
 void			open_result_debug		(OpenResult *result);
 
 G_END_DECLS

@@ -3,6 +3,7 @@ pixmapsdir = $(datadir)/pixmaps/@PACKAGE@
 pixmaps_DATA =	\
 	clear.png \
 	emblem-new.png \
+	back.png \
 	go-bottom.png \
 	go-down.png \
 	go-first.png \

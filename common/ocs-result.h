@@ -65,6 +65,7 @@ struct _OcsResultClass
 
 GType		ocs_result_get_type		(void) G_GNUC_CONST;
 OcsResult *	ocs_result_new_with_node	(xmlNodePtr node);
+GList *		ocs_result_list_new_with_node   (xmlNodePtr node);
 
 G_END_DECLS
 

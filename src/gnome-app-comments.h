@@ -23,8 +23,8 @@
 #ifndef __GNOME_APP_COMMENTS_H__
 #define __GNOME_APP_COMMENTS_H__
 
-#include <clutter/clutter.h>
-#include "gnome-app-store.h"
+#include <glib.h>
+#include "open-results.h"
 
 G_BEGIN_DECLS
 
@@ -35,9 +35,9 @@ G_BEGIN_DECLS
 #define GNOME_APP_IS_COMMENTS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  GNOME_APP_TYPE_COMMENTS))
 #define GNOME_APP_COMMENTS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  GNOME_APP_TYPE_COMMENTS, GnomeAppCommentsClass))
 
-typedef struct _GnomeAppComments GnomeAppInfosStage;
-typedef struct _GnomeAppCommentsClass GnomeAppInfosStageClass;
-typedef struct _GnomeAppCommentsPrivate GnomeAppInfosStagePrivate;
+typedef struct _GnomeAppComments GnomeAppComments;
+typedef struct _GnomeAppCommentsClass GnomeAppCommentsClass;
+typedef struct _GnomeAppCommentsPrivate GnomeAppCommentsPrivate;
 
 struct _GnomeAppComments
 {
@@ -52,7 +52,7 @@ struct _GnomeAppCommentsClass
 
 GType			gnome_app_comments_get_type              	(void);
 GnomeAppComments *    	gnome_app_comments_new                   	(void);
-void			gnome_app_comments_load				(GnomeAppComments *comments, const GList *data);
+void			gnome_app_comments_load				(GnomeAppComments *comments, OpenResults *results);
 void			gnome_app_comments_clean			(GnomeAppComments *comments);
 
 G_END_DECLS

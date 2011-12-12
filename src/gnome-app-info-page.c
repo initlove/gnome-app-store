@@ -18,6 +18,7 @@ Author: Lance Wang <lzwang@suse.com>
 #include "open-app-utils.h"
 #include "gnome-app-task.h"
 #include "gnome-app-comment.h"
+#include "gnome-app-comments.h"
 #include "gnome-app-store-ui.h"
 #include "gnome-app-score-ui.h"
 #include "gnome-app-info-page.h"
@@ -70,21 +71,15 @@ gnome_app_info_page_class_init (GnomeAppInfoPageClass *klass)
 }
 
 static gboolean
-on_info_page_event (ClutterActor *actor,
+on_back_icon_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
         GnomeAppStoreUI *store_ui;
 
-        switch (event->type)
-        {
-        case CLUTTER_BUTTON_PRESS:
-                store_ui = gnome_app_store_ui_get_default ();
-                gnome_app_store_ui_load_frame_ui (store_ui);
+	store_ui = gnome_app_store_ui_get_default ();
+	gnome_app_store_ui_load_frame_ui (store_ui);
 
-                break;
-
-        }
         return TRUE;
 }
 
@@ -92,26 +87,13 @@ static gpointer
 set_comments_callback (gpointer userdata, gpointer func_result)
 {
 	ClutterActor *comment;
+	GnomeAppComments *ui_comments;
 	ClutterActor *comment_group;
 	OpenResults *results;
-	OpenResult *result;
-	GList *list, *l;
 
 	results = OPEN_RESULTS (func_result);
-	comment_group = CLUTTER_ACTOR (userdata);
-
-	/* TODO: in fact, I don't know why the position is no longer in use, we should confirm to set it .. */
-	/* Do it later */
-
-	list = open_results_get_data (results);
-
-	for (l = list; l; l = l->next) {
-		result = l->data;
-//		open_result_debug (result);
-		comment = CLUTTER_ACTOR (gnome_app_comment_new_with_comment (result));
-		clutter_container_add_actor (CLUTTER_CONTAINER (comment_group), comment);
-break;
-	}
+	ui_comments = GNOME_APP_COMMENTS (userdata);
+        gnome_app_comments_load (ui_comments, results);
 
 	return NULL;
 }
@@ -186,17 +168,29 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 	score_actor = CLUTTER_ACTOR (gnome_app_score_ui_new_with_score (open_result_get (info, "score")));
 	clutter_container_add_actor (CLUTTER_CONTAINER (actor), score_actor);
 
+	clutter_script_get_objects (script, "back", &actor, NULL);
+	if (actor) {
+		filename = open_app_get_pixmap_uri ("back");
+		clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), filename, NULL);
+		g_free (filename);
+		g_signal_connect (actor, "button-press-event", G_CALLBACK (on_back_icon_press), NULL);
+	}
+
 /*TODO: how many comments shoude merge to comments .. */
 	gchar *comment_count;
+
 	clutter_script_get_objects (script, "comments-details", &actor, NULL);
 	if (actor) {
 		GnomeAppTask *task;
 		const gchar *id;
 		gchar *function;
+		GnomeAppComments *ui_comments;
 
 		id = open_result_get (info, "id");
+		ui_comments = gnome_app_comments_new_with_content (id, NULL); // TODO content2 is null now
+		clutter_container_add_actor (CLUTTER_CONTAINER (actor), CLUTTER_ACTOR (ui_comments));
 		function = g_strdup_printf ("/v1/comments/data/1/%s/0", id);
-		task = gnome_app_task_new (actor, "GET", function);
+		task = gnome_app_task_new (ui_comments, "GET", function);
 		gnome_app_task_add_params (task,
                                 "pagesize", "10",
                                 "page", "0",
@@ -206,8 +200,6 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 
 		g_free (function);
 	}
-
-        g_signal_connect (page, "event", G_CALLBACK (on_info_page_event), NULL);
 
 	return page;
 }

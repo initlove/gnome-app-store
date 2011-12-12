@@ -95,6 +95,38 @@ get (OpenResult *result, const gchar *prop)
 	return val;
 }
 
+static GList *
+get_child (OpenResult *result)
+{
+	OcsResult *ocs_result;
+	xmlNodePtr node;	
+	const gchar *val;
+	const gchar *content;
+	GList *list;
+
+	val = NULL;
+	ocs_result = OCS_RESULT (result);
+
+	for (node = ocs_result->priv->data->xmlChildrenNode; node; node = node->next) {
+		if (node->type == XML_TEXT_NODE)
+			continue;
+		/*TODO: lazy hack, assume 'childcount' comes before 'children' */
+		if (strcmp (node->name, "childcount") == 0) {
+		        content = xmlNodeGetContent (node);
+			if (strcmp (content, "0") == 0) {
+				return NULL;
+			}
+		}
+		if (strcmp (node->name, "children") == 0) {
+			list = ocs_result_list_new_with_node (node);
+
+			return list;
+		}
+	}
+
+	return NULL;
+}
+
 static void
 ocs_result_dispose (GObject *object)
 {
@@ -127,6 +159,7 @@ ocs_result_class_init (OcsResultClass *klass)
 	parent_class->get = get;
 	parent_class->get_backend_type = get_backend_type;
 	parent_class->get_props = get_props;
+	parent_class->get_child = get_child;
 
 	g_type_class_add_private (object_class, sizeof (OcsResultPrivate));
 }
@@ -144,4 +177,25 @@ ocs_result_new_with_node (xmlNodePtr node)
 	priv->data = xmlCopyNode (node, 1);
 
 	return result;
+}
+
+GList *
+ocs_result_list_new_with_node (xmlNodePtr data_node)
+{
+        xmlNodePtr node;
+        OcsResult *result;
+        GList *list = NULL;
+        gchar *name;
+
+        for (node = data_node->xmlChildrenNode; node; node = node->next) {
+                if (node->type == XML_TEXT_NODE)
+	                continue;
+	        name = (gchar *)node->name;
+	        result = ocs_result_new_with_node (node);
+	        list = g_list_prepend (list, result);
+	}
+	if (list)
+	        list = g_list_reverse (list);
+
+	return list;
 }

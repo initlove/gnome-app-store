@@ -136,27 +136,6 @@ ocs_results_get_default_doc ()
         return doc_ptr;
 }
 
-static GList *
-parse_data (xmlNodePtr data_node)
-{
-        xmlNodePtr node;
-	OcsResult *result;
-        GList *list = NULL;
-	gchar *name;
-	
-        for (node = data_node->xmlChildrenNode; node; node = node->next) {
-		if (node->type == XML_TEXT_NODE)
-			continue;
-		name = (gchar *)node->name;
-		result = ocs_result_new_with_node (node);
-                list = g_list_prepend (list, result);
-        }
-        if (list)
-                list = g_list_reverse (list);
-
-        return list;
-}
-
 OpenResults *
 ocs_get_results (const gchar *ocs, gint len)
 {
@@ -186,7 +165,7 @@ ocs_get_results (const gchar *ocs, gint len)
 
 	data_node = ocs_find_node (doc_ptr, "data");
 	if (data_node) {
-		list = parse_data (data_node);
+		list = ocs_result_list_new_with_node (data_node);
 		ocs_results_set_data (OPEN_RESULTS (results), list);
 	}
 
