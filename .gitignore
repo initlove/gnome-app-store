@@ -30,5 +30,6 @@
 Makefile
 Makefile.in
 tags
+lib/gnome-app-store-0.1.pc
 src/app_store
 src/test_comments

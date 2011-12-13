@@ -273,6 +273,7 @@ gnome_app_task_push (GnomeAppTask *task)
 
 		img_local_cache = open_app_get_local_icon (task->priv->url, FALSE);
 		if (img_local_cache) {
+			g_debug ("we use cached img");
 			if (task->priv->callback) {
 				task->priv->callback (task->priv->userdata, img_local_cache);
 				g_free (img_local_cache);
