@@ -150,7 +150,7 @@
       {
         "id" : "back",
         "type" : "ClutterTexture",
-        "x" : 700,
+        "x" : 800,
         "y" : 550,
         "width" : 64,
         "height" : 64,
