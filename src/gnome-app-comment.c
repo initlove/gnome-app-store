@@ -155,13 +155,12 @@ on_reply_entry_activate (ClutterActor *actor,
 	GnomeAppTask *task;
 	gchar *content;
 	gchar *parent;
-
+//TODO: make a reply window
 	parent = open_result_get (ui_comment->priv->comment, "id");
-	printf ("parent is %s content 1 %s content 2 %s\n", parent, ui_comment->priv->content, ui_comment->priv->content2);
 	task = gnome_app_task_new (ui_comment, "POST", "/v1/comments/add");
 	gnome_app_task_add_params (task,
 				"type", "1",
-				"content", content,
+				"content", ui_comment->priv->content,
 				"content2", "0",
 				"parent", parent,
 				"subject", "Replytothis",
