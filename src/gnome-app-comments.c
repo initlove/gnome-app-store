@@ -166,7 +166,7 @@ set_comments_callback (gpointer userdata, gpointer func_result)
 }
 
 GnomeAppComments *
-gnome_app_comments_new_with_content (gchar *content, gchar *content2)
+gnome_app_comments_new_with_content (const gchar *content, const gchar *content2)
 {
 	GnomeAppComments *comments;
 	GnomeAppTask *task;

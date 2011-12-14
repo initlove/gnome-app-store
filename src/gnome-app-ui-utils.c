@@ -16,7 +16,7 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-task.h"
 #include "gnome-app-ui-utils.h"
 
-static void
+static gpointer
 set_pic_callback (gpointer userdata, gpointer func_re)
 {
 	ClutterActor *actor;
@@ -25,6 +25,8 @@ set_pic_callback (gpointer userdata, gpointer func_re)
 	actor = CLUTTER_ACTOR (userdata);
 	dest_url = (gchar *) func_re;
 	clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), dest_url, NULL);
+
+	return NULL;
 }
 
 void

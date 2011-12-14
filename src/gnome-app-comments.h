@@ -52,6 +52,7 @@ struct _GnomeAppCommentsClass
 
 GType			gnome_app_comments_get_type              	(void);
 GnomeAppComments *    	gnome_app_comments_new                   	(void);
+GnomeAppComments *    	gnome_app_comments_new_with_content		(const gchar *content, const gchar *content2);
 void			gnome_app_comments_load				(GnomeAppComments *comments, OpenResults *results);
 void			gnome_app_comments_clean			(GnomeAppComments *comments);
 
