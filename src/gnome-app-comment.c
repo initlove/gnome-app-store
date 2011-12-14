@@ -48,7 +48,6 @@ _set_user_icon_1 (gpointer userdata, gpointer func_result)
 
 		list = open_results_get_data (results);
 		result = list->data;
-/*TODO: check avatarpicfound first? */
 		val = open_result_get (result, "avatarpicfound");
 		if (val && (strcmp (val, "1") == 0)) {
 			pic = open_result_get (result, "avatarpic");

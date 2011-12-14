@@ -19,6 +19,7 @@ Author: David Liang <dliang@novell.com>
 #include "open-result.h"
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
+#include "gnome-app-friends-ui.h"
 #include "gnome-app-account-ui.h"
 
 struct _GnomeAppAccountUIPrivate
@@ -97,7 +98,6 @@ set_account_callback (gpointer userdata, gpointer func_result)
 	} else {
 		list = open_results_get_data (results);
 		result = list->data;
-/*TODO: check avatarpicfound first? */
 		val = open_result_get (result, "avatarpicfound");
 		if (val && (strcmp (val, "1") == 0)) {
 			pic = open_result_get (result, "avatarpic");
@@ -138,6 +138,27 @@ set_account_callback (gpointer userdata, gpointer func_result)
 	}
 
 	return NULL;
+}
+
+
+static gboolean
+on_friend_press (ClutterActor *actor,
+		ClutterEvent *event,
+		gpointer      data)
+{
+	g_debug ("press on friend!");
+	GnomeAppAccountUI *account_ui;
+	GnomeAppFriendsUI *friend_ui;
+	gfloat x, y;
+
+	account_ui = GNOME_APP_ACCOUNT_UI (data);
+
+	friend_ui = gnome_app_friends_ui_new (account_ui->priv->person_id);
+	clutter_container_add_actor (CLUTTER_CONTAINER (account_ui), CLUTTER_ACTOR (friend_ui));
+	clutter_actor_get_position (actor, &x, &y);
+	clutter_actor_set_position (friend_ui, x + 10, y + 20);
+
+	return TRUE;
 }
 
 GnomeAppAccountUI *
@@ -213,6 +234,8 @@ gnome_app_account_ui_new (gchar *personid)
 	clutter_script_get_objects (script, "friends", &priv->friends, NULL);
 	if (!priv->friends) {
 		g_critical ("Cannot find 'friends' in %s!\n", filename);
+	} else {
+		g_signal_connect (priv->friends, "button-press-event", G_CALLBACK (on_friend_press), app_account_ui);
 	}
 
 	clutter_script_get_objects (script, "messages", &priv->messages, NULL);

@@ -268,6 +268,8 @@ gnome_app_comments_load (GnomeAppComments *comments, OpenResults *results)
 		return;
 	}
 	level = 1;
+	g_debug ("total item of this comments %d\n", open_results_get_total_items (results));
+
 	for (l = open_results_get_data (results); l; l = l->next) {
 		comment = l->data;
 		ui_comment = gnome_app_comment_new_with_comment (comment);

@@ -22,6 +22,7 @@ noinst_PROGRAMS +=      \
 	app_store	\
 	test_comments	\
 	test_account	\
+	test_friends	\
 	$(NULL)
 
 app_store_SOURCES =        \
@@ -34,6 +35,7 @@ app_store_SOURCES =        \
 	gnome-app-info-icon.c gnome-app-info-icon.h \
 	gnome-app-comment.c gnome-app-comment.h \
 	gnome-app-comments.c gnome-app-comments.h \
+	gnome-app-friends-ui.c gnome-app-friends-ui.h	\
 	gnome-app-account-ui.c gnome-app-account-ui.h  \
 	app_store.c
 
@@ -57,10 +59,21 @@ test_comments_LDADD =          \
 
 test_account_SOURCES = \
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
+	gnome-app-friends-ui.c gnome-app-friends-ui.h	\
 	gnome-app-account-ui.c gnome-app-account-ui.h  \
 	test_account.c
 
 test_account_LDADD =          \
+	$(top_srcdir)/common/libopen-app-common.la \
+	$(top_srcdir)/lib/libgnome-app-store.la \
+	$(GNOME_APP_STORE_LIBS)
+
+test_friends_SOURCES = \
+	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
+	gnome-app-friends-ui.c gnome-app-friends-ui.h	\
+	test_friends.c
+
+test_friends_LDADD =          \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
 	$(GNOME_APP_STORE_LIBS)
