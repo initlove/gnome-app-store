@@ -4,8 +4,8 @@
 #include <glib/gi18n.h>
 
 #include "gnome-app-store.h"
-#include "gnome-app-comment.h"
-#include "gnome-app-comments.h"
+#include "gnome-app-task.h"
+#include "gnome-app-account-ui.h"
 
 int
 main (int argc, char *argv[])
@@ -21,20 +21,20 @@ main (int argc, char *argv[])
 	loop = g_main_loop_new (NULL, FALSE);
 
 	stage = clutter_stage_new ();
-	clutter_stage_set_title (CLUTTER_STAGE (stage), "comment test");
+	clutter_stage_set_title (CLUTTER_STAGE (stage), "account test");
 	clutter_actor_set_size (stage, 400, 600);
 	clutter_actor_show_all (stage);
 
-	ClutterActor *comments;
-	GList *data;
+	ClutterActor *account;
 	GnomeAppStore *store;
+	GnomeAppTask *task;
 
 	store = gnome_app_store_get_default ();
 	gnome_app_store_set_lock_function (store, clutter_threads_enter);
 	gnome_app_store_set_unlock_function (store, clutter_threads_leave);
 
-	comments = CLUTTER_ACTOR (gnome_app_comments_new_with_content ("94391", NULL));
-	clutter_container_add (CLUTTER_CONTAINER (stage), comments, NULL);
+	account = CLUTTER_ACTOR (gnome_app_account_ui_new (NULL));
+	clutter_container_add (CLUTTER_CONTAINER (stage), account, NULL);
 
 	g_main_loop_run (loop);
   	g_main_loop_unref (loop);

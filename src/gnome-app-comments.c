@@ -15,6 +15,7 @@ Author: David Liang <dliang@novell.com>
 #include <clutter/clutter.h>
 #include "open-result.h"
 #include "gnome-app-store.h"
+#include "gnome-app-task.h"
 #include "gnome-app-comment.h"
 #include "gnome-app-comments.h"
 
@@ -151,16 +152,43 @@ gnome_app_comments_new (void)
 	return g_object_new (GNOME_APP_TYPE_COMMENTS, NULL);
 }
 
+static gpointer
+set_comments_callback (gpointer userdata, gpointer func_result)
+{
+	GnomeAppComments *ui_comments;
+	OpenResults *results;
+
+	results = OPEN_RESULTS (func_result);
+	ui_comments = GNOME_APP_COMMENTS (userdata);
+	gnome_app_comments_load (ui_comments, results);
+
+	return NULL;
+}
+
 GnomeAppComments *
 gnome_app_comments_new_with_content (gchar *content, gchar *content2)
 {
 	GnomeAppComments *comments;
+	GnomeAppTask *task;
+	gchar *function;
 
 	comments = g_object_new (GNOME_APP_TYPE_COMMENTS, NULL);
 	if (content)
 		comments->priv->content = g_strdup (content);
 	if (content2)
 		comments->priv->content2 = g_strdup (content2);
+
+	
+	function = g_strdup_printf ("/v1/comments/data/1/%s/0", content);
+	task = gnome_app_task_new (comments, "GET", function);
+	gnome_app_task_add_params (task,
+			"pagesize", "10",
+			"page", "0",
+			NULL);
+	gnome_app_task_set_callback (task, set_comments_callback);
+	gnome_app_task_push (task);
+
+	g_free (function);
 
 	return comments;
 }
@@ -224,6 +252,7 @@ add_child_comments (GnomeAppComments *comments,
 		add_child_comments (comments, child_comment, level + 1);
 	}
 }
+
 void
 gnome_app_comments_load (GnomeAppComments *comments, OpenResults *results)
 {

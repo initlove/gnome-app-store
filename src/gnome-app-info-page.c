@@ -16,7 +16,6 @@ Author: Lance Wang <lzwang@suse.com>
 #include <clutter/clutter.h>
 
 #include "open-app-utils.h"
-#include "gnome-app-task.h"
 #include "gnome-app-comment.h"
 #include "gnome-app-comments.h"
 #include "gnome-app-store-ui.h"
@@ -81,21 +80,6 @@ on_back_icon_press (ClutterActor *actor,
 	gnome_app_store_ui_load_frame_ui (store_ui);
 
         return TRUE;
-}
-
-static gpointer
-set_comments_callback (gpointer userdata, gpointer func_result)
-{
-	ClutterActor *comment;
-	GnomeAppComments *ui_comments;
-	ClutterActor *comment_group;
-	OpenResults *results;
-
-	results = OPEN_RESULTS (func_result);
-	ui_comments = GNOME_APP_COMMENTS (userdata);
-        gnome_app_comments_load (ui_comments, results);
-
-	return NULL;
 }
 
 GnomeAppInfoPage *
@@ -181,24 +165,12 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 
 	clutter_script_get_objects (script, "comments-details", &actor, NULL);
 	if (actor) {
-		GnomeAppTask *task;
 		const gchar *id;
-		gchar *function;
 		GnomeAppComments *ui_comments;
 
 		id = open_result_get (info, "id");
 		ui_comments = gnome_app_comments_new_with_content (id, NULL); // TODO content2 is null now
 		clutter_container_add_actor (CLUTTER_CONTAINER (actor), CLUTTER_ACTOR (ui_comments));
-		function = g_strdup_printf ("/v1/comments/data/1/%s/0", id);
-		task = gnome_app_task_new (ui_comments, "GET", function);
-		gnome_app_task_add_params (task,
-                                "pagesize", "10",
-                                "page", "0",
-                                NULL);
-		gnome_app_task_set_callback (task, set_comments_callback);
-		gnome_app_task_push (task);
-
-		g_free (function);
 	}
 
 	return page;

@@ -1,0 +1,91 @@
+{
+  "Account Info summary" : {
+    "id" : "app-account-ui",
+    "type" : "ClutterGroup",
+    "reactive" : true,
+    "children" : [
+      {
+        "id" : "avatar",
+        "type" : "ClutterTexture",
+	"x" : 1,
+	"y" : 0,
+        "width" : 64,
+        "height" : 64,
+        "keep-aspect-ratio" : true,
+        "anchor-x" : "5 em",
+        "anchor-y" : "5 pt",
+        "opacity" : 200,
+    	"reactive" : true,
+        "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
+      },
+      {
+        "id" : "username",
+        "type" : "ClutterText",
+        "text" : "username",
+	"x" : 72,
+	"y" : 5,
+        "width" : 100,
+        "font-name" : "Sans 14px",
+        "color" : "black",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      },
+      {
+        "id" : "company",
+        "type" : "ClutterText",
+        "text" : "company",
+	"x" : 72,
+	"y" : 30,
+        "width" : 100,
+        "font-name" : "Sans 12px",
+        "color" : "black",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      },
+      {
+        "id" : "homepage",
+        "type" : "ClutterText",
+        "text" : "Home Page",
+	"x" : 72,
+	"y" : 50,
+        "width" : 100,
+        "font-name" : "Sans 12px",
+        "color" : "black",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      },
+      {
+        "id" : "friends",
+        "type" : "ClutterText",
+        "text" : "Friends",
+	"x" : 8,
+	"y" : 72,
+        "font-name" : "Sans 16px",
+        "color" : "black",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      },
+      {
+        "id" : "messages",
+        "type" : "ClutterText",
+        "text" : "Messages",
+	"x" : 72,
+	"y" : 72,
+        "font-name" : "Sans 16px",
+        "color" : "black",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      }
+    ]
+  }
+}

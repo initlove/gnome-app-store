@@ -20,12 +20,15 @@ Author: Liang chenye <liangchenye@gmail.com>
 #include "open-app-utils.h"
 #include "gnome-app-store.h"
 #include "gnome-app-task.h"
+#include "gnome-app-account-ui.h"
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-infos-stage.h"
 
 struct _GnomeAppFrameUIPrivate
 {
 	ClutterGroup	*ui_group;
+	ClutterGroup	*account_group;
+	ClutterActor	*account;
 	ClutterActor	*search_icon;
 	ClutterActor	*search_entry;
 	ClutterActor 	*search_hint;
@@ -33,9 +36,9 @@ struct _GnomeAppFrameUIPrivate
 	gboolean	is_search_hint_enabled;
 	ClutterGroup 	*infos_stage_group;
 	ClutterGroup	*categories_group;
+	ClutterActor	*categories;
 	ClutterActor	*prev;
 	ClutterActor	*next;
-	ClutterActor	*categories;
 	ClutterActor	*status;
 	ClutterActor	*total_items;
         GnomeAppInfosStage *infos_stage;
@@ -400,6 +403,7 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
         }
 	g_free (filename);
 	clutter_script_get_objects (priv->script, "frame-ui", &priv->ui_group,
+					"account-group", &priv->account_group,
 					"search-icon", &priv->search_icon,
 					"search-hint", &priv->search_hint,
 					"search-entry", &priv->search_entry, 
@@ -411,8 +415,13 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 					"next-icon", &priv->next,
 					NULL);
 	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (priv->ui_group));
+
+	priv->account = CLUTTER_ACTOR (gnome_app_account_ui_new (NULL));
+	clutter_container_add_actor (CLUTTER_CONTAINER (priv->account_group), priv->account);
+
 	priv->categories = create_category_list (ui);
 	clutter_container_add_actor (CLUTTER_CONTAINER (priv->categories_group), priv->categories);
+
 	priv->infos_stage = NULL;
 	priv->pagesize = -1;
 	priv->task = NULL;

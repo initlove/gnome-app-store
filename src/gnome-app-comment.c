@@ -14,6 +14,7 @@ Author: David Liang <dliang@novell.com>
 */
 #include <clutter/clutter.h>
 
+#include "open-app-utils.h"
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
 #include "gnome-app-comment.h"
@@ -30,33 +31,47 @@ struct _GnomeAppCommentPrivate
 
 G_DEFINE_TYPE (GnomeAppComment, gnome_app_comment, CLUTTER_TYPE_GROUP)
 
-static void
+static gpointer
 _set_user_icon_1 (gpointer userdata, gpointer func_result)
 {
-	GnomeAppTask *task;
         OpenResults *results;
-        OpenResult *result;
-        GList *list;
-	const gchar *pic;
 
         results = OPEN_RESULTS (func_result);
-	list = open_results_get_data (results);
 	if (!open_results_get_status (results)) {
 		g_debug ("Fail to get the user info: %s\n", open_results_get_meta (results, "message"));
-		return;
+		return NULL;
 	} else {
+        	GList *list;
+        	OpenResult *result;
+		const gchar *val;
+		const gchar *pic;
+
+		list = open_results_get_data (results);
 		result = list->data;
 /*TODO: check avatarpicfound first? */
-		pic = open_result_get (result, "avatarpic");
-		if (pic) {
-			gnome_app_ui_set_icon (userdata, pic);
-			return;
+		val = open_result_get (result, "avatarpicfound");
+		if (val && (strcmp (val, "1") == 0)) {
+			pic = open_result_get (result, "avatarpic");
+			if (pic) {
+				gnome_app_ui_set_icon (userdata, pic);
+				return NULL;
+			}
+		} else {
+			val = open_result_get (result, "bigavatarpicfound");
+			if (val && (strcmp (val, "1") == 0)) {
+				pic = open_result_get (result, "bigavatarpic");
+				if (pic) {
+					gnome_app_ui_set_icon (userdata, pic);
+					return NULL;
+				}
+			}
 		}
 	}
 
+	return NULL;
 }
 
-static void			
+static void
 set_user_icon (ClutterActor *actor, const gchar *user)
 {
 	GnomeAppTask *task;
@@ -153,8 +168,8 @@ on_reply_entry_activate (ClutterActor *actor,
 	                 GnomeAppComment *ui_comment)
 {
 	GnomeAppTask *task;
-	gchar *content;
-	gchar *parent;
+	const gchar *parent;
+
 //TODO: make a reply window
 	parent = open_result_get (ui_comment->priv->comment, "id");
 	task = gnome_app_task_new (ui_comment, "POST", "/v1/comments/add");

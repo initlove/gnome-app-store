@@ -260,6 +260,12 @@ gnome_app_store_get_default (void)
 }
 
 const gchar *
+gnome_app_store_get_username (GnomeAppStore *store)
+{
+	return open_app_config_get_username (store->priv->config);
+}
+
+const gchar *
 gnome_app_store_get_url (GnomeAppStore *store)
 {
 	return (const gchar *) store->priv->url;

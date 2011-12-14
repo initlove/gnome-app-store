@@ -21,6 +21,7 @@ AM_CPPFLAGS =                                                   \
 noinst_PROGRAMS +=      \
 	app_store	\
 	test_comments	\
+	test_account	\
 	$(NULL)
 
 app_store_SOURCES =        \
@@ -33,6 +34,7 @@ app_store_SOURCES =        \
 	gnome-app-info-icon.c gnome-app-info-icon.h \
 	gnome-app-comment.c gnome-app-comment.h \
 	gnome-app-comments.c gnome-app-comments.h \
+	gnome-app-account-ui.c gnome-app-account-ui.h  \
 	app_store.c
 
 app_store_LDADD =          \
@@ -49,6 +51,16 @@ test_comments_SOURCES = \
 	test_comments.c
 
 test_comments_LDADD =          \
+	$(top_srcdir)/common/libopen-app-common.la \
+	$(top_srcdir)/lib/libgnome-app-store.la \
+	$(GNOME_APP_STORE_LIBS)
+
+test_account_SOURCES = \
+	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
+	gnome-app-account-ui.c gnome-app-account-ui.h  \
+	test_account.c
+
+test_account_LDADD =          \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
 	$(GNOME_APP_STORE_LIBS)
