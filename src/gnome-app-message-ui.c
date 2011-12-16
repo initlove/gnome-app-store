@@ -29,7 +29,6 @@ struct _GnomeAppMessageUIPrivate
 	ClutterActor	*folder_box;
 	ClutterLayoutManager *message_layout;
 	ClutterActor	*message_box;
-	GList		*message_actors;
 
 	gint		folder_count;
 	gchar		*current_folder;
@@ -45,7 +44,6 @@ gnome_app_message_ui_init (GnomeAppMessageUI *ui)
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
 	                                                 GNOME_APP_TYPE_MESSAGE_UI,
 	                                                 GnomeAppMessageUIPrivate);
-	priv->message_actors = NULL;
 	priv->folder_count = 0;
 	priv->current_folder = NULL;
 }
@@ -82,13 +80,82 @@ gnome_app_message_ui_class_init (GnomeAppMessageUIClass *klass)
 static void
 message_folder_clean (GnomeAppMessageUI *ui)
 {
-	GList *l;
+	clutter_actor_destroy (ui->priv->message_box);
+               
+	ui->priv->message_layout = clutter_table_layout_new ();
+	clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), 20);
+	clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), 20);
+	ui->priv->message_box = clutter_box_new (ui->priv->message_layout);
+	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->main_layout), ui->priv->message_box,
+					 FALSE,	/*expand*/
+					 FALSE, /*x-fill*/
+					 FALSE, /*y-fill*/
+					 CLUTTER_BOX_ALIGNMENT_START,
+					 CLUTTER_BOX_ALIGNMENT_START);
+}
 
-	for (l = ui->priv->message_actors; l; l = l->next) {
-		clutter_actor_destroy (CLUTTER_ACTOR (l->data));
+static void
+message_box_add (GnomeAppMessageUI *ui, OpenResult *result, gint row)
+{
+	ClutterActor	*icon;
+	ClutterActor	*text;
+	ClutterActor	*sender;
+	const gchar *subject;
+	const gchar *status;
+	gint status_i;
+	const gchar *first;
+	const gchar *last;
+	gchar *name;
+	gchar *label;
+	gchar *icon_uri;
+
+	icon = clutter_texture_new ();
+	clutter_actor_set_width (icon, 16);
+	clutter_actor_set_height (icon, 16);
+	text = clutter_text_new ();
+	clutter_text_set_ellipsize (CLUTTER_TEXT (text), PANGO_ELLIPSIZE_END);
+	sender = clutter_text_new ();
+	clutter_text_set_ellipsize (CLUTTER_TEXT (sender), PANGO_ELLIPSIZE_END);
+
+	subject = open_result_get (result, "subject");
+	first = open_result_get (result, "firstname");
+	last = open_result_get (result, "lastname");
+	status = open_result_get (result, "status");
+	name = g_strdup_printf ("%s %s", first, last);
+	clutter_text_set_text (CLUTTER_TEXT (sender), name);
+	g_free (name);
+
+	status_i = atoi (status);
+	/* 0: unread, 1: read, 2: answered */
+	switch (status_i) {
+		case 0:
+			label = g_strdup_printf ("<b>%s</b>", subject);
+			clutter_text_set_markup (CLUTTER_TEXT (text), label);
+			icon_uri = open_app_get_pixmap_uri ("unread");
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (icon), icon_uri, NULL);
+			g_free (label);
+			g_free (icon_uri);
+			break;
+		case 1:
+			clutter_text_set_text (CLUTTER_TEXT (text), subject);
+			icon_uri = open_app_get_pixmap_uri ("read");
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (icon), icon_uri, NULL);
+			g_free (icon_uri);
+			break;
+		case 2:
+			clutter_text_set_text (CLUTTER_TEXT (text), subject);
+			icon_uri = open_app_get_pixmap_uri ("reply");
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (icon), icon_uri, NULL);
+			g_free (icon_uri);
+			break;
+		default:
+			g_critical ("Server status error in message list!");
+			break;
 	}
-
-	ui->priv->message_actors = NULL;
+	                
+	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), CLUTTER_ACTOR (icon), 0, row);
+	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), CLUTTER_ACTOR (text), 1, row);
+	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), CLUTTER_ACTOR (sender), 2, row);
 }
 
 static gpointer
@@ -113,46 +180,21 @@ message_folder_callback (gpointer userdata, gpointer func_result)
 	} 
 
 	ClutterActor *actor;
-	const gchar *msg;
 	gint count;
+	gint row;
 
 	count = open_results_get_total_items (results);
 	if (count == 0) {
 		actor = clutter_text_new ();
 		clutter_text_set_text (CLUTTER_TEXT (actor), "(No message)");
-		clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->message_layout), actor,
-					 FALSE,	/*expand*/
-					 FALSE, /*x-fill*/
-					 FALSE, /*y-fill*/
-					 CLUTTER_BOX_ALIGNMENT_START,
-					 CLUTTER_BOX_ALIGNMENT_START);
-		ui->priv->message_actors = g_list_prepend (ui->priv->message_actors, actor);
+		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), CLUTTER_ACTOR (actor), 1, 0);
 		return NULL;
 	}
+	row = 0;
 	for (l = open_results_get_data (results); l; l = l->next) {
 		result = OPEN_RESULT (l->data);
-
-		actor = clutter_text_new ();
-		clutter_text_set_text (CLUTTER_TEXT (actor), "---------------");
-		clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->message_layout), actor,
-					 FALSE,	/*expand*/
-					 FALSE, /*x-fill*/
-					 FALSE, /*y-fill*/
-					 CLUTTER_BOX_ALIGNMENT_START,
-					 CLUTTER_BOX_ALIGNMENT_START);
-		ui->priv->message_actors = g_list_prepend (ui->priv->message_actors, actor);
-
-		msg = open_result_get (result, "body");
-		actor = clutter_text_new ();
-		clutter_text_set_text (CLUTTER_TEXT (actor), msg);
-		clutter_text_set_line_wrap (CLUTTER_TEXT (actor), TRUE);
-		clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->message_layout), actor,
-					 FALSE,	/*expand*/
-					 FALSE, /*x-fill*/
-					 FALSE, /*y-fill*/
-					 CLUTTER_BOX_ALIGNMENT_START,
-					 CLUTTER_BOX_ALIGNMENT_START);
-		ui->priv->message_actors = g_list_prepend (ui->priv->message_actors, actor);
+		message_box_add (ui, result, row);
+		row ++;
 	}
 
 	return NULL;
@@ -266,8 +308,9 @@ set_message_callback (gpointer userdata, gpointer func_result)
 					 CLUTTER_BOX_ALIGNMENT_START,
 					 CLUTTER_BOX_ALIGNMENT_START);
 
-		ui->priv->message_layout = clutter_box_layout_new ();
-	 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (ui->priv->message_layout), TRUE);
+                ui->priv->message_layout = clutter_table_layout_new ();
+		clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), 20);
+		clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), 20);
 		ui->priv->message_box = clutter_box_new (ui->priv->message_layout);
 		clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->main_layout), ui->priv->message_box,
 					 FALSE,	/*expand*/
