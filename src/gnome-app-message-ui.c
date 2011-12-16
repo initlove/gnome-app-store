@@ -110,8 +110,8 @@ message_box_add (GnomeAppMessageUI *ui, OpenResult *result, gint row)
 	gchar *icon_uri;
 
 	icon = clutter_texture_new ();
-	clutter_actor_set_width (icon, 16);
-	clutter_actor_set_height (icon, 16);
+	clutter_actor_set_width (icon, 24);
+	clutter_actor_set_height (icon, 24);
 	text = clutter_text_new ();
 	clutter_text_set_ellipsize (CLUTTER_TEXT (text), PANGO_ELLIPSIZE_END);
 	sender = clutter_text_new ();
@@ -350,8 +350,8 @@ set_message_callback (gpointer userdata, gpointer func_result)
 		clutter_actor_set_reactive (actor, TRUE);
 		uri = open_app_get_pixmap_uri ("close");
 		clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), uri, NULL);
-		clutter_actor_set_width (actor, 16);
-		clutter_actor_set_height (actor, 16);
+		clutter_actor_set_width (actor, 24);
+		clutter_actor_set_height (actor, 24);
 		clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->folder_layout), actor,
 					 FALSE,	/*expand*/
 					 FALSE, /*x-fill*/
