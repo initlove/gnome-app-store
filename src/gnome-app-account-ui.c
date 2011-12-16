@@ -168,7 +168,7 @@ on_message_press (ClutterActor *actor,
 {
 	g_debug ("press on message!");
 	GnomeAppAccountUI *account_ui;
-	GnomeAppFriendsUI *message_ui;
+	GnomeAppMessageUI *message_ui;
 	gfloat x, y;
 
 	account_ui = GNOME_APP_ACCOUNT_UI (data);
