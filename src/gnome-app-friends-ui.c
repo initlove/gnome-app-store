@@ -23,8 +23,6 @@ Author: David Liang <dliang@novell.com>
 
 struct _GnomeAppFriendsUIPrivate
 {
-	ClutterGroup    *ui_group;
-
 	gchar 		*person_id;
 	gint		friends_count;
 };
@@ -73,6 +71,8 @@ gnome_app_friends_ui_class_init (GnomeAppFriendsUIClass *klass)
 	g_type_class_add_private (object_class, sizeof (GnomeAppFriendsUIPrivate));
 }
 
+/*TODO: better way to merge this to the main class */
+/*TODO: use set data */
 typedef struct _FriendUIData {
 	ClutterActor *icon;
 	ClutterActor *info;
@@ -181,8 +181,7 @@ set_friends_callback (gpointer userdata, gpointer func_result)
 		g_debug ("Fail to get the friend info of %s: %s\n", friends_ui->priv->person_id, open_results_get_meta (results, "message"));
 		return NULL;
 	} else {
-		val = open_results_get_meta (results, "totalitems");
-		friends_ui->priv->friends_count = atoi (val);
+		friends_ui->priv->friends_count = open_results_get_total_items (results);
 		/*TODO: if none friends, different ui */
 
 		ClutterLayoutManager *layout;

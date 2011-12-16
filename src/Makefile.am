@@ -23,6 +23,7 @@ noinst_PROGRAMS +=      \
 	test_comments	\
 	test_account	\
 	test_friends	\
+	test_message	\
 	$(NULL)
 
 app_store_SOURCES =        \
@@ -36,6 +37,7 @@ app_store_SOURCES =        \
 	gnome-app-comment.c gnome-app-comment.h \
 	gnome-app-comments.c gnome-app-comments.h \
 	gnome-app-friends-ui.c gnome-app-friends-ui.h	\
+	gnome-app-message-ui.c gnome-app-message-ui.h	\
 	gnome-app-account-ui.c gnome-app-account-ui.h  \
 	app_store.c
 
@@ -60,6 +62,7 @@ test_comments_LDADD =          \
 test_account_SOURCES = \
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
 	gnome-app-friends-ui.c gnome-app-friends-ui.h	\
+	gnome-app-message-ui.c gnome-app-message-ui.h	\
 	gnome-app-account-ui.c gnome-app-account-ui.h  \
 	test_account.c
 
@@ -74,6 +77,16 @@ test_friends_SOURCES = \
 	test_friends.c
 
 test_friends_LDADD =          \
+	$(top_srcdir)/common/libopen-app-common.la \
+	$(top_srcdir)/lib/libgnome-app-store.la \
+	$(GNOME_APP_STORE_LIBS)
+
+test_message_SOURCES = \
+	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
+	gnome-app-message-ui.c gnome-app-message-ui.h	\
+	test_message.c
+
+test_message_LDADD =          \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
 	$(GNOME_APP_STORE_LIBS)

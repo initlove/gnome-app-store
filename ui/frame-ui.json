@@ -70,7 +70,7 @@
       {
         "id" : "account-group",
         "type" : "ClutterGroup",
-        "x" : 750,
+        "x" : 700,
 	"y" : 10
       },
       {
