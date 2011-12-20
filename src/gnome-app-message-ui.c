@@ -25,11 +25,12 @@ struct _GnomeAppMessageUIPrivate
 {
 	ClutterLayoutManager *main_layout;
 	ClutterActor	*main_box;
-	ClutterLayoutManager *folder_layout;
-	ClutterActor	*folder_box;
-	ClutterLayoutManager *message_layout;
+	ClutterLayoutManager *folder_list_layout;
+	ClutterActor	*folder_list_box;
+	ClutterLayoutManager *message_list_layout;
+	ClutterActor	*message_list_box;
+	ClutterActor	*message_layout;
 	ClutterActor	*message_box;
-
 	gint		folder_count;
 	gchar		*current_folder;
 };
@@ -80,22 +81,115 @@ gnome_app_message_ui_class_init (GnomeAppMessageUIClass *klass)
 static void
 message_folder_clean (GnomeAppMessageUI *ui)
 {
-	clutter_actor_destroy (ui->priv->message_box);
-               
-	ui->priv->message_layout = clutter_table_layout_new ();
-	clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), 20);
-	clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), 20);
-	ui->priv->message_box = clutter_box_new (ui->priv->message_layout);
-	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->main_layout), ui->priv->message_box,
-					 FALSE,	/*expand*/
-					 FALSE, /*x-fill*/
-					 FALSE, /*y-fill*/
-					 CLUTTER_BOX_ALIGNMENT_START,
-					 CLUTTER_BOX_ALIGNMENT_START);
+	if (ui->priv->message_list_box) {
+		clutter_actor_destroy (ui->priv->message_list_box);
+		ui->priv->message_list_layout = clutter_table_layout_new ();
+		clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_list_layout), 10);
+		clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_list_layout), 10);
+		ui->priv->message_list_box = clutter_box_new (ui->priv->message_list_layout);
+		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->main_layout), 
+					CLUTTER_ACTOR (ui->priv->message_list_box), 
+					0, 1);
+	}
 }
 
 static void
-message_box_add (GnomeAppMessageUI *ui, OpenResult *result, gint row)
+message_clean (GnomeAppMessageUI *ui)
+{
+	if (ui->priv->message_box) {
+		clutter_actor_destroy (ui->priv->message_box);
+		ui->priv->message_layout = clutter_box_layout_new ();
+	 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (ui->priv->message_layout), FALSE);
+		ui->priv->message_box = clutter_box_new (ui->priv->message_layout);
+		clutter_table_layout_set_alignment (CLUTTER_TABLE_LAYOUT (ui->priv->main_layout),
+					CLUTTER_ACTOR (ui->priv->message_list_box),
+					CLUTTER_TABLE_ALIGNMENT_START,
+					CLUTTER_TABLE_ALIGNMENT_START);
+		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->main_layout), 
+					CLUTTER_ACTOR (ui->priv->message_box), 
+					0, 2);
+	}
+}
+
+static gboolean
+on_message_press (ClutterActor *actor,
+		ClutterEvent *event,
+		gpointer      data)
+{
+	OpenResult *result;
+	GnomeAppMessageUI *ui;
+	const gchar *first;
+	const gchar *last;
+	gchar *name;
+	gchar *filename;
+	GError *error;
+	ClutterScript *script;
+	ClutterActor *message_info_page;
+        ClutterActor *sender_label, *sender_info;
+	ClutterActor *subject_label, *subject_info;
+	ClutterActor *date_label, *date_info;
+	ClutterActor *body_info;
+	ClutterLayoutManager *layout;
+
+	result = g_object_get_data (actor, "result");
+	ui = GNOME_APP_MESSAGE_UI (data);
+
+	message_clean (ui);
+
+        filename = open_app_get_ui_uri ("message-info-page");
+        script = clutter_script_new ();
+	clutter_script_load_from_file (script, filename, &error);
+	g_free (filename);
+	error = NULL;
+	if (error) {
+		printf ("error in load script %s!\n", error->message);
+		g_error_free (error);
+		return FALSE;
+	}
+		
+	clutter_script_get_objects (script, "message-info-page", &message_info_page, 
+					"sender_label", &sender_label,
+					"sender_info", &sender_info,
+					"subject_label", &subject_label,
+					"subject_info", &subject_info,
+					"date_label", &date_label,
+					"date_info", &date_info,
+					"body_info", &body_info,
+					NULL);
+
+	first = open_result_get (result, "firstname");
+	last = open_result_get (result, "lastname");
+	name = g_strdup_printf ("%s %s", first, last);
+printf ("name %s\n", name);
+	clutter_text_set_text (sender_info, name);
+	g_free (name);
+	clutter_text_set_text (subject_info, open_result_get (result, "subject"));
+	clutter_text_set_text (body_info, open_result_get (result, "body"));
+
+	/*FIXME:TODO: I donnot want to do this, but clutter script did not recognize the layout setting */
+        layout = clutter_box_get_layout_manager (message_info_page);
+        clutter_layout_manager_child_set (layout, message_info_page, sender_label, "column", 0, "row", 0, NULL);
+        clutter_layout_manager_child_set (layout, message_info_page, sender_info, "column", 1, "row", 0, NULL);
+        clutter_layout_manager_child_set (layout, message_info_page, subject_label, "column", 0, "row", 1, NULL);
+        clutter_layout_manager_child_set (layout, message_info_page, subject_info, "column", 1, "row", 1, NULL);
+        clutter_layout_manager_child_set (layout, message_info_page, date_label, "column", 0, "row", 2, NULL);
+        clutter_layout_manager_child_set (layout, message_info_page, date_info, "column", 1, "row", 2, NULL);
+        clutter_layout_manager_child_set (layout, message_info_page, body_info, "column", 0, "row", 3, "column-span", 2, NULL);
+
+		
+	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->message_layout), message_info_page,
+					 TRUE,	/*expand*/
+					 TRUE, /*x-fill*/
+					 TRUE, /*y-fill*/
+					 CLUTTER_BOX_ALIGNMENT_START,
+					 CLUTTER_BOX_ALIGNMENT_START);
+
+
+	return TRUE;
+}
+
+static void
+message_list_box_add (GnomeAppMessageUI *ui, OpenResult *result, gint row)
 {
 	ClutterActor	*icon;
 	ClutterActor	*text;
@@ -113,6 +207,7 @@ message_box_add (GnomeAppMessageUI *ui, OpenResult *result, gint row)
 	clutter_actor_set_width (icon, 24);
 	clutter_actor_set_height (icon, 24);
 	text = clutter_text_new ();
+	clutter_actor_set_reactive (text, TRUE);
 	clutter_text_set_ellipsize (CLUTTER_TEXT (text), PANGO_ELLIPSIZE_END);
 	sender = clutter_text_new ();
 	clutter_text_set_ellipsize (CLUTTER_TEXT (sender), PANGO_ELLIPSIZE_END);
@@ -153,9 +248,14 @@ message_box_add (GnomeAppMessageUI *ui, OpenResult *result, gint row)
 			break;
 	}
 	                
-	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), CLUTTER_ACTOR (icon), 0, row);
-	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), CLUTTER_ACTOR (text), 1, row);
-	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), CLUTTER_ACTOR (sender), 2, row);
+	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_list_layout), CLUTTER_ACTOR (icon), 0, row);
+	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_list_layout), CLUTTER_ACTOR (text), 1, row);
+	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_list_layout), CLUTTER_ACTOR (sender), 2, row);
+
+	g_object_set_data (text, "result", result);
+	g_signal_connect (text, "button-press-event", G_CALLBACK (on_message_press), ui);
+//	g_signal_connect (icon, "button-press-event", G_CALLBACK (on_message_press), ui);
+//	g_signal_connect (sender, "button-press-event", G_CALLBACK (on_message_press), ui);
 }
 
 static gpointer
@@ -187,13 +287,13 @@ message_folder_callback (gpointer userdata, gpointer func_result)
 	if (count == 0) {
 		actor = clutter_text_new ();
 		clutter_text_set_text (CLUTTER_TEXT (actor), "(No message)");
-		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), CLUTTER_ACTOR (actor), 1, 0);
+		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_list_layout), CLUTTER_ACTOR (actor), 1, 0);
 		return NULL;
 	}
 	row = 0;
 	for (l = open_results_get_data (results); l; l = l->next) {
 		result = OPEN_RESULT (l->data);
-		message_box_add (ui, result, row);
+		message_list_box_add (ui, result, row);
 		row ++;
 	}
 
@@ -201,7 +301,7 @@ message_folder_callback (gpointer userdata, gpointer func_result)
 }
 
 static gboolean
-on_message_info_press (ClutterActor *actor,
+on_folder_press (ClutterActor *actor,
 		ClutterEvent *event,
 		gpointer      data)
 {
@@ -251,7 +351,7 @@ on_close_press (ClutterActor *actor,
 }
 		
 static void
-set_default_message_box (GnomeAppMessageUI *ui)
+set_default_message_list_box (GnomeAppMessageUI *ui)
 {
 	ui->priv->current_folder = g_strdup ("0");
 
@@ -292,32 +392,39 @@ set_message_callback (gpointer userdata, gpointer func_result)
 		ui->priv->folder_count = open_results_get_total_items (results);
 		/*TODO: if no folders, different ui */
 
-		ui->priv->main_layout = clutter_box_layout_new ();
-	 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (ui->priv->main_layout), TRUE);
+		ui->priv->main_layout = clutter_table_layout_new ();
+		clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->main_layout), 20);
+		clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->main_layout), 20);
 		ui->priv->main_box = clutter_box_new (ui->priv->main_layout);
 		clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (ui->priv->main_box));
 
-		ui->priv->folder_layout = clutter_box_layout_new ();
-	 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (ui->priv->folder_layout), FALSE);
-		clutter_box_layout_set_spacing (CLUTTER_BOX_LAYOUT (ui->priv->folder_layout), 20);
-		ui->priv->folder_box = clutter_box_new (ui->priv->folder_layout);
-		clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->main_layout), ui->priv->folder_box,
-					 FALSE,	/*expand*/
-					 FALSE, /*x-fill*/
-					 FALSE, /*y-fill*/
-					 CLUTTER_BOX_ALIGNMENT_START,
-					 CLUTTER_BOX_ALIGNMENT_START);
+		ui->priv->folder_list_layout = clutter_box_layout_new ();
+	 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (ui->priv->folder_list_layout), FALSE);
+		clutter_box_layout_set_spacing (CLUTTER_BOX_LAYOUT (ui->priv->folder_list_layout), 20);
+		ui->priv->folder_list_box = clutter_box_new (ui->priv->folder_list_layout);
+		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->main_layout), 
+					CLUTTER_ACTOR (ui->priv->folder_list_box), 
+					0, 0);
 
-                ui->priv->message_layout = clutter_table_layout_new ();
-		clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), 20);
-		clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_layout), 20);
+                ui->priv->message_list_layout = clutter_table_layout_new ();
+		clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_list_layout), 10);
+		clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (ui->priv->message_list_layout), 10);
+		ui->priv->message_list_box = clutter_box_new (ui->priv->message_list_layout);
+		clutter_table_layout_set_alignment (CLUTTER_TABLE_LAYOUT (ui->priv->main_layout),
+					CLUTTER_ACTOR (ui->priv->message_list_box),
+					CLUTTER_TABLE_ALIGNMENT_START,
+					CLUTTER_TABLE_ALIGNMENT_START);
+
+		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->main_layout), 
+					CLUTTER_ACTOR (ui->priv->message_list_box), 
+					0, 1);
+
+		ui->priv->message_layout = clutter_box_layout_new ();
+	 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (ui->priv->message_layout), FALSE);
 		ui->priv->message_box = clutter_box_new (ui->priv->message_layout);
-		clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->main_layout), ui->priv->message_box,
-					 FALSE,	/*expand*/
-					 FALSE, /*x-fill*/
-					 FALSE, /*y-fill*/
-					 CLUTTER_BOX_ALIGNMENT_START,
-					 CLUTTER_BOX_ALIGNMENT_START);
+		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->main_layout), 
+					CLUTTER_ACTOR (ui->priv->message_box), 
+					0, 2);
 
 		for (l = open_results_get_data (results); l ; l = l->next) {
 			const gchar *name;
@@ -335,13 +442,13 @@ set_message_callback (gpointer userdata, gpointer func_result)
 			clutter_text_set_text (CLUTTER_TEXT (actor), name);
 			g_object_set_data (G_OBJECT (actor), "id", (gpointer)id);
 			clutter_actor_set_reactive (actor, TRUE);
-			clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->folder_layout), actor,
+			clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->folder_list_layout), actor,
 					 FALSE,	/*expand*/
 					 FALSE, /*x-fill*/
 					 FALSE, /*y-fill*/
 					 CLUTTER_BOX_ALIGNMENT_START,
 					 CLUTTER_BOX_ALIGNMENT_START);
-			g_signal_connect (actor, "button-press-event", G_CALLBACK (on_message_info_press), ui);
+			g_signal_connect (actor, "button-press-event", G_CALLBACK (on_folder_press), ui);
 		}
 
 		gchar *uri;
@@ -352,7 +459,7 @@ set_message_callback (gpointer userdata, gpointer func_result)
 		clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), uri, NULL);
 		clutter_actor_set_width (actor, 24);
 		clutter_actor_set_height (actor, 24);
-		clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->folder_layout), actor,
+		clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->folder_list_layout), actor,
 					 FALSE,	/*expand*/
 					 FALSE, /*x-fill*/
 					 FALSE, /*y-fill*/
@@ -362,7 +469,7 @@ set_message_callback (gpointer userdata, gpointer func_result)
 
 		g_free (uri);
 
-		set_default_message_box (ui);
+		set_default_message_list_box (ui);
 	}
 
 	return NULL;

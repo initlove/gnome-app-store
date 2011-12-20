@@ -1,0 +1,63 @@
+	{
+	"id" : "message-info-page", 
+	"type" : "ClutterBox",
+	"layout-manager" : {
+		"type" : "ClutterTableLayout" ,
+		"column-spacing" : 10,
+		"row-spacing" : 10
+	},
+	"children" : [
+	  {
+          "id" : "sender_label", 
+	  "type" : "ClutterText",
+	  "layout::column": 0,
+	  "layout::row" : 0,
+	  "text": "Sender:"
+	  }, 
+	  {
+          "id" : "sender_info",
+	  "type" : "ClutterText",
+	  "layout::column": "1",
+	  "layout::row" : "0",
+	  "text": ""
+	  },
+	  {
+          "id" : "subject_label", 
+	  "type" : "ClutterText",
+	  "layout::column": 0,
+	  "layout::row" : 1,
+	  "text": "Subject:"
+	  }, 
+	  {
+          "id" : "subject_info",
+	  "type" : "ClutterText",
+	  "layout::column": "1",
+	  "layout::row" : "1",
+	  "text": ""
+	  },
+	  {
+          "id" : "date_label", 
+	  "type" : "ClutterText",
+	  "layout::column": 0,
+	  "layout::row" : 2,
+	  "text": "Date:"
+	  }, 
+	  {
+          "id" : "date_info",
+	  "type" : "ClutterText",
+	  "layout::column": "1",
+	  "layout::row" : "2",
+	  "text": ""
+	  },
+	  {
+	  "id" : "body_info",
+	  "type" : "ClutterText",
+	  "layout::column": "0",
+	  "layout::row" : "3",
+          "line-alignment" : "begin",
+          "line-wrap-mode" : "word",
+          "line-wrap" : true,
+	  "text": ""
+	  }
+	]
+  	}
