@@ -29,7 +29,7 @@ struct _GnomeAppMessageUIPrivate
 	ClutterActor	*folder_list_box;
 	ClutterLayoutManager *message_list_layout;
 	ClutterActor	*message_list_box;
-	ClutterActor	*message_layout;
+	ClutterLayoutManager *message_layout;
 	ClutterActor	*message_box;
 	gint		folder_count;
 	gchar		*current_folder;
@@ -131,7 +131,7 @@ on_message_press (ClutterActor *actor,
 	ClutterActor *body_info;
 	ClutterLayoutManager *layout;
 
-	result = g_object_get_data (actor, "result");
+	result = OPEN_RESULT (g_object_get_data (G_OBJECT (actor), "result"));
 	ui = GNOME_APP_MESSAGE_UI (data);
 
 	message_clean (ui);
@@ -161,20 +161,20 @@ on_message_press (ClutterActor *actor,
 	last = open_result_get (result, "lastname");
 	name = g_strdup_printf ("%s %s", first, last);
 printf ("name %s\n", name);
-	clutter_text_set_text (sender_info, name);
+	clutter_text_set_text (CLUTTER_TEXT (sender_info), name);
 	g_free (name);
-	clutter_text_set_text (subject_info, open_result_get (result, "subject"));
-	clutter_text_set_text (body_info, open_result_get (result, "body"));
+	clutter_text_set_text (CLUTTER_TEXT (subject_info), open_result_get (result, "subject"));
+	clutter_text_set_text (CLUTTER_TEXT (body_info), open_result_get (result, "body"));
 
 	/*FIXME:TODO: I donnot want to do this, but clutter script did not recognize the layout setting */
-        layout = clutter_box_get_layout_manager (message_info_page);
-        clutter_layout_manager_child_set (layout, message_info_page, sender_label, "column", 0, "row", 0, NULL);
-        clutter_layout_manager_child_set (layout, message_info_page, sender_info, "column", 1, "row", 0, NULL);
-        clutter_layout_manager_child_set (layout, message_info_page, subject_label, "column", 0, "row", 1, NULL);
-        clutter_layout_manager_child_set (layout, message_info_page, subject_info, "column", 1, "row", 1, NULL);
-        clutter_layout_manager_child_set (layout, message_info_page, date_label, "column", 0, "row", 2, NULL);
-        clutter_layout_manager_child_set (layout, message_info_page, date_info, "column", 1, "row", 2, NULL);
-        clutter_layout_manager_child_set (layout, message_info_page, body_info, "column", 0, "row", 3, "column-span", 2, NULL);
+        layout = clutter_box_get_layout_manager (CLUTTER_BOX (message_info_page));
+        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), sender_label, "column", 0, "row", 0, NULL);
+        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), sender_info, "column", 1, "row", 0, NULL);
+        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), subject_label, "column", 0, "row", 1, NULL);
+        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), subject_info, "column", 1, "row", 1, NULL);
+        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), date_label, "column", 0, "row", 2, NULL);
+        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), date_info, "column", 1, "row", 2, NULL);
+        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), body_info, "column", 0, "row", 3, "column-span", 2, NULL);
 
 		
 	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->message_layout), message_info_page,
@@ -252,7 +252,7 @@ message_list_box_add (GnomeAppMessageUI *ui, OpenResult *result, gint row)
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_list_layout), CLUTTER_ACTOR (text), 1, row);
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_list_layout), CLUTTER_ACTOR (sender), 2, row);
 
-	g_object_set_data (text, "result", result);
+	g_object_set_data (G_OBJECT (text), "result", (gpointer )result);
 	g_signal_connect (text, "button-press-event", G_CALLBACK (on_message_press), ui);
 //	g_signal_connect (icon, "button-press-event", G_CALLBACK (on_message_press), ui);
 //	g_signal_connect (sender, "button-press-event", G_CALLBACK (on_message_press), ui);
