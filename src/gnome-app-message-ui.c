@@ -112,6 +112,21 @@ message_clean (GnomeAppMessageUI *ui)
 }
 
 static gboolean
+on_reply_press (ClutterActor *actor,
+		ClutterEvent *event,
+		gpointer      data)
+{
+	GnomeAppMessageUI *ui;
+	OpenResult *result;
+
+	printf ("on reply press\n");
+	ui = GNOME_APP_MESSAGE_UI (data);
+	result = OPEN_RESULT (g_object_get_data (G_OBJECT (actor), "result"));
+
+	return TRUE;
+}
+
+static gboolean
 on_message_press (ClutterActor *actor,
 		ClutterEvent *event,
 		gpointer      data)
@@ -127,6 +142,7 @@ on_message_press (ClutterActor *actor,
 	ClutterActor *message_info_page;
         ClutterActor *sender_label, *sender_info;
 	ClutterActor *subject_label, *subject_info;
+	ClutterActor *reply_info;
 	ClutterActor *date_label, *date_info;
 	ClutterActor *body_info;
 	ClutterLayoutManager *layout;
@@ -152,6 +168,7 @@ on_message_press (ClutterActor *actor,
 					"sender_info", &sender_info,
 					"subject_label", &subject_label,
 					"subject_info", &subject_info,
+					"reply_info", &reply_info,
 					"date_label", &date_label,
 					"date_info", &date_info,
 					"body_info", &body_info,
@@ -160,22 +177,29 @@ on_message_press (ClutterActor *actor,
 	first = open_result_get (result, "firstname");
 	last = open_result_get (result, "lastname");
 	name = g_strdup_printf ("%s %s", first, last);
-printf ("name %s\n", name);
 	clutter_text_set_text (CLUTTER_TEXT (sender_info), name);
 	g_free (name);
+	filename = open_app_get_pixmap_uri ("reply");
+	clutter_texture_set_from_file (CLUTTER_TEXTURE (reply_info), filename, NULL);
+	g_free (filename);
 	clutter_text_set_text (CLUTTER_TEXT (subject_info), open_result_get (result, "subject"));
+	clutter_text_set_text (CLUTTER_TEXT (date_info), open_result_get (result, "senddate"));
 	clutter_text_set_text (CLUTTER_TEXT (body_info), open_result_get (result, "body"));
 
 	/*FIXME:TODO: I donnot want to do this, but clutter script did not recognize the layout setting */
         layout = clutter_box_get_layout_manager (CLUTTER_BOX (message_info_page));
         clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), sender_label, "column", 0, "row", 0, NULL);
-        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), sender_info, "column", 1, "row", 0, NULL);
+        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), sender_info, "column", 1, "row", 0, 
+					 "column-span", 2, NULL);
         clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), subject_label, "column", 0, "row", 1, NULL);
         clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), subject_info, "column", 1, "row", 1, NULL);
+        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), reply_info, "column", 2, "row", 1, 
+					"x-expand", FALSE, "x-fill", FALSE, NULL);
         clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), date_label, "column", 0, "row", 2, NULL);
-        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), date_info, "column", 1, "row", 2, NULL);
-        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), body_info, "column", 0, "row", 3, "column-span", 2, NULL);
-
+        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), date_info, "column", 1, "row", 2, 
+					"column-span", 2, NULL);
+        clutter_layout_manager_child_set (layout, CLUTTER_CONTAINER (message_info_page), body_info, "column", 0, "row", 3, 
+					"column-span", 3, NULL);
 		
 	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (ui->priv->message_layout), message_info_page,
 					 TRUE,	/*expand*/
@@ -184,7 +208,20 @@ printf ("name %s\n", name);
 					 CLUTTER_BOX_ALIGNMENT_START,
 					 CLUTTER_BOX_ALIGNMENT_START);
 
+	g_object_set_data (G_OBJECT (reply_info), "result", result);
+	g_signal_connect (reply_info, "button-press-event", G_CALLBACK (on_reply_press), ui);
+/* TODO: mark the message as read, we should use a stronger tree view, iter, or something to deal with the icon */
+#if 0
+	GnomeAppTask *task;
+	gchar *function;
 
+	function = g_strdup_printf ("/v1/message/%s/", ui->priv->current_folder, open_result_get (result, "id"));
+	task = gnome_app_task_new (ui, "GET", function);
+	gnome_app_task_set_callback (task, message_read_callback);
+	gnome_app_task_push (task);
+
+	g_free (function);
+#endif
 	return TRUE;
 }
 

@@ -3,7 +3,7 @@
 	"type" : "ClutterBox",
 	"layout-manager" : {
 		"type" : "ClutterTableLayout" ,
-		"column-spacing" : 10,
+		"column-spacing" : 2,
 		"row-spacing" : 10
 	},
 	"children" : [
@@ -31,9 +31,19 @@
 	  {
           "id" : "subject_info",
 	  "type" : "ClutterText",
+	  "text": "",
+	  "ellipsize" : "end",
 	  "layout::column": "1",
-	  "layout::row" : "1",
-	  "text": ""
+	  "layout::row" : "1"
+	  },
+	  {
+          "id" : "reply_info",
+	  "type" : "ClutterTexture",
+          "width" : 24,
+          "height" : 24,
+          "reactive" : true,
+	  "layout::column": "2",
+	  "layout::row" : "1"
 	  },
 	  {
           "id" : "date_label", 

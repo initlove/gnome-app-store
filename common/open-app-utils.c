@@ -244,6 +244,7 @@ open_app_get_default_categories ()
 	return defaults;
 }
 
+/*TODO: make a hash? return const gchar *? */
 gchar *
 open_app_get_pixmap_uri (const gchar *name)
 {
