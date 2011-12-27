@@ -35,6 +35,7 @@ gchar *		open_app_get_local_icon (const gchar *uri, gboolean download);
 gchar *		open_app_get_pixmap_uri (const gchar *name);
 gchar *		open_app_get_ui_uri 	(const gchar *name);
 const gchar **	open_app_get_default_categories ();
+gboolean	open_app_is_compatible_distribution (const gchar *distribution);
 
 G_END_DECLS
 

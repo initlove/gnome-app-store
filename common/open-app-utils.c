@@ -2,12 +2,12 @@
 
    Copyright 2011
 
-   The Gnome appitem lib is free software; you can redistribute it and/or
+   The Gnome appitem lib is free software; you can redescribute it and/or
    modify it under the terms of the GNU Library General Public License as
    published by the Free Software Foundation; either version 2 of the
    License, or (at your option) any later version.
    
-   The Gnome appitem lib is distributed in the hope that it will be useful,
+   The Gnome appitem lib is descributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    Library General Public License for more details.
@@ -288,3 +288,66 @@ open_app_get_ui_uri (const gchar *name)
 
 	return uri;
 }
+
+gboolean
+open_app_is_compatible_distribution (const gchar *distribution)
+{
+	GError *error;
+	gchar *desc;
+	gchar *release;
+	gchar *output;
+	gchar **infos;
+	gchar *p;
+	gint i;
+	gboolean val;
+
+	/*TODO: list all this ? */
+	const gchar *special_types [] = {"Source", "Arch", "other", NULL};
+	for (i = 0; special_types [i]; i++) {
+		if (strcasestr (special_types [i], distribution)) {
+			return TRUE;
+		}
+	}
+
+	val = FALSE;
+	desc = NULL;
+	release = NULL;
+	error = NULL;
+	output = NULL;
+	g_spawn_command_line_sync ("lsb-release -a",
+			&output, NULL, NULL, &error);
+	if (error) {
+		g_debug ("Error in getting describution info %s.",
+				error->message);
+		g_error_free (error);
+	} else {
+		if (output) {
+			infos = g_strsplit (output, "\n", -1);
+			for (i = 0; infos [i]; i++) {
+				p = strchr (infos [i], ':');
+				if (!p)
+					continue;
+				if (strncmp (infos [i], "Description", strlen ("Description")) == 0) {
+					desc = g_strstrip (g_strdup (p + 1));
+				} else if (strncmp (infos [i], "Release", strlen ("Release")) == 0) {
+					release = g_strstrip (g_strdup (p + 1));
+				}
+			}
+			g_strfreev (infos);
+			g_free (output);
+		}
+	}
+
+	/*TODO: what about release? */
+	if (strcasestr (desc, distribution)) {
+		val = TRUE;
+	}
+
+	if (desc)
+		g_free (desc);
+	if (release)
+		g_free (release);
+
+	return val;
+}
+
