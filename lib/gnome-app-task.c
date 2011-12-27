@@ -156,7 +156,14 @@ async_func (OAsyncWorkerTask *oasync_task, gpointer arguments)
         payload = rest_proxy_call_get_payload (app_task->priv->call);
         len = rest_proxy_call_get_payload_length (app_task->priv->call);
         results = (OpenResults *) ocs_get_results (payload, len);
+	if (!results) {
+		gchar *str;
 
+		str = gnome_app_task_to_str (app_task);
+		g_debug ("Error in get results %s\n", str);
+		g_free (str);
+		return NULL;
+	}
 	GnomeAppStore *store;
 	GnomeAppProxy *proxy;
 

@@ -149,8 +149,13 @@ ocs_get_results (const gchar *ocs, gint len)
 
 	doc_ptr = xmlParseMemory (ocs, len);
 	if (!doc_ptr) {
-		g_debug ("Cannot parse the document!\n");
-		return NULL;
+		doc_ptr = xmlRecoverMemory (ocs, len);
+		if (!doc_ptr) {
+			g_debug ("Cannot parse the document!\n");
+			return NULL;
+		} else {
+			g_debug ("We recover the memory !\n");
+		}
 	}
 
 	results = NULL;

@@ -89,7 +89,7 @@ gnome_app_comments_init (GnomeAppComments *comments)
 	comments->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (comments,
 	                                                 GNOME_APP_TYPE_COMMENTS,
 	                                                 GnomeAppCommentsPrivate);
-
+	clutter_actor_set_clip_to_allocation (comments, TRUE);
 	priv->layout = clutter_box_layout_new ();
 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (priv->layout), TRUE);
 	priv->layout_box = clutter_box_new (priv->layout);
@@ -105,7 +105,7 @@ gnome_app_comments_init (GnomeAppComments *comments)
    	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (priv->action_y),
 					CLUTTER_DRAG_Y_AXIS);
         g_signal_connect (priv->action_y, "drag-end", G_CALLBACK (on_drag_end), comments);
-
+  
       	clutter_actor_set_reactive (priv->layout_box, TRUE);
 	clutter_container_add_actor (CLUTTER_CONTAINER (comments), priv->layout_box);
 

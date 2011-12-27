@@ -102,6 +102,7 @@ gnome_app_infos_stage_init (GnomeAppInfosStage *infos_stage)
 
 	priv->viewport = clutter_box_new (clutter_box_layout_new ());
 	clutter_container_add_actor (CLUTTER_CONTAINER (infos_stage), priv->viewport);
+
 	clutter_actor_set_anchor_point (CLUTTER_ACTOR (priv->viewport), -60, 20);
 #if 0
 	priv->action = clutter_drag_action_new ();

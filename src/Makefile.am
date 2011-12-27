@@ -24,6 +24,7 @@ noinst_PROGRAMS +=      \
 	test_account	\
 	test_friends	\
 	test_message	\
+	test_scroll	\
 	$(NULL)
 
 app_store_SOURCES =        \
@@ -89,6 +90,14 @@ test_message_SOURCES = \
 test_message_LDADD =          \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
+	$(GNOME_APP_STORE_LIBS)
+
+test_scroll_SOURCES = \
+	st.h \
+	test_scroll.c
+
+test_scroll_LDADD =          \
+	libst-1.0.la	\
 	$(GNOME_APP_STORE_LIBS)
 
 include Makefile-st.am
