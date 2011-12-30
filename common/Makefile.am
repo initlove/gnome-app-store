@@ -1,6 +1,6 @@
 CLEANFILES =
 
-lib_LTLIBRARIES = libopen-app-common.la
+noinst_LTLIBRARIES = libopen-app-common.la
 
 AM_CPPFLAGS =							\
 	-I$(top_srcdir)						\

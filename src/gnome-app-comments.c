@@ -58,19 +58,9 @@ on_drag_end (ClutterDragAction   *action,
 	width = clutter_actor_get_width (comments->priv->layout_box);
 	height = clutter_actor_get_height (comments->priv->layout_box);
 
-	if (x > 0) {
-  		clutter_actor_animate (comments->priv->layout_box, CLUTTER_EASE_OUT_BOUNCE, 250,
-				"x", 0.0,
-				NULL);
-	}
 	if (y > 0) {
   		clutter_actor_animate (comments->priv->layout_box, CLUTTER_EASE_OUT_BOUNCE, 250,
 				"y", 0.0,
-				NULL);
-	}
-       	if (x < (comments->priv->view_width -width)) {
-		clutter_actor_animate (comments->priv->layout_box, CLUTTER_EASE_OUT_BOUNCE, 250,
-				"x", comments->priv->view_width - width,
 				NULL);
 	}
        	if (y < (comments->priv->view_height - height)) {
@@ -78,7 +68,18 @@ on_drag_end (ClutterDragAction   *action,
 				"y", comments->priv->view_height - height,
 				NULL);
 	}
-
+#if 0
+	if (x > 0) {
+  		clutter_actor_animate (comments->priv->layout_box, CLUTTER_EASE_OUT_BOUNCE, 250,
+				"x", 0.0,
+				NULL);
+	}
+       	if (x < (comments->priv->view_width -width)) {
+		clutter_actor_animate (comments->priv->layout_box, CLUTTER_EASE_OUT_BOUNCE, 250,
+				"x", comments->priv->view_width - width,
+				NULL);
+	}
+#endif
 }
 
 static void
@@ -93,20 +94,20 @@ gnome_app_comments_init (GnomeAppComments *comments)
 	priv->layout = clutter_box_layout_new ();
 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (priv->layout), TRUE);
 	priv->layout_box = clutter_box_new (priv->layout);
-
+#if 0
 	priv->action_x = clutter_drag_action_new ();
     	clutter_actor_add_action (priv->layout_box, priv->action_x);
    	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (priv->action_x),
 					CLUTTER_DRAG_X_AXIS);
         g_signal_connect (priv->action_x, "drag-end", G_CALLBACK (on_drag_end), comments);
-
+#endif
 	priv->action_y = clutter_drag_action_new ();
     	clutter_actor_add_action (priv->layout_box, priv->action_y);
+      	clutter_actor_set_reactive (priv->layout_box, TRUE);
    	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (priv->action_y),
 					CLUTTER_DRAG_Y_AXIS);
         g_signal_connect (priv->action_y, "drag-end", G_CALLBACK (on_drag_end), comments);
   
-      	clutter_actor_set_reactive (priv->layout_box, TRUE);
 	clutter_container_add_actor (CLUTTER_CONTAINER (comments), priv->layout_box);
 
 	priv->view_width = 300.0;

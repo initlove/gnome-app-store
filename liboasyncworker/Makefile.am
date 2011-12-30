@@ -3,7 +3,7 @@ AM_CPPFLAGS =                                                   \
 	$(LIBOASYNCWORKER_CFLAGS) 				\
 	$(NULL)
 
-lib_LTLIBRARIES = liboasyncworker-1.0.la
+noinst_LTLIBRARIES = liboasyncworker-1.0.la
 
 liboasyncworker_1_0_la_LIBADD = 	\
 	$(LIBOASYNCWORKER_LIBS)	\

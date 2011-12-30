@@ -249,11 +249,12 @@ gnome_app_task_set_priority (GnomeAppTask *task, TaskPriority priority)
 void
 gnome_app_task_push (GnomeAppTask *task)
 {
+#if 0
 	gchar *str;
 	str = gnome_app_task_to_str (task);
 	g_debug ("gnome_app_task_push %s", str);
 	g_free (str);
-
+#endif
 	const gchar *method;
 	OpenResults *results;
 
@@ -267,7 +268,6 @@ gnome_app_task_push (GnomeAppTask *task)
 			proxy = gnome_app_store_get_proxy (store);
 			results = gnome_app_proxy_find (proxy, task);
 			if (results) {
-				g_debug ("we use the cached data");
 				if (task->priv->callback)
 					task->priv->callback (task->priv->userdata, results);
 				else 
@@ -280,7 +280,6 @@ gnome_app_task_push (GnomeAppTask *task)
 
 		img_local_cache = open_app_get_local_icon (task->priv->url, FALSE);
 		if (img_local_cache) {
-			g_debug ("we use cached img");
 			if (task->priv->callback) {
 				task->priv->callback (task->priv->userdata, img_local_cache);
 				g_free (img_local_cache);

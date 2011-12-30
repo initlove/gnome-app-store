@@ -301,6 +301,8 @@ open_app_is_compatible_distribution (const gchar *distribution)
 	gint i;
 	gboolean val;
 
+	g_return_val_if_fail (distribution != NULL, TRUE);
+
 	/*TODO: list all this ? */
 	const gchar *special_types [] = {"Source", "Arch", "other", NULL};
 	for (i = 0; special_types [i]; i++) {

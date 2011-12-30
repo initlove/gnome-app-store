@@ -82,47 +82,17 @@ main (int argc, gchar **argv)
   clutter_actor_set_size (stage, 800, 600);
   g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
-  /* scroll: the group that contains the scrolling viewport; we set its
-   * size to be the same as one rectangle, position it in the middle of
-   * the stage and set it to clip its contents to the allocated size
-   */
-  scroll = clutter_group_new ();
-  clutter_container_add_actor (CLUTTER_CONTAINER (stage), scroll);
-  clutter_actor_set_size (scroll, RECT_WIDTH, RECT_HEIGHT);
-  clutter_actor_add_constraint (scroll, clutter_align_constraint_new (stage, CLUTTER_ALIGN_X_AXIS, 0.2));
-  clutter_actor_add_constraint (scroll, clutter_align_constraint_new (stage, CLUTTER_ALIGN_Y_AXIS, 0.2));
-  clutter_actor_set_clip_to_allocation (scroll, TRUE);
+  ClutterActor *text;
+  gchar *str = NULL;
+  gint len;
 
-  /* viewport: the actual container for the children; we scroll it using
-   * the Drag action constrained to the horizontal axis, and every time
-   * the dragging ends we check whether we're dragging past the end of
-   * the viewport
-   */
-  viewport = clutter_box_new (clutter_box_layout_new ());
-  clutter_container_add_actor (CLUTTER_CONTAINER (scroll), viewport);
-
-  /* add dragging capabilities to the viewport; the heavy lifting is
-   * all done by the DragAction itself, plus the ::drag-end signal
-   * handler in our code
-   */
-  action = clutter_drag_action_new ();
-  clutter_actor_add_action (viewport, action);
-  clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
-                                     CLUTTER_DRAG_X_AXIS);
-  g_signal_connect (action, "drag-end", G_CALLBACK (on_drag_end), NULL);
-  clutter_actor_set_reactive (viewport, TRUE);
-
-  /* children of the viewport */
-  for (i = 0; i < N_RECTS; i++)
-    {
-      ClutterColor color;
-
-      clutter_color_from_string (&color, rect_color[i]);
-
-      rectangle[i] = clutter_rectangle_new_with_color (&color);
-      clutter_container_add_actor (CLUTTER_CONTAINER (viewport), rectangle[i]);
-      clutter_actor_set_size (rectangle[i], RECT_WIDTH, RECT_HEIGHT);
-    }
+  g_file_get_contents ("/tmp/text", &str, &len, NULL);
+  printf ("str is %s\n", str);
+  text = clutter_text_new ();
+  clutter_actor_set_width (text, 400);
+  clutter_text_set_line_wrap (text, TRUE);
+  clutter_container_add_actor (CLUTTER_CONTAINER (stage), text);
+  clutter_text_set_text (text, str);
 
   clutter_actor_show (stage);
 

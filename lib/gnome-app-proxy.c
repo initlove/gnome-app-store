@@ -83,7 +83,7 @@ gnome_app_proxy_add (GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *resu
 	const gchar *method;
 	gchar *key;
 
-	g_debug ("gnome_app_proxy_add!");
+//	g_debug ("gnome_app_proxy_add!");
 
 	method = gnome_app_task_get_method (task);
 	if (strcasecmp (method, "GET") != 0)
@@ -91,7 +91,6 @@ gnome_app_proxy_add (GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *resu
 
         if (ocs_results_get_status (results)) {
 		key = gnome_app_task_to_str (task);
-		g_debug ("proxy add <%s> prio %d", key, gnome_app_task_get_priority (task));
 		g_hash_table_replace (proxy->priv->cache, key, g_object_ref (results));
 		                
 		if (gnome_app_task_get_priority (task) >= TASK_PRIORITY_NORMAL)			
@@ -182,11 +181,6 @@ next_page_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 		}
 		gnome_app_task_set_priority (next_task, TASK_PRIORITY_PREDICT);
 		gnome_app_task_push (next_task);
-
-		gchar *next_task_str;
-		next_task_str = gnome_app_task_to_str (next_task);
-		g_debug ("predict next page %s.", next_task_str);
-		g_free (next_task_str);
 
 		g_free (next_page);
 	} else {

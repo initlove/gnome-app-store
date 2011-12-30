@@ -108,10 +108,7 @@ gnome_app_store_ui_load_app_info (GnomeAppStoreUI *ui, OpenResult *info)
 {
 	GnomeAppStoreUIPrivate *priv = ui->priv;
 
-	if (priv->info_page)
-		g_object_unref (priv->info_page);
 	priv->info_page = gnome_app_info_page_new_with_app (info);
-
 #if 0
 	ClutterAnimation *animation;
 

@@ -1,6 +1,6 @@
 CLEANFILES =
 
-lib_LTLIBRARIES = libgnome-app-store.la
+noinst_LTLIBRARIES = libgnome-app-store.la
 
 AM_CPPFLAGS =							\
 	-I$(top_srcdir)						\

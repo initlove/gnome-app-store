@@ -1,0 +1,83 @@
+{
+  "Info page body" : {
+    "id" : "info-page-body",
+    "type" : "ClutterGroup",
+    "width" : 550,
+    "height" : 700,
+    "reactive" : true,
+    "children" : [
+      {
+        "id" : "name",
+        "type" : "ClutterText",
+        "x" : 250,
+        "y" : 0,
+        "text" : "app name",
+        "font-name" : "Sans 18px",
+        "color" : "black",
+        "line-alignment" : "center",
+        "line-wrap" : false,
+        "ellipsize" : "none",
+        "rotation" : [
+          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
+          { "z-axis" : [ 45.0, [  75,  75 ] ] }
+        ]
+      },
+      {
+        "id" : "personid",
+        "type" : "ClutterText",
+        "x" : 300,
+        "y" : 40,
+        "text" : "Author name",
+        "font-name" : "Sans 15px",
+        "color" : "black",
+        "line-alignment" : "center",
+        "line-wrap" : false,
+        "ellipsize" : "none",
+        "rotation" : [
+          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
+          { "z-axis" : [ 45.0, [  75,  75 ] ] }
+        ]
+      },
+      {
+        "id" : "previewpic1",
+        "type" : "ClutterTexture",
+        "x" : 0,
+        "y" : 80,
+        "width" : 300,
+        "height" : 300,
+        "keep-aspect-ratio" : true,
+        "anchor-x" : "5 em",
+        "anchor-y" : "5 pt",
+        "opacity" : 255,
+        "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
+      },
+      {
+        "id" : "description",
+        "type" : "ClutterText",
+        "x" : 320,
+        "y" : 80,
+	"width": 300, 
+	"height": 300,
+        "text" : "app descriptioin",
+        "font-name" : "Sans 12px",
+        "color" : "black",
+        "line-alignment" : "begin",
+	"line-wrap-mode" : "word",
+        "line-wrap" : true,
+        "ellipsize" : "none",
+        "rotation" : [
+          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
+          { "z-axis" : [ 45.0, [  75,  75 ] ] }
+        ]
+      },
+      {
+        "id" : "comments-details",
+	"type" : "ClutterGroup",
+        "x" : 30,
+        "y" : 320,
+	"width" : 500,
+	"height" : 300
+      }
+    ]
+  }
+}

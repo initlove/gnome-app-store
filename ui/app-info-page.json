@@ -7,150 +7,143 @@
     "reactive" : true,
     "children" : [
       {
-        "id" : "smallpreviewpic1",
+        "id" : "big-pic",
         "type" : "ClutterTexture",
-        "x" : 20,
-        "y" : 20,
-        "width" : 80,
-        "height" : 80,
-        "keep-aspect-ratio" : true,
-        "anchor-x" : "5 em",
-        "anchor-y" : "5 pt",
-        "opacity" : 100,
-        "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
+        "x" : 50,
+        "y" : 40,
+        "width" : 400,
+        "height" : 320,
+        "opacity" : 255
       },
       {
         "id" : "name",
         "type" : "ClutterText",
-        "x" : 150,
-        "y" : 30,
+        "x" : 650,
+        "y" : 50,
         "text" : "app name",
         "font-name" : "Sans 18px",
         "color" : "black",
         "line-alignment" : "center",
         "line-wrap" : false,
-        "ellipsize" : "none",
-        "rotation" : [
-          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
-          { "z-axis" : [ 45.0, [  75,  75 ] ] }
-        ]
+        "ellipsize" : "none"
+      },
+      {
+	"id" : "personicon",
+	"type" : "ClutterTexture",
+	"x" : 670,
+	"y" : 80,
+	"width" : 48,
+	"height" : 48,
+        "opacity" : 255
       },
       {
         "id" : "personid",
         "type" : "ClutterText",
-        "x" : 180,
-        "y" : 50,
+        "x" : 700,
+        "y" : 80,
         "text" : "Author name",
         "font-name" : "Sans 15px",
         "color" : "black",
         "line-alignment" : "center",
         "line-wrap" : false,
-        "ellipsize" : "none",
-        "rotation" : [
-          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
-          { "z-axis" : [ 45.0, [  75,  75 ] ] }
-        ]
+        "ellipsize" : "none"
       },
       {
-        "id" : "description",
-        "type" : "ClutterText",
-        "x" : 320,
-        "y" : 80,
-	"width": 400, 
-	"height": 550,
-        "text" : "app descriptioin",
-        "font-name" : "Sans 12px",
-        "color" : "black",
-        "line-alignment" : "begin",
-	"line-wrap-mode" : "word",
-        "line-wrap" : true,
-        "ellipsize" : "none",
-        "rotation" : [
-          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
-          { "z-axis" : [ 45.0, [  75,  75 ] ] }
-        ]
+        "id" : "score",
+	"type" : "ClutterGroup",
+        "x" : 550,
+        "y" : 120,
+	"width" : 100,
+	"height" : 20
       },
       {
         "id" : "license",
         "type" : "ClutterText",
-        "x" : 20,
-        "y" : 130,
+        "x" : 550,
+        "y" : 150,
         "text" : "license",
         "font-name" : "Sans 13px",
         "color" : "black",
         "line-alignment" : "center",
         "line-wrap" : false,
-        "ellipsize" : "none",
-        "rotation" : [
-          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
-          { "z-axis" : [ 45.0, [  75,  75 ] ] }
-        ]
+        "ellipsize" : "none"
       },
+      {
+        "id" : "fans",
+        "type" : "ClutterText",
+        "x" : 550,
+        "y" : 180,
+        "text" : "app fans",
+        "font-name" : "Sans 13px",
+        "color" : "black",
+        "line-alignment" : "center",
+        "line-wrap" : false,
+        "ellipsize" : "none"
+      },
+      {
+        "id" : "fan-button",
+        "type" : "ClutterText",
+        "text" : "ADD TO FAN",
+        "font-name" : "Sans 17px",
+        "color" : "green",
+        "x" : 750,
+        "y" : 180
+      },
+
       {
         "id" : "downloads",
         "type" : "ClutterText",
-        "x" : 20,
-        "y" : 150,
+        "x" : 550,
+        "y" : 210,
         "text" : "app downloads",
         "font-name" : "Sans 13px",
         "color" : "black",
         "line-alignment" : "center",
         "line-wrap" : false,
-        "ellipsize" : "none",
-        "rotation" : [
-          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
-          { "z-axis" : [ 45.0, [  75,  75 ] ] }
-        ]
+        "ellipsize" : "none"
+      },
+      {
+        "id" : "download-button",
+        "type" : "ClutterText",
+        "text" : "DOWNLOAD",
+        "font-name" : "Sans 17px",
+        "color" : "green",
+        "x" : 750,
+        "y" : 210
       },
       {
         "id" : "comments",
         "type" : "ClutterText",
-        "x" : 20,
-        "y" : 170,
+        "x" : 550,
+        "y" : 240,
         "text" : "app comments",
         "font-name" : "Sans 13px",
         "color" : "black",
         "line-alignment" : "center",
         "line-wrap" : false,
-        "ellipsize" : "none",
-        "rotation" : [
-          { "y-axis" : [ 60.0, [ 275, 100 ] ] },
-          { "z-axis" : [ 45.0, [  75,  75 ] ] }
-        ]
+        "ellipsize" : "none"
+      },
+      {
+        "id" : "comment-button",
+        "type" : "ClutterText",
+        "text" : "COMMENT",
+        "font-name" : "Sans 17px",
+        "color" : "green",
+        "x" : 750,
+        "y" : 240
       },
       {
         "id" : "comments-details",
 	"type" : "ClutterGroup",
-        "x" : 10,
-        "y" : 200,
+        "x" : 550,
+        "y" : 300,
 	"width" : 300,
 	"height" : 400
       },
       {
-        "id" : "score",
-	"type" : "ClutterGroup",
-        "x" : 20,
-        "y" : 110,
-	"width" : 100,
-	"height" : 20
-      },
-      {
-        "id" : "previewpic1",
+        "id" : "return-button",
         "type" : "ClutterTexture",
-        "x" : 320,
-        "y" : 80,
-        "width" : 400,
-        "height" : 550,
-        "keep-aspect-ratio" : true,
-        "anchor-x" : "5 em",
-        "anchor-y" : "5 pt",
-        "opacity" : 100,
-        "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
-      },
-      {
-        "id" : "back",
-        "type" : "ClutterTexture",
-        "x" : 800,
+        "x" : 900,
         "y" : 550,
         "width" : 64,
         "height" : 64,
@@ -159,6 +152,14 @@
         "anchor-y" : "5 pt",
         "opacity" : 100,
         "reactive" : true
+      },
+      {
+        "id" : "description",
+	"type" : "ClutterGroup",
+        "x" : 50,
+        "y" : 400,
+	"width" : 400,
+	"height" : 300
       }
     ]
   }
