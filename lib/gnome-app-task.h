@@ -73,6 +73,7 @@ GnomeAppTask *		gnome_app_task_new 			(gpointer userdata, const gchar *method, c
 GnomeAppTask *		gnome_download_task_new 		(gpointer userdata, const gchar *url);
 void			gnome_app_task_add_param 		(GnomeAppTask *task, const gchar *param, const gchar *value);
 void			gnome_app_task_add_params 		(GnomeAppTask *task, ...);
+void			gnome_app_task_set_userdata		(GnomeAppTask *task, gpointer userdata);
 void			gnome_app_task_set_callback		(GnomeAppTask *task, GnomeAppTaskFunc callback);
 void			gnome_app_task_set_priority		(GnomeAppTask *task, TaskPriority priority);
 void			gnome_app_task_preload			(GnomeAppTask *task);

@@ -9,10 +9,28 @@
       {
         "id" : "big-pic",
         "type" : "ClutterTexture",
-        "x" : 50,
+        "x" : 55,
         "y" : 40,
-        "width" : 400,
-        "height" : 320,
+        "width" : 380,
+        "height" : 300,
+        "opacity" : 255
+      },
+      {
+        "id" : "prev",
+        "type" : "ClutterTexture",
+        "x" : 10,
+        "y" : 150,
+        "width" : 32,
+        "height" : 32,
+        "opacity" : 255
+      },
+      {
+        "id" : "next",
+        "type" : "ClutterTexture",
+        "x" : 450,
+        "y" : 150,
+        "width" : 32,
+        "height" : 32,
         "opacity" : 255
       },
       {
@@ -157,7 +175,7 @@
         "id" : "description",
 	"type" : "ClutterGroup",
         "x" : 50,
-        "y" : 400,
+        "y" : 360,
 	"width" : 400,
 	"height" : 300
       }

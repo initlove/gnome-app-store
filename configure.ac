@@ -87,7 +87,7 @@ PKG_CHECK_MODULES(LIBSOUP, libsoup-2.4)
 PKG_CHECK_MODULES(LIBREST, rest-0.7)
 PKG_CHECK_MODULES(LIBOASYNCWORKER, glib-2.0 gobject-2.0 gthread-2.0)
 PKG_CHECK_MODULES(ST, clutter-1.0 gtk+-3.0 libcroco-0.6 >= 0.6.2 gnome-desktop-3.0 >= 2.90.0 x11)
-PKG_CHECK_MODULES(GNOME_APP_STORE, libxml-2.0 >= $LIBXML_REQUIRED gnome-desktop-3.0 >= $GNOME_DESKTOP_REQUIRED gdk-pixbuf-2.0 >= $GDK_PIXBUF_REQUIRED gtk+-3.0 >= $GTK_REQUIRED glib-2.0 >= $GLIB_REQUIRED gio-2.0 >= $GLIB_REQUIRED gsettings-desktop-schemas >= $GSETTINGS_DESKTOP_SCHEMAS_REQUIRED clutter-1.0 >= $CLUTTER_REQUIRED)
+PKG_CHECK_MODULES(GNOME_APP_STORE, libxml-2.0 >= $LIBXML_REQUIRED gnome-desktop-3.0 >= $GNOME_DESKTOP_REQUIRED gdk-pixbuf-2.0 >= $GDK_PIXBUF_REQUIRED gtk+-3.0 >= $GTK_REQUIRED glib-2.0 >= $GLIB_REQUIRED gio-2.0 >= $GLIB_REQUIRED gsettings-desktop-schemas >= $GSETTINGS_DESKTOP_SCHEMAS_REQUIRED clutter-1.0 >= $CLUTTER_REQUIRED clutter-gtk-1.0)
 
 
 dnl gnome-doc-utils stuff
@@ -112,6 +112,7 @@ ui/Makefile
 common/Makefile
 liboasyncworker/Makefile
 lib/Makefile
+new-src/Makefile
 src/Makefile
 lib/gnome-app-store-0.1.pc
 po/Makefile.in

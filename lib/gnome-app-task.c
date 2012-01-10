@@ -234,6 +234,12 @@ gnome_app_task_add_params (GnomeAppTask *task, ...)
 }
 
 void
+gnome_app_task_set_userdata (GnomeAppTask *task, gpointer userdata)
+{
+	task->priv->userdata = userdata;
+}
+
+void
 gnome_app_task_set_callback (GnomeAppTask *task, GnomeAppTaskFunc callback)
 {
 	task->priv->callback = callback;
@@ -260,7 +266,8 @@ gnome_app_task_push (GnomeAppTask *task)
 
 	if (!task->priv->url) {
 		method = rest_proxy_call_get_method (task->priv->call);
-		if (strcasecmp (method, "GET") == 0) {
+		//TODO: in some case, method is NULL? what is wrong? 
+		if (method && (strcasecmp (method, "GET") == 0)) {
 			GnomeAppStore *store;
 			GnomeAppProxy *proxy;
 
