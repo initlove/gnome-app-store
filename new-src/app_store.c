@@ -9,10 +9,25 @@
 #include "gnome-app-search-entry.h"
 #include "gnome-app-icon-view.h"
 
+GtkBuilder *builder;
+
+void
+main_view_change (OpenResult *info)
+{
+	GtkWidget *info_page;
+	GtkWidget *app_info_page_place, *app_iconview_place;
+
+	info_page = gnome_app_info_page_new_with_app (info);
+	app_info_page_place = GTK_WIDGET (gtk_builder_get_object (builder, "app_info_page_place"));
+	app_iconview_place = GTK_WIDGET (gtk_builder_get_object (builder, "app_iconview_place"));
+	gtk_widget_hide (app_iconview_place);
+
+	gtk_box_pack_start (GTK_BOX (app_info_page_place), info_page, TRUE, TRUE, 0);
+}
+
 int main (gint argc, gchar **argv)
 {
 	GtkWidget *window = NULL;
-	GtkBuilder *builder;
 	GtkWidget *iconview_box, *search_box, *login_user_box;
 	GtkWidget **left_arrow, *right_arrow;
 	GtkWidget *search_entry, *iconview, *login_user;

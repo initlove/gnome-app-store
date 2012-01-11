@@ -16,44 +16,15 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.
 
-   Author: Lance Wang <lzwang@suse.com>
+   Author: David Liang <dliang@novell.com>
 */
 
 #ifndef __GNOME_APP_INFO_PAGE_H__
 #define __GNOME_APP_INFO_PAGE_H__
 
-#include <glib.h>
-#include <clutter/clutter.h>
+#include <gtk/gtk.h>
 #include "open-result.h"
 
-G_BEGIN_DECLS
-
-#define GNOME_APP_TYPE_INFO_PAGE            (gnome_app_info_page_get_type ())
-#define GNOME_APP_INFO_PAGE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GNOME_APP_TYPE_INFO_PAGE, GnomeAppInfoPage))
-#define GNOME_APP_INFO_PAGE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  GNOME_APP_TYPE_INFO_PAGE, GnomeAppInfoPageClass))
-#define GNOME_APP_IS_INFO_PAGE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GNOME_APP_TYPE_INFO_PAGE))
-#define GNOME_APP_IS_INFO_PAGE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  GNOME_APP_TYPE_INFO_PAGE))
-#define GNOME_APP_INFO_PAGE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  GNOME_APP_TYPE_INFO_PAGE, GnomeAppInfoPageClass))
-
-typedef struct _GnomeAppInfoPage GnomeAppInfoPage;
-typedef struct _GnomeAppInfoPageClass GnomeAppInfoPageClass;
-typedef struct _GnomeAppInfoPagePrivate GnomeAppInfoPagePrivate;
-
-struct _GnomeAppInfoPage
-{
-        ClutterGroup            parent_instance;
-	
-	GnomeAppInfoPagePrivate	*priv;
-};
-
-struct _GnomeAppInfoPageClass
-{
-        ClutterGroupClass parent_class;
-};
-
-GType				gnome_app_info_page_get_type		(void);
-GnomeAppInfoPage *		gnome_app_info_page_new_with_app 	(OpenResult *app);
-
-G_END_DECLS
+GtkWidget *	gnome_app_info_page_new_with_app (OpenResult *info);
 
 #endif

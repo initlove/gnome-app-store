@@ -20,9 +20,6 @@ pixmaps_DATA =	\
 	go-previous.png \
 	go-top.png \
 	go-up.png \
-	Makefile
-	Makefile.am
-	Makefile.in
 	non-starred.png \
 	person.png \
 	search.png \

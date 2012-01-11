@@ -9,10 +9,15 @@ set_icon_callback (gpointer userdata, gpointer func_re)
 {
 	GtkWidget *login_user_icon;
 	gchar *dest_url;
-		
+	gint width, height;
+	GdkPixbuf *pixbuf;
+
 	login_user_icon = GTK_WIDGET (userdata);
 	dest_url = (gchar *) func_re;
-	gtk_image_set_from_file (login_user_icon, dest_url);
+	gtk_widget_get_size_request (login_user_icon, &width, &height);
+	pixbuf = gdk_pixbuf_new_from_file_at_scale (dest_url, width, height, FALSE, NULL);
+	gtk_image_set_from_pixbuf (login_user_icon, pixbuf);
+	g_object_unref (pixbuf);
 
 	return NULL;
 }

@@ -15,18 +15,7 @@ noinst_PROGRAMS =      \
 	$(NULL)
 
 app_store_SOURCES =        \
-	gnome-app-ui-utils.c gnome-app-ui-utils.h       \
-	gnome-app-store-ui.c gnome-app-store-ui.h \
-	gnome-app-frame-ui.c gnome-app-frame-ui.h \
-	gnome-app-score-ui.c gnome-app-score-ui.h \
-	gnome-app-infos-stage.c gnome-app-infos-stage.h \
 	gnome-app-info-page.c gnome-app-info-page.h \
-	gnome-app-info-icon.c gnome-app-info-icon.h \
-	gnome-app-comment.c gnome-app-comment.h \
-	gnome-app-comments.c gnome-app-comments.h \
-	gnome-app-friends-ui.c gnome-app-friends-ui.h   \
-	gnome-app-message-ui.c gnome-app-message-ui.h   \
-	gnome-app-account-ui.c gnome-app-account-ui.h  \
 	gnome-app-login-user.c gnome-app-login-user.h  \
 	gnome-app-icon-view.c gnome-app-icon-view.h \
 	gnome-app-search-entry.c gnome-app-search-entry.h \

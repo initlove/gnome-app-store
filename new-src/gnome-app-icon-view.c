@@ -97,10 +97,8 @@ item_activated (GtkIconView *icon_view,
 	gtk_tree_model_get (model, &iter,
 			COL_APP_INFO, &app_info,
 			-1);
-	if (!app_info)
-		printf ("cannot get app info\n");
-	else
-		printf ("clicked on %s\n", open_result_get (app_info, "name"));
+	printf ("clicked on %s\n", open_result_get (app_info, "name"));
+	main_view_change (app_info);
 }
 
 GtkWidget *
