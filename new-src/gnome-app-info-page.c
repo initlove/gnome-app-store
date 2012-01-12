@@ -1,39 +1,111 @@
-/* -*- Mode: C; indent-tabs-mode: t; c-basic-offset: 8; tab-width: 8 -*-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Library General Public License for more details.
+/*
+   Copyright 2012, Novell, Inc.
 
-You should have received a copy of the GNU Library General Public
-License along with this program; if not, write to the
-Free Software Foundation, Inc., 59 Temple Place - Spagete 330,
-Boston, MA 02111-1307, USA.
+   The Gnome App Store is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Library General Public License as
+   published by the Free Software Foundation; either version 2 of the
+   License, or (at your option) any later version.
+   
+   The Gnome appinfo_page lib is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Library General Public License for more details.
+   
+   You should have received a copy of the GNU Library General Public
+   License along with the Gnome Library; see the file COPYING.LIB.  If not,
+   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.
 
-Author: David Liang <dliang@novell.com>
-
+   Author: David Liang <dliang@novell.com>
 */
-
 #include <string.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
-
 #include "open-app-utils.h"
+#include "open-results.h"
+#include "open-result.h"
 #include "gnome-app-task.h"
 #include "gnome-app-info-page.h"
 
-GtkWidget *
-gnome_app_info_page_new_with_app (OpenResult *info)
+struct _GnomeAppInfoPagePrivate
 {
 	GtkBuilder *builder;
-	GError *error;
-	gchar *filename;
+};
 
-	error = NULL;
+G_DEFINE_TYPE (GnomeAppInfoPage, gnome_app_info_page, GTK_TYPE_BOX)
+
+static void
+gnome_app_info_page_init (GnomeAppInfoPage *info_page)
+{
+	GnomeAppInfoPagePrivate *priv;
+
+	info_page->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (info_page,
+	                                                 GNOME_APP_TYPE_INFO_PAGE,
+	                                                 GnomeAppInfoPagePrivate);
+	priv->builder = NULL;
+}
+
+static void
+gnome_app_info_page_dispose (GObject *object)
+{
+	G_OBJECT_CLASS (gnome_app_info_page_parent_class)->dispose (object);
+}
+
+static void
+gnome_app_info_page_finalize (GObject *object)
+{
+	GnomeAppInfoPage *info_page = GNOME_APP_INFO_PAGE (object);
+	GnomeAppInfoPagePrivate *priv = info_page->priv;
+
+	if (priv->builder)
+		g_object_unref (priv->builder);
+
+	G_OBJECT_CLASS (gnome_app_info_page_parent_class)->finalize (object);
+}
+
+static void
+gnome_app_info_page_class_init (GnomeAppInfoPageClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	object_class->dispose = gnome_app_info_page_dispose;
+	object_class->finalize = gnome_app_info_page_finalize;
+	 
+	g_type_class_add_private (object_class, sizeof (GnomeAppInfoPagePrivate));
+}
+
+GnomeAppInfoPage *
+gnome_app_info_page_new ()
+{
+	GnomeAppInfoPage *info_page;
+	GnomeAppInfoPagePrivate *priv;
+	gchar *filename;
+	GError *error;
+
+	info_page = g_object_new (GNOME_APP_TYPE_INFO_PAGE, NULL);
+	priv = info_page->priv;
+
 	filename = "./main_ui.glade";
-	builder = gtk_builder_new ();
-	gtk_builder_add_from_file (builder, filename, &error);
-	
+	error = NULL;
+	priv->builder = gtk_builder_new ();
+	gtk_builder_add_from_file (priv->builder, filename, &error);
+	if (error) {
+		g_error ("Error in load main_ui.glade: %s\n", error->message);
+		g_free (error);
+	}
+
 	GtkWidget *app_info_page_box;
+
+	app_info_page_box = GTK_WIDGET (gtk_builder_get_object (priv->builder, "app_info_page_box"));
+	gtk_box_pack_start (GTK_BOX (info_page), app_info_page_box, TRUE, TRUE, 0);
+
+	return info_page;
+}
+
+void
+gnome_app_info_page_set_with_app (GnomeAppInfoPage *info_page, OpenResult *info)
+{
+	GtkBuilder *builder;
 	GtkWidget *big_image;
 	GtkWidget *images_box;
         GtkWidget *description_textview;
@@ -46,7 +118,7 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 	GtkWidget *comments;
 	GtkWidget *comment_box;
 
-	app_info_page_box = GTK_WIDGET (gtk_builder_get_object (builder, "app_info_page_box"));
+	builder = info_page->priv->builder;
 	big_image = GTK_WIDGET (gtk_builder_get_object (builder, "big_image"));
 	images_box = GTK_WIDGET (gtk_builder_get_object (builder, "images_box"));
 	description_textview = GTK_WIDGET (gtk_builder_get_object (builder, "description_textview"));
@@ -89,6 +161,7 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 	gint score, i;
 	GtkWidget *image;
 	GdkPixbuf *star, *nostar;
+	gchar *filename;
 
 	filename = open_app_get_pixmap_uri ("starred");
 	star = gdk_pixbuf_new_from_file_at_scale (filename, 24, 24, FALSE, NULL);
@@ -124,6 +197,4 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 	str = g_strdup_printf ("%s comments", open_result_get (info, "comments"));
 	gtk_label_set_text (GTK_LABEL (comments), str);
 	g_free (str);
-
-	return app_info_page_box;
 }
