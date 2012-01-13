@@ -80,6 +80,7 @@ void			gnome_app_task_preload			(GnomeAppTask *task);
 void			gnome_app_task_push			(GnomeAppTask *task);
 
 gchar *			gnome_app_task_to_str			(GnomeAppTask *task);
+const gchar *		gnome_app_task_get_param_value		(GnomeAppTask *task, const gchar *param);
 const gchar *		gnome_app_task_get_method		(GnomeAppTask *task);
 const gchar *		gnome_app_task_get_function		(GnomeAppTask *task);
 TaskPriority		gnome_app_task_get_priority		(GnomeAppTask *task);

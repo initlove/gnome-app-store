@@ -30,12 +30,16 @@
 enum
 {
 	PROP_0,
-	PROP_APPLICATION
+	PROP_APPLICATION,
+	PROP_ACTIONS
 };
 
 struct _GnomeAppIconViewPrivate
 {
 	GnomeAppApplication *app;
+	GtkBuilder *builder;
+	GnomeAppTask *task;
+	GtkWidget *actions;
 };
 
 G_DEFINE_TYPE (GnomeAppIconView, gnome_app_icon_view, GTK_TYPE_ICON_VIEW)
@@ -68,6 +72,31 @@ set_icon_callback (gpointer userdata, gpointer func_re)
 //	g_free (dest_url);
 }
 
+/*TODO: we should fill lots of infos in this function */
+static void
+set_prev_next_button (GnomeAppIconView *icon_view, OpenResults *results)
+{
+	GnomeAppIconViewPrivate *priv;
+	GtkWidget *prev;
+	GtkWidget *next;
+	const gchar *val;
+	gint total_items;
+	gint page;
+	gint pagesize;	
+
+	priv = icon_view->priv;
+	total_items = open_results_get_total_items (results);
+	val = gnome_app_task_get_param_value (priv->task, "page");
+	page = atoi (val);
+	val = gnome_app_task_get_param_value (priv->task, "pagesize");
+	pagesize = atoi (val);
+
+	//page begin with '0'
+	prev = GTK_WIDGET (gtk_builder_get_object (priv->builder, "icon_view_prev_button"));
+	next = GTK_WIDGET (gtk_builder_get_object (priv->builder, "icon_view_next_button"));
+	gtk_widget_set_sensitive (prev, (page == 0) ? FALSE : TRUE);
+	gtk_widget_set_sensitive (next, ((page + 2) * pagesize > total_items) ? FALSE : TRUE);
+}
 
 static gpointer
 task_callback (gpointer userdata, gpointer func_result)
@@ -95,6 +124,15 @@ task_callback (gpointer userdata, gpointer func_result)
 	filename = open_app_get_pixmap_uri ("missing");
 	pixbuf = gdk_pixbuf_new_from_file_at_scale (filename, 64, 48, FALSE, NULL);
 	g_free (filename);
+
+	if (!open_results_get_status (results)) {
+		/*TODO: */
+		g_debug ("Cannot get the page\n");
+		return NULL;
+	}
+
+	set_prev_next_button (icon_view, results);
+
 	for (l = list; l; l = l->next) {
 		display_name = open_result_get (l->data, "name");
 		gtk_list_store_append (store, &iter);
@@ -132,35 +170,68 @@ item_activated (GtkIconView *icon_view,
 	gtk_tree_model_get (model, &iter,
 			COL_APP_INFO, &app_info,
 			-1);
-	printf ("clicked on %s\n", open_result_get (app_info, "name"));
 	gnome_app_application_load (app_iconview->priv->app, APP_INFO_PAGE, app_info);
 }
 
 static void
-gnome_app_icon_view_init (GnomeAppIconView *icon_view)
+prev_button_clicked (GtkWidget *button, GnomeAppIconView *icon_view)
 {
-	GnomeAppIconViewPrivate *priv;
+	GnomeAppTask *task;
+	gchar *val;
+	gint page;
 
-	icon_view->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (icon_view,
-	                                                 GNOME_APP_TYPE_ICON_VIEW,
-	                                                 GnomeAppIconViewPrivate);
+	task = icon_view->priv->task;
+	val = gnome_app_task_get_param_value (task, "page");
+	page = atoi (val);
+	val = g_strdup_printf ("%d", page - 1);
+	gnome_app_task_add_param (task, "page", val);
+	g_free (val);
+
+	gnome_app_icon_view_set_with_task (icon_view, task);
 }
 
 static void
-gnome_app_icon_view_dispose (GObject *object)
+next_button_clicked (GtkWidget *button, GnomeAppIconView *icon_view)
 {
-	G_OBJECT_CLASS (gnome_app_icon_view_parent_class)->dispose (object);
+	GnomeAppTask *task;
+	gchar *val;
+	gint page;
+
+	task = icon_view->priv->task;
+	val = gnome_app_task_get_param_value (task, "page");
+	page = atoi (val);
+	val = g_strdup_printf ("%d", page + 1);
+	gnome_app_task_add_param (task, "page", val);
+	g_free (val);
+
+	gnome_app_icon_view_set_with_task (icon_view, task);
 }
 
 static void
-gnome_app_icon_view_finalize (GObject *object)
+icon_view_set_actions (GnomeAppIconView *icon_view)
 {
-	GnomeAppIconView *icon_view = GNOME_APP_ICON_VIEW (object);
-	GnomeAppIconViewPrivate *priv = icon_view->priv;
+	GtkBuilder *builder;
+	GtkWidget *prev_button, *next_button;
+	GtkWidget *prev_image, *next_image;
+	gchar *filename;
+	GError *error = NULL;
 
-	G_OBJECT_CLASS (gnome_app_icon_view_parent_class)->finalize (object);
+	builder = icon_view->priv->builder = gtk_builder_new ();
+	filename = "./main_ui.glade";
+	gtk_builder_add_from_file (builder, filename, &error);
+
+	icon_view->priv->actions = GTK_WIDGET (gtk_builder_get_object (builder, "icon_view_action_box"));
+
+	prev_button = GTK_WIDGET (gtk_builder_get_object (builder, "icon_view_prev_button"));
+	next_button = GTK_WIDGET (gtk_builder_get_object (builder, "icon_view_next_button"));
+	prev_image = GTK_WIDGET (gtk_builder_get_object (builder, "icon_view_prev_image"));
+	next_image = GTK_WIDGET (gtk_builder_get_object (builder, "icon_view_next_image"));
+	gtk_widget_show (prev_image);
+	gtk_widget_show (next_image);
+
+	g_signal_connect (prev_button, "clicked", G_CALLBACK (prev_button_clicked), icon_view);
+	g_signal_connect (next_button, "clicked", G_CALLBACK (next_button_clicked), icon_view);
 }
-
 
 static void
 icon_view_set_property (GObject      *object,
@@ -195,7 +266,35 @@ icon_view_get_property (GObject      *object,
 		case PROP_APPLICATION:
 			g_value_set_object (value, icon_view->priv->app);
 			break;
+		case PROP_ACTIONS:
+			g_value_set_object (value, icon_view->priv->actions);
+			break;
 	}
+}
+
+static void
+gnome_app_icon_view_init (GnomeAppIconView *icon_view)
+{
+	GnomeAppIconViewPrivate *priv;
+
+	icon_view->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (icon_view,
+	                                                 GNOME_APP_TYPE_ICON_VIEW,
+	                                                 GnomeAppIconViewPrivate);
+}
+
+static void
+gnome_app_icon_view_dispose (GObject *object)
+{
+	G_OBJECT_CLASS (gnome_app_icon_view_parent_class)->dispose (object);
+}
+
+static void
+gnome_app_icon_view_finalize (GObject *object)
+{
+	GnomeAppIconView *icon_view = GNOME_APP_ICON_VIEW (object);
+	GnomeAppIconViewPrivate *priv = icon_view->priv;
+
+	G_OBJECT_CLASS (gnome_app_icon_view_parent_class)->finalize (object);
 }
 
 static void
@@ -208,7 +307,6 @@ gnome_app_icon_view_class_init (GnomeAppIconViewClass *klass)
 	object_class->dispose = gnome_app_icon_view_dispose;
 	object_class->finalize = gnome_app_icon_view_finalize;
 
-	
         g_object_class_install_property (object_class,
 				PROP_APPLICATION,
 				g_param_spec_object ("application",
@@ -216,6 +314,14 @@ gnome_app_icon_view_class_init (GnomeAppIconViewClass *klass)
 				"The application of the icon view",
 				GNOME_APP_TYPE_APPLICATION,
 				G_PARAM_READWRITE));
+
+        g_object_class_install_property (object_class,
+				PROP_ACTIONS,
+				g_param_spec_object ("actions",
+				"Actions",
+				"The actions of the icon view",
+				GTK_TYPE_WIDGET,
+				G_PARAM_READABLE));
 
 	g_type_class_add_private (object_class, sizeof (GnomeAppIconViewPrivate));
 }
@@ -243,12 +349,15 @@ gnome_app_icon_view_new (const gchar *personid)
 	g_signal_connect (icon_view, "item-activated",
 			G_CALLBACK (item_activated), NULL);
 
+	icon_view_set_actions (icon_view);
+
 	return icon_view;
 }
 
 void
 gnome_app_icon_view_set_with_task (GnomeAppIconView *icon_view, GnomeAppTask *task)
 {
+	icon_view->priv->task = task;
 	gnome_app_task_set_callback (task, task_callback);
 	gnome_app_task_set_userdata (task, icon_view);
 	gnome_app_task_push (task);

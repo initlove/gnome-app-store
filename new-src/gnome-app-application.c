@@ -34,6 +34,7 @@ struct _GnomeAppApplicationPrivate
         GtkWidget *iconview;
 	GtkWidget *login_user;
 	GtkWidget *info_page;
+	GtkWidget *actions;
 };
 
 G_DEFINE_TYPE (GnomeAppApplication, gnome_app_application, GTK_TYPE_APPLICATION)
@@ -57,10 +58,18 @@ load_icon_view (GnomeAppApplication *application, gpointer userdata)
 {
 	GnomeAppApplicationPrivate *priv;
 	GnomeAppTask *task;
+	GtkWidget *action_box;
 
 	priv = application->priv;
 	task = GNOME_APP_TASK (userdata);
 	gnome_app_icon_view_set_with_task (GNOME_APP_ICON_VIEW (priv->iconview), task);
+	action_box = GTK_WIDGET (gtk_builder_get_object (priv->builder, "action_box"));
+	if (priv->actions)
+		gtk_widget_destroy (priv->actions);
+	g_object_get (G_OBJECT (priv->iconview), "actions", &priv->actions, NULL);
+	gtk_box_pack_start (GTK_BOX (action_box), priv->actions, TRUE, TRUE, 0);
+
+	gtk_widget_show (priv->actions);
 	gtk_widget_show (priv->iconview);
 	gtk_widget_hide (priv->info_page);
 }

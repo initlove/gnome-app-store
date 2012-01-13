@@ -27,9 +27,19 @@
 #include "gnome-app-task.h"
 #include "gnome-app-info-page.h"
 
+/* Properties */
+enum
+{
+	PROP_0,
+	PROP_APPLICATION,
+	PROP_ACTIONS
+};
+
 struct _GnomeAppInfoPagePrivate
 {
+	GnomeAppApplication *app;
 	GtkBuilder *builder;
+	GtkWidget *actions;
 };
 
 G_DEFINE_TYPE (GnomeAppInfoPage, gnome_app_info_page, GTK_TYPE_BOX)
@@ -64,14 +74,76 @@ gnome_app_info_page_finalize (GObject *object)
 }
 
 static void
+info_page_set_property (GObject      *object,
+		guint         prop_id,
+		const GValue *value,
+		GParamSpec   *pspec)
+{
+	GnomeAppInfoPage *info_page;
+	
+	info_page = GNOME_APP_INFO_PAGE (object);
+			        
+	switch (prop_id)
+	{
+		case PROP_APPLICATION:
+			info_page->priv->app = g_value_get_object (value);
+			break;
+	}
+}
+
+static void
+info_page_get_property (GObject      *object,
+		guint         prop_id,
+		GValue       *value,
+		GParamSpec   *pspec)
+{
+ 	GnomeAppInfoPage *info_page;
+
+	info_page = GNOME_APP_INFO_PAGE (object);
+
+	switch (prop_id)
+	{
+		case PROP_APPLICATION:
+			g_value_set_object (value, info_page->priv->app);
+			break;
+		case PROP_ACTIONS:
+			g_value_set_object (value, info_page->priv->actions);
+			break;
+	}
+}
+
+static void
 gnome_app_info_page_class_init (GnomeAppInfoPageClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+	object_class->set_property = info_page_set_property;
+	object_class->get_property = info_page_get_property;
 	object_class->dispose = gnome_app_info_page_dispose;
 	object_class->finalize = gnome_app_info_page_finalize;
+
+	g_object_class_install_property (object_class,
+			PROP_APPLICATION,
+			g_param_spec_object ("application",
+				"Application",
+				"The application of the icon view",
+				GNOME_APP_TYPE_APPLICATION,
+				G_PARAM_READWRITE));
+
+	g_object_class_install_property (object_class,
+			PROP_ACTIONS,
+			g_param_spec_object ("actions",
+				"Actions",
+				"The actions of the icon view",
+				GTK_TYPE_WIDGET,
+				G_PARAM_READABLE));
 	 
 	g_type_class_add_private (object_class, sizeof (GnomeAppInfoPagePrivate));
+}
+
+static void
+info_page_set_actions (GnomeAppInfoPage *info_page)
+{
 }
 
 GnomeAppInfoPage *
@@ -98,6 +170,8 @@ gnome_app_info_page_new ()
 
 	app_info_page_box = GTK_WIDGET (gtk_builder_get_object (priv->builder, "app_info_page_box"));
 	gtk_box_pack_start (GTK_BOX (info_page), app_info_page_box, TRUE, TRUE, 0);
+
+	info_page_set_actions (info_page);
 
 	return info_page;
 }

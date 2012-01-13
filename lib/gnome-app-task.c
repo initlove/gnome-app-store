@@ -233,6 +233,19 @@ gnome_app_task_add_params (GnomeAppTask *task, ...)
         va_end (params);
 }
 
+const gchar *
+gnome_app_task_get_param_value (GnomeAppTask *task, const gchar *param)
+{
+	RestParam *rest_param;
+	const gchar *content = NULL;
+
+	rest_param = rest_proxy_call_lookup_param (task->priv->call, param);
+	if (rest_param)
+		content = rest_param_get_content (rest_param);
+
+	return content;
+}
+
 void
 gnome_app_task_set_userdata (GnomeAppTask *task, gpointer userdata)
 {
