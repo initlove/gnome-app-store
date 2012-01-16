@@ -25,6 +25,7 @@
 #include "open-results.h"
 #include "open-result.h"
 #include "gnome-app-task.h"
+#include "gnome-app-application.h"
 #include "gnome-app-info-page.h"
 
 /* Properties */
@@ -142,8 +143,35 @@ gnome_app_info_page_class_init (GnomeAppInfoPageClass *klass)
 }
 
 static void
+back_button_clicked (GtkWidget *button, GnomeAppInfoPage *info_page)
+{
+	gnome_app_application_load (info_page->priv->app, APP_ICON_VIEW, NULL);
+}
+
+static void
 info_page_set_actions (GnomeAppInfoPage *info_page)
 {
+	GtkBuilder *builder;
+	GtkWidget *fan_button;
+	GtkWidget *download_button;
+	GtkWidget *comment_button;
+	GtkWidget *back_button;
+       	gchar *filename;
+	GError *error = NULL;
+
+	builder = info_page->priv->builder = gtk_builder_new ();
+	filename = "./main_ui.glade";
+	gtk_builder_add_from_file (builder, filename, &error);
+
+	info_page->priv->actions = GTK_WIDGET (gtk_builder_get_object (builder, "info_page_action_box"));
+	fan_button = GTK_WIDGET (gtk_builder_get_object (builder, "fan_button"));
+	download_button = GTK_WIDGET (gtk_builder_get_object (builder, "download_button"));
+	comment_button = GTK_WIDGET (gtk_builder_get_object (builder, "comment_button"));
+	back_button = GTK_WIDGET (gtk_builder_get_object (builder, "back_button"));
+	
+//	g_signal_connect (prev_button, "clicked", G_CALLBACK (prev_button_clicked), info_page);
+	g_signal_connect (back_button, "clicked", G_CALLBACK (back_button_clicked), info_page);
+
 }
 
 GnomeAppInfoPage *
@@ -151,27 +179,8 @@ gnome_app_info_page_new ()
 {
 	GnomeAppInfoPage *info_page;
 	GnomeAppInfoPagePrivate *priv;
-	gchar *filename;
-	GError *error;
 
 	info_page = g_object_new (GNOME_APP_TYPE_INFO_PAGE, NULL);
-	priv = info_page->priv;
-
-	filename = "./main_ui.glade";
-	error = NULL;
-	priv->builder = gtk_builder_new ();
-	gtk_builder_add_from_file (priv->builder, filename, &error);
-	if (error) {
-		g_error ("Error in load main_ui.glade: %s\n", error->message);
-		g_free (error);
-	}
-
-	GtkWidget *app_info_page_box;
-
-	app_info_page_box = GTK_WIDGET (gtk_builder_get_object (priv->builder, "app_info_page_box"));
-	gtk_box_pack_start (GTK_BOX (info_page), app_info_page_box, TRUE, TRUE, 0);
-
-	info_page_set_actions (info_page);
 
 	return info_page;
 }
@@ -192,7 +201,23 @@ gnome_app_info_page_set_with_app (GnomeAppInfoPage *info_page, OpenResult *info)
 	GtkWidget *comments;
 	GtkWidget *comment_box;
 
-	builder = info_page->priv->builder;
+	gchar *filename;
+	GError *error;
+
+	filename = "./main_ui.glade";
+	error = NULL;
+	builder = info_page->priv->builder = gtk_builder_new ();
+	gtk_builder_add_from_file (builder, filename, &error);
+	if (error) {
+		g_error ("Error in load main_ui.glade: %s\n", error->message);
+		g_free (error);
+	}
+
+	GtkWidget *app_info_page_box;
+
+	app_info_page_box = GTK_WIDGET (gtk_builder_get_object (builder, "app_info_page_box"));
+	gtk_box_pack_start (GTK_BOX (info_page), app_info_page_box, TRUE, TRUE, 0);
+
 	big_image = GTK_WIDGET (gtk_builder_get_object (builder, "big_image"));
 	images_box = GTK_WIDGET (gtk_builder_get_object (builder, "images_box"));
 	description_textview = GTK_WIDGET (gtk_builder_get_object (builder, "description_textview"));
@@ -209,7 +234,7 @@ gnome_app_info_page_set_with_app (GnomeAppInfoPage *info_page, OpenResult *info)
 	const gchar *val;
 	gchar *str;
 	gint width, height;
-
+	
 	val = open_result_get (info, "smallpreviewpic1");
 	/*TODO: this image should already be downloaded */
 	str = open_app_get_local_icon (val, FALSE);
@@ -217,8 +242,8 @@ gnome_app_info_page_set_with_app (GnomeAppInfoPage *info_page, OpenResult *info)
 	pixbuf = gdk_pixbuf_new_from_file_at_scale (str, width, height, FALSE, NULL);
 	gtk_image_set_from_pixbuf (GTK_IMAGE (big_image), pixbuf);
 	g_object_unref (pixbuf);
+	gtk_widget_show (big_image);
 	g_free (str);
-
 //TODO images box: for more than one images 
 
         GtkTextBuffer *buffer;
@@ -228,14 +253,12 @@ gnome_app_info_page_set_with_app (GnomeAppInfoPage *info_page, OpenResult *info)
 
 	val = open_result_get (info, "name");
 	gtk_label_set_text (GTK_LABEL (app_title), val);
-
 	val = open_result_get (info, "personid");
 	gtk_label_set_text (GTK_LABEL (author_name), val);
 
 	gint score, i;
 	GtkWidget *image;
 	GdkPixbuf *star, *nostar;
-	gchar *filename;
 
 	filename = open_app_get_pixmap_uri ("starred");
 	star = gdk_pixbuf_new_from_file_at_scale (filename, 24, 24, FALSE, NULL);
@@ -271,4 +294,6 @@ gnome_app_info_page_set_with_app (GnomeAppInfoPage *info_page, OpenResult *info)
 	str = g_strdup_printf ("%s comments", open_result_get (info, "comments"));
 	gtk_label_set_text (GTK_LABEL (comments), str);
 	g_free (str);
+
+	info_page_set_actions (info_page);
 }

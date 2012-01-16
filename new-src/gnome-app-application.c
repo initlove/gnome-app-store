@@ -35,6 +35,9 @@ struct _GnomeAppApplicationPrivate
 	GtkWidget *login_user;
 	GtkWidget *info_page;
 	GtkWidget *actions;
+
+	/*TODO: make history info mush stronger */
+	gpointer *history_data;
 };
 
 G_DEFINE_TYPE (GnomeAppApplication, gnome_app_application, GTK_TYPE_APPLICATION)
@@ -44,11 +47,20 @@ load_info_page (GnomeAppApplication *application, gpointer userdata)
 {
 	GnomeAppApplicationPrivate *priv;
 	OpenResult *info;
+	GtkWidget *action_box;
 
 	priv = application->priv;
 	info = OPEN_RESULT (userdata);
 
 	gnome_app_info_page_set_with_app (GNOME_APP_INFO_PAGE (priv->info_page), info);
+
+	action_box = GTK_WIDGET (gtk_builder_get_object (priv->builder, "action_box"));
+	if (priv->actions)
+		gtk_container_remove (GTK_CONTAINER (action_box), priv->actions);
+	g_object_get (G_OBJECT (priv->info_page), "actions", &priv->actions, NULL);
+	gtk_box_pack_start (GTK_BOX (action_box), priv->actions, TRUE, TRUE, 0);
+	gtk_widget_show (priv->actions);
+
 	gtk_widget_hide (priv->iconview);
 	gtk_widget_show (priv->info_page);
 }
@@ -61,15 +73,18 @@ load_icon_view (GnomeAppApplication *application, gpointer userdata)
 	GtkWidget *action_box;
 
 	priv = application->priv;
-	task = GNOME_APP_TASK (userdata);
-	gnome_app_icon_view_set_with_task (GNOME_APP_ICON_VIEW (priv->iconview), task);
+	if (userdata) {
+		task = GNOME_APP_TASK (userdata);
+		gnome_app_icon_view_set_with_task (GNOME_APP_ICON_VIEW (priv->iconview), task);
+	}
+	
 	action_box = GTK_WIDGET (gtk_builder_get_object (priv->builder, "action_box"));
 	if (priv->actions)
-		gtk_widget_destroy (priv->actions);
+		gtk_container_remove (GTK_CONTAINER (action_box), priv->actions);
 	g_object_get (G_OBJECT (priv->iconview), "actions", &priv->actions, NULL);
 	gtk_box_pack_start (GTK_BOX (action_box), priv->actions, TRUE, TRUE, 0);
-
 	gtk_widget_show (priv->actions);
+
 	gtk_widget_show (priv->iconview);
 	gtk_widget_hide (priv->info_page);
 }
@@ -113,7 +128,8 @@ application_activate (GApplication *g_app)
 	priv = app->priv;
 
 	GtkBuilder *builder;
-	GtkWidget *window = NULL;
+	GtkWidget *window;
+	GtkWidget *paned;
 	GtkWidget *iconview_box, *search_box, *login_user_box, *info_page_box;
 
       	GError *error = NULL;
@@ -136,12 +152,14 @@ application_activate (GApplication *g_app)
         }
 // 	gtk_builder_connect_signals (builder, NULL);
       	window = GTK_WIDGET (gtk_builder_get_object (builder, "app_store_window"));
+      	paned = GTK_WIDGET (gtk_builder_get_object (builder, "app_store_window_paned"));
 	iconview_box = GTK_WIDGET (gtk_builder_get_object (builder, "iconview_box"));
 	login_user_box = GTK_WIDGET (gtk_builder_get_object (builder, "login_user_box"));
 	search_box = GTK_WIDGET (gtk_builder_get_object (builder, "search_box"));
 	iconview_box = GTK_WIDGET (gtk_builder_get_object (builder, "iconview_box"));
 	info_page_box = GTK_WIDGET (gtk_builder_get_object (builder, "info_page_box"));
 
+	gtk_paned_set_position (paned, 800);
 	priv->iconview = GTK_WIDGET (gnome_app_icon_view_new ());
 	g_object_set (GNOME_APP_ICON_VIEW (priv->iconview), "application", app, NULL);
 	gtk_box_pack_start (GTK_BOX (iconview_box), priv->iconview, TRUE, TRUE, 0);
@@ -150,6 +168,7 @@ application_activate (GApplication *g_app)
 	priv->login_user = GTK_WIDGET (gnome_app_login_user_new ());
 	gtk_box_pack_start (GTK_BOX (login_user_box), priv->login_user, TRUE, TRUE, 0);
 	priv->info_page = GTK_WIDGET (gnome_app_info_page_new ());
+	g_object_set (GNOME_APP_INFO_PAGE (priv->info_page), "application", app, NULL);
 	gtk_box_pack_start (GTK_BOX (info_page_box), priv->info_page, TRUE, TRUE, 0);
 
 	gtk_window_set_application (GTK_WINDOW (window), GTK_APPLICATION (app));
