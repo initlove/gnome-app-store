@@ -142,19 +142,29 @@
         "ellipsize" : "none"
       },
       {
+	"id" : "comment-entry",
+	"type" : "ClutterText",
+	"text" : "comment here",
+	"editable" : "true",
+	"x" : 550,
+	"y" : 300,
+	"width" : 300,
+	"height" : 200
+      },
+      {
         "id" : "comment-button",
         "type" : "ClutterText",
         "text" : "COMMENT",
         "font-name" : "Sans 17px",
         "color" : "green",
-        "x" : 750,
-        "y" : 240
+        "x" : 650,
+        "y" : 520
       },
       {
         "id" : "comments-details",
 	"type" : "ClutterGroup",
         "x" : 550,
-        "y" : 300,
+        "y" : 520,
 	"width" : 300,
 	"height" : 400
       },

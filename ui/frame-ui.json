@@ -74,7 +74,7 @@
 	"y" : 10
       },
       {
-	"id" : "infos-stage", 
+	"id" : "icon-view", 
 	"type" : "ClutterGroup",
 	"x" : 10,
 	"y" : 80

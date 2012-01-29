@@ -19,17 +19,25 @@ Author: Lance Wang <lzwang@suse.com>
 #include "gnome-app-task.h"
 #include "gnome-app-comment.h"
 #include "gnome-app-comments.h"
-#include "gnome-app-store-ui.h"
+#include "gnome-app-application.h"
 #include "gnome-app-score-ui.h"
 #include "gnome-app-info-page.h"
 
 struct _GnomeAppInfoPagePrivate
 {
+	GnomeAppApplication *app;
 	OpenResult *info;
 	ClutterScript *script;
 
 	gint pic_count;
 	gint current_pic;
+};
+
+/* Properties */
+enum
+{
+	PROP_0,
+	PROP_LAST
 };
 
 G_DEFINE_TYPE (GnomeAppInfoPage, gnome_app_info_page, CLUTTER_TYPE_GROUP)
@@ -44,22 +52,55 @@ gnome_app_info_page_init (GnomeAppInfoPage *page)
 	page->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (page,
 							 GNOME_APP_TYPE_INFO_PAGE,
 							 GnomeAppInfoPagePrivate);
+	priv->app = NULL;
 	priv->info = NULL;
 	priv->script = NULL;
 }
 
 static void
-gnome_app_info_page_dispose (GObject *object)
+info_page_set_property (GObject      *object,
+		guint         prop_id,
+		const GValue *value,
+		GParamSpec   *pspec)
+{
+	GnomeAppInfoPage *info_page;
+
+	info_page = GNOME_APP_INFO_PAGE (object);
+
+	switch (prop_id)
+	{
+	}
+}
+
+static void
+info_page_get_property (GObject      *object,
+		guint         prop_id,
+		GValue       *value,
+		GParamSpec   *pspec)
+{
+	GnomeAppInfoPage *info_page;
+
+	info_page = GNOME_APP_INFO_PAGE (object);
+
+	switch (prop_id)
+	{
+	}
+}
+
+static void
+info_page_dispose (GObject *object)
 {
 	G_OBJECT_CLASS (gnome_app_info_page_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_info_page_finalize (GObject *object)
+info_page_finalize (GObject *object)
 {
 	GnomeAppInfoPage *page = GNOME_APP_INFO_PAGE (object);
 	GnomeAppInfoPagePrivate *priv = page->priv;
 
+	if (priv->app)
+		g_object_unref (priv->app);
 	if (priv->info)
 		g_object_unref (priv->info);
 	if (priv->script)
@@ -73,9 +114,11 @@ gnome_app_info_page_class_init (GnomeAppInfoPageClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = gnome_app_info_page_dispose;
-	object_class->finalize = gnome_app_info_page_finalize;
-	 
+	object_class->set_property = info_page_set_property;
+	object_class->get_property = info_page_get_property;
+	object_class->dispose = info_page_dispose;
+	object_class->finalize = info_page_finalize;
+
 	g_type_class_add_private (object_class, sizeof (GnomeAppInfoPagePrivate));
 }
 
@@ -162,10 +205,14 @@ on_return_button_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
-        GnomeAppStoreUI *store_ui;
+	GnomeAppInfoPage *page;
+        GnomeAppApplication *app;
 
-	store_ui = gnome_app_store_ui_get_default ();
-	gnome_app_store_ui_load_frame_ui (store_ui);
+	page = GNOME_APP_INFO_PAGE (data);
+	if (page->priv->app)
+		gnome_app_application_load (page->priv->app, UI_TYPE_FRAME_UI, NULL);
+	else
+		g_error ("Set the application to the info-page!\n");
 
         return TRUE;
 }
@@ -237,15 +284,16 @@ get_description_actor (const gchar *desc)
 	clutter_container_add_actor (CLUTTER_CONTAINER (group), layout_box);
 #else
 	ret = clutter_group_new ();
-	clutter_actor_set_height (ret, 300);
+	//TODO: remove the height setting?
+//	clutter_actor_set_height (ret, 300);
 	clutter_actor_set_clip_to_allocation (ret, TRUE);
 
 	group = clutter_group_new ();
 	text = clutter_text_new ();
 	/*TODO, not fixed width */
 	clutter_actor_set_width (text, 400);
-	clutter_text_set_text (text, desc);
-	clutter_text_set_line_wrap (text, TRUE);
+	clutter_text_set_text (CLUTTER_TEXT (text), desc);
+	clutter_text_set_line_wrap (CLUTTER_TEXT (text), TRUE);
 	clutter_actor_set_reactive (group, TRUE);
 	action = clutter_drag_action_new ();
 	clutter_actor_add_action (group, action);
@@ -291,11 +339,73 @@ draw_pic (GnomeAppInfoPage *page)
 }
 
 GnomeAppInfoPage *
-gnome_app_info_page_new_with_app (OpenResult *info)
+gnome_app_info_page_new_with_app (GnomeAppApplication *app)
 {
-	GnomeAppInfoPage *page;
+	GnomeAppInfoPage *info_page;
 
-	g_return_val_if_fail (info != NULL, NULL);
+	info_page = g_object_new (GNOME_APP_TYPE_INFO_PAGE, NULL);
+
+	info_page->priv->app = g_object_ref (app);
+
+	return info_page;
+}
+
+ClutterActor *
+gnome_app_info_page_get_actions (GnomeAppInfoPage *page)
+{
+	GError *error;
+	gchar *filename;
+	ClutterScript *script;
+
+	ClutterActor *info_page_actions, *fan_button, *download_button, *comment_button, *return_button;
+
+	error = NULL;
+	filename = open_app_get_ui_uri ("app-info-page-actions");
+	script = clutter_script_new ();
+	clutter_script_load_from_file (script, filename, &error);
+	g_free (filename);
+	if (error) {
+		g_critical ("Error in load script %s.", error->message);
+		g_object_unref (script);
+		g_error_free (error);
+		return NULL;
+	}
+	 
+	clutter_script_get_objects (script,
+			"info-page-actions", &info_page_actions,
+			"fan-button", &fan_button,
+			"download-button", &download_button,
+			"comment-button", &comment_button,
+			"return-button", &return_button,
+			NULL);
+
+	filename = open_app_get_pixmap_uri ("back");
+	clutter_texture_set_from_file (CLUTTER_TEXTURE (return_button), filename, NULL);
+	g_free (filename);
+	g_signal_connect (return_button, "button-press-event", G_CALLBACK (on_return_button_press), page);
+
+//TODO: unref the script ? 
+	return info_page_actions;
+}
+
+static void
+on_comment_entry_paint (ClutterActor *actor,
+		gpointer      data)
+{
+	ClutterActorBox allocation = { 0, };
+     	gfloat width, height;
+   	clutter_actor_get_allocation_box (actor, &allocation);
+ 	clutter_actor_box_clamp_to_pixel (&allocation);
+      	clutter_actor_box_get_size (&allocation, &width, &height);
+	/*TODO better color and fixed size */
+    	cogl_set_source_color4ub (0, 255, 0, 255);
+	cogl_rectangle (0, 0, width, height);
+}
+
+void
+gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
+{
+	g_return_if_fail (info != NULL);
 
 	gchar *filename;
 	const gchar *val;
@@ -309,11 +419,7 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 	ClutterActor *license;
 	ClutterActor *downloads;
 	ClutterActor *fans;
-	ClutterActor *comments;
-	ClutterActor *fan_button;
-	ClutterActor *download_button;
-	ClutterActor *comment_button;
-	ClutterActor *return_button;
+	ClutterActor *comments, *comment_entry;
 	ClutterActor *name;
 	ClutterActor *personid, *personicon;
 	ClutterActor *big_pic;
@@ -321,18 +427,17 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 	ClutterActor *comments_details, *comments_details_actor;
 	ClutterAction *action;
 
-	page = g_object_new (GNOME_APP_TYPE_INFO_PAGE, NULL);
 	page->priv->info = g_object_ref (info);
 
 	error = NULL;
 	filename = open_app_get_ui_uri ("app-info-page");
 	page->priv->script = clutter_script_new ();
 	clutter_script_load_from_file (page->priv->script, filename, &error);
+	g_free (filename);
 	if (error) {
 		g_critical ("Error in load script %s.", error->message);
-		g_free (filename);
 		g_error_free (error);
-		return page;
+		return ;
 	}
 	 
 	clutter_script_get_objects (page->priv->script,
@@ -344,10 +449,7 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 			"next", &next,
 			"prev", &prev,
 			"comments", &comments,
-			"fan-button", &fan_button,
-			"comment-button", &comment_button,
-			"download-button", &download_button,
-			"return-button", &return_button,
+			"comment-entry", &comment_entry,
 			"name", &name,
 			"personid", &personid,
 			"personicon", &personicon,
@@ -355,7 +457,6 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 			"comments-details", &comments_details,
 			NULL);
 
-	g_free (filename);
 
 	gint count;
 	for (count = 0; ; count ++) {
@@ -369,10 +470,10 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 	page->priv->pic_count = count;
 	page->priv->current_pic = 1;
 	filename = open_app_get_pixmap_uri ("go-previous");
-	clutter_texture_set_from_file (prev, filename, NULL);
+	clutter_texture_set_from_file (CLUTTER_TEXTURE (prev), filename, NULL);
 	g_free (filename);
 	filename = open_app_get_pixmap_uri ("go-next");
-	clutter_texture_set_from_file (next, filename, NULL);
+	clutter_texture_set_from_file (CLUTTER_TEXTURE (next), filename, NULL);
 	g_free (filename);
 	draw_pic (page);
 
@@ -388,9 +489,22 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 	str = g_strdup_printf ("%s comments", open_result_get (info, "comments"));
 	clutter_text_set_text (CLUTTER_TEXT (comments), str);
 	g_free (str);
-	str = open_app_get_pixmap_uri ("back");
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (return_button), str, NULL);
-	g_free (str);
+
+	ClutterColor  cursor_color     = { 0xff, 0x33, 0x33, 0xff };
+      	ClutterColor  selected_text_color = { 0x00, 0x00, 0xff, 0xff };
+
+	clutter_text_set_line_wrap (CLUTTER_TEXT (comment_entry), TRUE);
+	clutter_actor_set_reactive (comment_entry, TRUE);
+ 	clutter_text_set_editable (CLUTTER_TEXT (comment_entry), TRUE);
+      	clutter_text_set_selectable (CLUTTER_TEXT (comment_entry), TRUE);
+	clutter_text_set_activatable (CLUTTER_TEXT (comment_entry), TRUE);
+    	clutter_text_set_cursor_color (CLUTTER_TEXT (comment_entry), &cursor_color);
+  	clutter_text_set_selected_text_color (CLUTTER_TEXT (comment_entry), &selected_text_color);
+	  
+	g_signal_connect (comment_entry, "paint",
+			G_CALLBACK (on_comment_entry_paint),
+			NULL);
+
 	clutter_text_set_text (CLUTTER_TEXT (name), open_result_get (info, "name"));
 	clutter_text_set_text (CLUTTER_TEXT (personid), open_result_get (info, "personid"));
 	description_actor = get_description_actor (open_result_get (info, "description"));
@@ -400,10 +514,13 @@ gnome_app_info_page_new_with_app (OpenResult *info)
 
 	g_signal_connect (prev, "button-press-event", G_CALLBACK (on_prev_button_press), page);
 	g_signal_connect (next, "button-press-event", G_CALLBACK (on_next_button_press), page);
-	g_signal_connect (download_button, "button-press-event", G_CALLBACK (on_download_button_press), page);
-	g_signal_connect (return_button, "button-press-event", G_CALLBACK (on_return_button_press), page);
 
 	clutter_container_add_actor (CLUTTER_CONTAINER (page), info_page);
+	clutter_actor_set_reactive (CLUTTER_ACTOR (page), TRUE);
+	action = clutter_drag_action_new ();
+	clutter_actor_add_action (CLUTTER_ACTOR (page), action);
+	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
+			CLUTTER_DRAG_Y_AXIS);
 
-	return page;
+	return ;
 }

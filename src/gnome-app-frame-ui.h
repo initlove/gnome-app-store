@@ -25,9 +25,7 @@
 
 #include <clutter/clutter.h>
 #include "open-results.h"
-#include "gnome-app-store.h"
-#include "gnome-app-infos-stage.h"
-#include "gnome-app-info-page.h"
+#include "gnome-app-application.h"
 
 G_BEGIN_DECLS
 
@@ -55,10 +53,8 @@ struct _GnomeAppFrameUIClass
 };
 
 GType  		        gnome_app_frame_ui_get_type		(void);
-GnomeAppFrameUI *      	gnome_app_frame_ui_new			(void);
-GnomeAppFrameUI *	gnome_app_frame_ui_new_with_store 	(GnomeAppStore *store);
-
-void			gnome_app_frame_ui_load_results 	(GnomeAppFrameUI *ui, OpenResults *results);
+GnomeAppFrameUI *      	gnome_app_frame_ui_new_with_app		(GnomeAppApplication *app);
+ClutterActor *		gnome_app_frame_ui_get_actions		(GnomeAppFrameUI *ui);
 
 G_END_DECLS
 

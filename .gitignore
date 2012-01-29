@@ -9,6 +9,7 @@
 *o
 *~
 .libs
+new-src/*
 /m4/libtool.m4
 /m4/lt*.m4
 /aclocal.m4

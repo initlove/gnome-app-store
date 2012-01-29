@@ -22,12 +22,30 @@ Author: David Liang <dliang@suse.com>
 #include "gnome-app-task.h"
 #include "gnome-app-info-icon.h"
 #include "gnome-app-info-page.h"
-#include "gnome-app-store-ui.h"
+#include "gnome-app-application.h"
 
 struct _GnomeAppInfoIconPrivate
 {
+	GnomeAppApplication *app;
 	OpenResult *info;
 };
+
+/* Properties */
+enum
+{
+	PROP_0,
+	PROP_APPLICATION,
+	PROP_INFO,
+	PROP_LAST
+};
+
+enum
+{
+	CLICKED,
+	LAST_SIGNAL
+};
+
+static guint info_icon_signals [LAST_SIGNAL] = { 0, };
 
 G_DEFINE_TYPE (GnomeAppInfoIcon, gnome_app_info_icon, CLUTTER_TYPE_GROUP)
 
@@ -39,21 +57,60 @@ gnome_app_info_icon_init (GnomeAppInfoIcon *info_icon)
 	info_icon->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (info_icon,
 							 GNOME_APP_TYPE_INFO_ICON,
 							 GnomeAppInfoIconPrivate);
+	priv->app = NULL;
 	priv->info = NULL;
 }
 
 static void
-gnome_app_info_icon_dispose (GObject *object)
+info_icon_set_property (GObject      *object,
+		guint         prop_id,
+		const GValue *value,
+		GParamSpec   *pspec)
+{
+	GnomeAppInfoIcon *info_icon;
+
+	info_icon = GNOME_APP_INFO_ICON (object);
+
+	switch (prop_id)
+	{
+		case PROP_APPLICATION:
+			info_icon->priv->app = g_value_get_object (value);
+			break;
+	}
+}
+
+static void
+info_icon_get_property (GObject      *object,
+		guint         prop_id,
+		GValue       *value,
+		GParamSpec   *pspec)
+{
+	GnomeAppInfoIcon *info_icon;      
+
+	info_icon = GNOME_APP_INFO_ICON (object);
+
+	switch (prop_id)
+	{
+		case PROP_INFO:
+			g_value_set_object (value, info_icon->priv->info);
+			break;
+	}
+}
+
+static void
+info_icon_dispose (GObject *object)
 {
 	G_OBJECT_CLASS (gnome_app_info_icon_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_info_icon_finalize (GObject *object)
+info_icon_finalize (GObject *object)
 {
 	GnomeAppInfoIcon *info_icon = GNOME_APP_INFO_ICON (object);
 	GnomeAppInfoIconPrivate *priv = info_icon->priv;
 
+	if (priv->app)
+		g_object_unref (priv->app);
 	if (priv->info)
 		g_object_unref (priv->info);
 
@@ -65,9 +122,37 @@ gnome_app_info_icon_class_init (GnomeAppInfoIconClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = gnome_app_info_icon_dispose;
-	object_class->finalize = gnome_app_info_icon_finalize;
-	 
+	object_class->set_property = info_icon_set_property;
+	object_class->get_property = info_icon_get_property;
+	object_class->dispose = info_icon_dispose;
+	object_class->finalize = info_icon_finalize;
+
+        g_object_class_install_property (object_class,
+			PROP_APPLICATION,
+	  		g_param_spec_object ("application",
+		  		"application",
+				"The application which handle the whole app ui",
+				GNOME_APP_TYPE_APPLICATION,
+				G_PARAM_READWRITE));
+
+        g_object_class_install_property (object_class,
+			PROP_INFO,
+	  		g_param_spec_object ("info",
+		  		"info",
+				"The app info of the info icon",
+				TYPE_OPEN_RESULT,
+				G_PARAM_READABLE));
+#if 0
+	info_icon_signals [CLICKED] =
+		g_signal_new (g_intern_static_string ("selected"),
+				G_OBJECT_CLASS_TYPE (object_class),
+				G_SIGNAL_RUN_LAST,
+				G_STRUCT_OFFSET (GnomeAppInfoIconClass, selected),
+				NULL, NULL,
+				g_cclosure_marshal_VOID__OBJECT,
+				G_TYPE_NONE, 1,
+				TYPE_OPEN_RESULT);
+#endif
 	g_type_class_add_private (object_class, sizeof (GnomeAppInfoIconPrivate));
 }
 
@@ -76,16 +161,21 @@ on_info_icon_event (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
+	GnomeAppInfoIcon *info_icon;
 	OpenResult *info;
-	GnomeAppStoreUI *store_ui;
 	ClutterActor *page, *stage;
 
-	info = OPEN_RESULT (data);
+	info_icon = GNOME_APP_INFO_ICON (data);
+printf ("1\n");
+if (info_icon)
+	printf ("get\n");
+	info = info_icon->priv->info;
+printf ("1\n");
 	switch (event->type)
 	{
 	case CLUTTER_BUTTON_PRESS:
-		store_ui = gnome_app_store_ui_get_default ();
-		gnome_app_store_ui_load_app_info (store_ui, info);
+		gnome_app_application_load (info_icon->priv->app, UI_TYPE_INFO_PAGE, info);
+//		g_signal_emit (G_OBJECT (actor), info_icon_signals [CLICKED], 0);
 		break;
 	case CLUTTER_ENTER:
 		clutter_actor_set_scale (actor, 1.5, 1.5);
@@ -147,7 +237,7 @@ gnome_app_info_icon_new_with_app (OpenResult *info)
 //TODO
 	}
 
-	g_signal_connect (actor, "event", G_CALLBACK (on_info_icon_event), info);
+	g_signal_connect (actor, "event", G_CALLBACK (on_info_icon_event), info_icon);
 
 	return info_icon;
 }

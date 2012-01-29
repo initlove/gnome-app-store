@@ -1,7 +1,8 @@
-/*
-   Copyright 2012, Novell, Inc.
+/* libgnome-app-icon_view.h - 
 
-   The Gnome App Store is free software; you can redistribute it and/or
+   Copyright 2011, Novell, Inc.
+
+   The Gnome appicon_view lib is free software; you can redistribute it and/or
    modify it under the terms of the GNU Library General Public License as
    published by the Free Software Foundation; either version 2 of the
    License, or (at your option) any later version.
@@ -22,8 +23,8 @@
 #ifndef __GNOME_APP_ICON_VIEW_H__
 #define __GNOME_APP_ICON_VIEW_H__
 
-#include <gtk/gtk.h>
-#include "gnome-app-task.h"
+#include <clutter/clutter.h>
+#include "gnome-app-application.h"
 
 G_BEGIN_DECLS
 
@@ -40,17 +41,19 @@ typedef struct _GnomeAppIconViewPrivate GnomeAppIconViewPrivate;
 
 struct _GnomeAppIconView
 {
-	GtkIconView parent_instance;
+	ClutterGroup parent_instance;
 	GnomeAppIconViewPrivate	*priv;
 };
 
 struct _GnomeAppIconViewClass
 {
-        GtkIconViewClass parent_class;
+        ClutterGroupClass parent_class;
 };
 
-GnomeAppIconView *	gnome_app_icon_view_new ();
-void			gnome_app_icon_view_set_with_task (GnomeAppIconView *app_iconview, GnomeAppTask *task);
+GType			gnome_app_icon_view_get_type              	(void);
+GnomeAppIconView *	gnome_app_icon_view_new_with_app               	(GnomeAppApplication *app);
+void			gnome_app_icon_view_set_with_data		(GnomeAppIconView *icon_view, const GList *data);
+gint			gnome_app_icon_view_get_pagesize		(GnomeAppIconView *icon_view);
 
 G_END_DECLS
 

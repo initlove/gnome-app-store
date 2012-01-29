@@ -21,8 +21,9 @@ Author: Liang chenye <liangchenye@gmail.com>
 #include "gnome-app-store.h"
 #include "gnome-app-task.h"
 #include "gnome-app-account-ui.h"
+#include "gnome-app-application.h"
 #include "gnome-app-frame-ui.h"
-#include "gnome-app-infos-stage.h"
+#include "gnome-app-icon-view.h"
 
 struct _GnomeAppFrameUIPrivate
 {
@@ -34,39 +35,32 @@ struct _GnomeAppFrameUIPrivate
 	ClutterActor 	*search_hint;
 	gboolean	is_search_enabled;
 	gboolean	is_search_hint_enabled;
-	ClutterGroup 	*infos_stage_group;
+	ClutterGroup 	*icon_view_group;
 	ClutterGroup	*categories_group;
 	ClutterActor	*categories;
 	ClutterActor	*prev;
 	ClutterActor	*next;
 	ClutterActor	*status;
 	ClutterActor	*total_items;
-        GnomeAppInfosStage *infos_stage;
+        GnomeAppIconView *icon_view;
         ClutterScript	*script;
 
+	GnomeAppApplication *app;
 	gint		pagesize;
-	gint 		current_page;
 	GnomeAppTask	*task;
+};
+
+/* Properties */
+enum
+{
+	PROP_0,
+	PROP_LAST
 };
 
 G_DEFINE_TYPE (GnomeAppFrameUI, gnome_app_frame_ui, CLUTTER_TYPE_GROUP)
 
-static gpointer
-task_callback (gpointer userdata, gpointer func_result)
-{
-	GnomeAppFrameUI *ui;
-	OpenResults *results;
-
-	ui = GNOME_APP_FRAME_UI (userdata);
-	results = OPEN_RESULTS (func_result);
-
-	gnome_app_frame_ui_load_results (ui, results);
-
-	return NULL;
-}
-
-void
-gnome_app_frame_ui_load_results (GnomeAppFrameUI *ui, OpenResults *results)
+static void
+frame_ui_load_results (GnomeAppFrameUI *ui, OpenResults *results)
 {
 	gchar *message;
 
@@ -86,35 +80,61 @@ gnome_app_frame_ui_load_results (GnomeAppFrameUI *ui, OpenResults *results)
 		return ;
 	}
 
+	GnomeAppFrameUIPrivate *priv;
 	const GList *list;
 	gint total_items;
+	gint cur_page;
 
+	priv = ui->priv;
 	total_items = open_results_get_total_items (results);
 	if (total_items > 0) {
 		gchar *total_items_text;
+		const gchar *val;
+printf ("total %d\n", total_items);
 		total_items_text = g_strdup_printf ("%d apps", total_items);
-		clutter_text_set_text (CLUTTER_TEXT (ui->priv->total_items), total_items_text);
+		clutter_text_set_text (CLUTTER_TEXT (priv->total_items), total_items_text);
 		g_free (total_items_text);
-
-		if (ui->priv->current_page > 0) {
-			clutter_actor_show (ui->priv->prev);
+        
+		val = gnome_app_task_get_param_value (priv->task, "page");
+		if (val) {
+			cur_page = atoi (val);
 		} else {
-			clutter_actor_hide (ui->priv->prev);
+			g_debug ("Cannot find 'page' in task!\n");
+			return;
 		}
-		if ((ui->priv->current_page + 1) * ui->priv->pagesize <= total_items) {
-			clutter_actor_show (ui->priv->next);
+
+		if (cur_page > 0) {
+			clutter_actor_show (priv->prev);
 		} else {
-			clutter_actor_hide (ui->priv->next);
+			clutter_actor_hide (priv->prev);
+		}
+		if ((cur_page + 1) * priv->pagesize <= total_items) {
+			clutter_actor_show (priv->next);
+		} else {
+			clutter_actor_hide (priv->next);
 		}
 
 		list = open_results_get_data (results);
-		gnome_app_infos_stage_load (ui->priv->infos_stage, list);
+		gnome_app_icon_view_set_with_data (priv->icon_view, list);
 	} else {
-		clutter_actor_hide (ui->priv->prev);
-		clutter_actor_hide (ui->priv->next);
+		clutter_actor_hide (priv->prev);
+		clutter_actor_hide (priv->next);
 	}
 }
 
+static gpointer
+task_callback (gpointer userdata, gpointer func_result)
+{
+	GnomeAppFrameUI *ui;
+	OpenResults *results;
+
+	ui = GNOME_APP_FRAME_UI (userdata);
+	results = OPEN_RESULTS (func_result);
+
+	frame_ui_load_results (ui, results);
+
+	return NULL;
+}
 
 static gboolean
 is_blank_text (const gchar *text)
@@ -180,26 +200,25 @@ on_search_entry_activate (ClutterActor *actor,
 	if (is_blank_text (search))
 		return;
 
+	GnomeAppFrameUIPrivate *priv;
 	GnomeAppTask *task;
 	gchar *pagesize;
-	gchar *page;
 
-	pagesize = g_strdup_printf ("%d", ui->priv->pagesize);
-	page = g_strdup_printf ("%d", ui->priv->current_page);
+	priv = ui->priv;
+	pagesize = g_strdup_printf ("%d", priv->pagesize);
 
-	if (ui->priv->task)
-		g_object_unref (ui->priv->task);
-        ui->priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data");
-	gnome_app_task_add_params (ui->priv->task,
+	if (priv->task)
+		g_object_unref (priv->task);
+        priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+	gnome_app_task_add_params (priv->task,
 				"search", search,
 				"pagesize", pagesize,
-				"page", page,
+				"page", "0",
 				NULL);
-	gnome_app_task_set_callback (ui->priv->task, task_callback);
-	gnome_app_task_push (ui->priv->task);
+	gnome_app_task_set_callback (priv->task, task_callback);
+	gnome_app_task_push (priv->task);
 
 	g_free (pagesize);
-	g_free (page);
 }
 
 static gboolean
@@ -207,16 +226,17 @@ on_search_entry_event (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
-	gchar *search;
 	GnomeAppFrameUI *ui;
+	GnomeAppFrameUIPrivate *priv;
 
 	ui = GNOME_APP_FRAME_UI (data);
+	priv = ui->priv;
         switch (event->type)
         {
         case CLUTTER_BUTTON_PRESS:
-		if (ui->priv->is_search_hint_enabled) {
-			clutter_actor_hide (ui->priv->search_hint);
-			ui->priv->is_search_hint_enabled = FALSE;
+		if (priv->is_search_hint_enabled) {
+			clutter_actor_hide (priv->search_hint);
+			priv->is_search_hint_enabled = FALSE;
 		}
 		break;
 	}
@@ -230,13 +250,13 @@ on_search_icon_event (ClutterActor *actor,
                 gpointer      data)
 {
 	GnomeAppFrameUI *ui;
-	gchar *search;
+	GnomeAppFrameUIPrivate *priv;
 
 	ui = GNOME_APP_FRAME_UI (data);
         switch (event->type)
         {
         case CLUTTER_BUTTON_PRESS:
-		on_search_entry_activate (ui->priv->search_entry, ui);
+		on_search_entry_activate (priv->search_entry, ui);
 		break;
 	}
 
@@ -249,38 +269,38 @@ on_category_event (ClutterActor *actor,
                 gpointer      data)
 {
 	GnomeAppFrameUI *ui;
+	GnomeAppFrameUIPrivate *priv;
+	GnomeAppStore *store;
+	GnomeAppTask *task;
 	const gchar *name;
 	const gchar *cids;
 	gchar *pagesize;
 	gchar *page;
-	GnomeAppStore *store;
-	GnomeAppTask *task;
 
 	ui = GNOME_APP_FRAME_UI (data);
-
+	priv = ui->priv;
         switch (event->type)
         {
         case CLUTTER_BUTTON_PRESS:
-		pagesize = g_strdup_printf ("%d", ui->priv->pagesize);
-		page = g_strdup_printf ("%d", ui->priv->current_page);
+		pagesize = g_strdup_printf ("%d", priv->pagesize);
 	        name = st_button_get_label (ST_BUTTON (actor));
 printf ("click on %s\n", name);
 		store = gnome_app_store_get_default ();
 		cids = gnome_app_store_get_cids_by_name (store, name);
 /*TODO where to final the task */
-		if (ui->priv->task)
-			g_object_unref (ui->priv->task);
-        	ui->priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data");
-		gnome_app_task_add_params (ui->priv->task,
+		if (priv->task)
+			g_object_unref (priv->task);
+        	priv->task = gnome_app_task_new (NULL, "GET", "/v1/content/data");
+		gnome_app_task_set_userdata (priv->task, ui);
+		gnome_app_task_add_params (priv->task,
 				"categories", cids,
 				"pagesize", pagesize,
-				"page", page,
+				"page", "0",
 				NULL);
-		gnome_app_task_set_callback (ui->priv->task, task_callback);
+		gnome_app_task_set_callback (priv->task, task_callback);
 		gnome_app_task_push (ui->priv->task);
 
 		g_free (pagesize);
-		g_free (page);
 		break;
 	}
 
@@ -322,24 +342,35 @@ on_icon_press (ClutterActor *actor,
                 gpointer      data)
 {
 	GnomeAppFrameUI *ui;
+	GnomeAppFrameUIPrivate *priv;
 
 	ui = GNOME_APP_FRAME_UI (data);
+	priv = ui->priv;
 
-	if (actor == ui->priv->search_icon) {
-		on_search_entry_activate (ui->priv->search_entry, ui);
+	if (actor == priv->search_icon) {
+		on_search_entry_activate (priv->search_entry, ui);
 	} else {
+		const gchar *val;
 		gchar *page;
+		int cur_page;
 
-		if (actor == ui->priv->prev) {
-			if (ui->priv->current_page > 0)
-				ui->priv->current_page --;
-		} else if (actor == ui->priv->next) {
-			ui->priv->current_page ++;
+		val = gnome_app_task_get_param_value (priv->task, "page");
+		if (val) {
+			cur_page = atoi (val);
+		} else {
+			g_debug ("Cannot get 'page' in the task \n");
+			return FALSE;
 		}
-
-		page = g_strdup_printf ("%d", ui->priv->current_page);
-        	gnome_app_task_add_param (ui->priv->task, "page", page);
-		gnome_app_task_push (ui->priv->task);
+		
+		if (actor == priv->prev) {
+			cur_page --;
+		} else if (actor == priv->next) {
+			cur_page ++;
+		}
+        
+		page = g_strdup_printf ("%d", cur_page);
+        	gnome_app_task_add_param (priv->task, "page", page);
+		gnome_app_task_push (priv->task);
 
 		g_free (page);
 	}
@@ -384,14 +415,14 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
 	                                                 GNOME_APP_TYPE_FRAME_UI,
 	                                                 GnomeAppFrameUIPrivate);
-	ui->priv->is_search_enabled = FALSE;
-	ui->priv->is_search_hint_enabled = TRUE;
-	ui->priv->current_page = 0;
+	priv->is_search_enabled = FALSE;
+	priv->is_search_hint_enabled = TRUE;
+	priv->app = NULL;
 
         gchar *filename;
 	GError *error;
         gint i;
-
+printf ("ui init\n");
         filename = open_app_get_ui_uri ("frame-ui");
 
         priv->script = clutter_script_new ();
@@ -407,7 +438,7 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 					"search-icon", &priv->search_icon,
 					"search-hint", &priv->search_hint,
 					"search-entry", &priv->search_entry, 
-					"infos-stage", &priv->infos_stage_group,
+					"icon-view", &priv->icon_view_group,
 					"categories", &priv->categories_group,
 					"status", &priv->status,
 					"total-items", &priv->total_items,
@@ -422,7 +453,7 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	priv->categories = create_category_list (ui);
 	clutter_container_add_actor (CLUTTER_CONTAINER (priv->categories_group), priv->categories);
 
-	priv->infos_stage = NULL;
+	priv->icon_view = NULL;
 	priv->pagesize = -1;
 	priv->task = NULL;
 
@@ -459,19 +490,51 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 }
 
 static void
-gnome_app_frame_ui_dispose (GObject *object)
+frame_ui_set_property (GObject      *object,
+		guint         prop_id,
+		const GValue *value,
+		GParamSpec   *pspec)
+{
+	GnomeAppFrameUI *ui;        
+
+	ui = GNOME_APP_FRAME_UI (object);
+			        
+	switch (prop_id)
+	{
+	}
+}
+
+static void
+frame_ui_get_property (GObject      *object,
+		guint         prop_id,
+		GValue       *value,
+		GParamSpec   *pspec)
+{
+	GnomeAppFrameUI *ui;        
+
+	ui = GNOME_APP_FRAME_UI (object);
+
+	switch (prop_id)
+	{
+	}
+}
+
+static void
+frame_ui_dispose (GObject *object)
 {
 	G_OBJECT_CLASS (gnome_app_frame_ui_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_frame_ui_finalize (GObject *object)
+frame_ui_finalize (GObject *object)
 {
 	GnomeAppFrameUI *ui = GNOME_APP_FRAME_UI (object);
 	GnomeAppFrameUIPrivate *priv = ui->priv;
 
-	if (priv->infos_stage)
-		g_object_unref (priv->infos_stage);
+	if (priv->app)
+		g_object_unref (priv->app);
+	if (priv->icon_view)
+		g_object_unref (priv->icon_view);
 	if (priv->task)
 		g_object_unref (priv->task);
 
@@ -483,46 +546,49 @@ gnome_app_frame_ui_class_init (GnomeAppFrameUIClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = gnome_app_frame_ui_dispose;
-	object_class->finalize = gnome_app_frame_ui_finalize;
-	 
+        object_class->set_property = frame_ui_set_property;
+	object_class->get_property = frame_ui_get_property;
+	object_class->dispose = frame_ui_dispose;
+	object_class->finalize = frame_ui_finalize;
+
 	g_type_class_add_private (object_class, sizeof (GnomeAppFrameUIPrivate));
 }
 
-void
-gnome_app_frame_ui_set_default_task (GnomeAppFrameUI *ui)
+static void
+frame_ui_set_default_data (GnomeAppFrameUI *ui)
 {
+	GnomeAppFrameUIPrivate *priv;
 	gchar *pagesize;
-	gchar *page;
 
-	pagesize = g_strdup_printf ("%d", ui->priv->pagesize);
-	page = g_strdup_printf ("%d", ui->priv->current_page);
+	priv = ui->priv;
+	pagesize = g_strdup_printf ("%d", priv->pagesize);
 		
-	if (ui->priv->task)
-		g_object_unref (ui->priv->task);
-        ui->priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data");
-	gnome_app_task_add_params (ui->priv->task,
+        priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+	gnome_app_task_add_params (priv->task,
 				"sortmode", "new",
 				"pagesize", pagesize,
-				"page", page,
+				"page", "0",
 				NULL);
-	gnome_app_task_set_callback (ui->priv->task, task_callback);
-	gnome_app_task_push (ui->priv->task);
+	gnome_app_task_set_callback (priv->task, task_callback);
+	gnome_app_task_push (priv->task);
 
 	g_free (pagesize);
-	g_free (page);
 }
 
 GnomeAppFrameUI *
-gnome_app_frame_ui_new ()
+gnome_app_frame_ui_new_with_app (GnomeAppApplication *app)
 {
 	GnomeAppFrameUI *ui;
+	GnomeAppFrameUIPrivate *priv;
 
 	ui = g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
-	ui->priv->infos_stage = gnome_app_infos_stage_new ();
-	ui->priv->pagesize = gnome_app_infos_stage_get_pagesize (ui->priv->infos_stage);
-	clutter_container_add_actor (CLUTTER_CONTAINER (ui->priv->infos_stage_group), CLUTTER_ACTOR (ui->priv->infos_stage));
-	gnome_app_frame_ui_set_default_task (ui);
+	priv = ui->priv;
+	priv->app = g_object_ref (app);
+	priv->icon_view = gnome_app_icon_view_new_with_app (app);
+	priv->pagesize = gnome_app_icon_view_get_pagesize (priv->icon_view);
+	clutter_container_add_actor (CLUTTER_CONTAINER (priv->icon_view_group), CLUTTER_ACTOR (priv->icon_view));
+
+	frame_ui_set_default_data (ui);
 
 	return ui;
 }

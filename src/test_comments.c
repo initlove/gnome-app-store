@@ -2,7 +2,7 @@
 #include <gmodule.h>
 #include <clutter/clutter.h>
 #include <glib/gi18n.h>
-
+#include "st.h"
 #include "gnome-app-store.h"
 #include "gnome-app-comment.h"
 #include "gnome-app-comments.h"
@@ -28,14 +28,16 @@ main (int argc, char *argv[])
 	ClutterActor *comments;
 	GList *data;
 	GnomeAppStore *store;
+	gfloat height;
 
 	store = gnome_app_store_get_default ();
 	gnome_app_store_set_lock_function (store, clutter_threads_enter);
 	gnome_app_store_set_unlock_function (store, clutter_threads_leave);
 
 	comments = CLUTTER_ACTOR (gnome_app_comments_new_with_content ("94391", NULL));
-	clutter_actor_set_size (comments, 300, 500);
-
+//	clutter_actor_set_size (comments, 300, 500);
+	height = clutter_actor_get_height (comments);
+printf ("height %f vs %f\n", height, clutter_actor_get_height (stage));
 	ClutterActor *box;
 	ClutterLayoutManager *layout;
 
@@ -64,6 +66,7 @@ main (int argc, char *argv[])
 				FALSE, /*y-fill*/
 				CLUTTER_BOX_ALIGNMENT_START,
 				CLUTTER_BOX_ALIGNMENT_START);
+
 	clutter_container_add (CLUTTER_CONTAINER (stage), box, NULL);
 
 	g_main_loop_run (loop);

@@ -1,12 +1,12 @@
-/*
-   Copyright 2012, Novell, Inc.
+/* -*- Mode: C; indent-tabs-mode: t; c-basic-offset: 8; tab-width: 8 -*-
+   Copyright 2011, Novell, Inc.
 
-   The Gnome App Store is free software; you can redistribute it and/or
+   The Gnome appinfo lib is free software; you can redistribute it and/or
    modify it under the terms of the GNU Library General Public License as
    published by the Free Software Foundation; either version 2 of the
    License, or (at your option) any later version.
    
-   The Gnome App Store is distributed in the hope that it will be useful,
+   The Gnome appinfo lib is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    Library General Public License for more details.
@@ -16,13 +16,16 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.
 
-   Author: David Liang <dliang@novell.com>
+   Author: Liang chenye <liangchenye@gmail.com>
 */
 
 #ifndef __GNOME_APP_APPLICATION_H__
 #define __GNOME_APP_APPLICATION_H__
 
-#include <gtk/gtk.h>
+#include <glib.h>
+#include <clutter/clutter.h>
+
+#include "open-result.h"
 
 G_BEGIN_DECLS
 
@@ -37,26 +40,30 @@ typedef struct _GnomeAppApplication GnomeAppApplication;
 typedef struct _GnomeAppApplicationClass GnomeAppApplicationClass;
 typedef struct _GnomeAppApplicationPrivate GnomeAppApplicationPrivate;
 
-typedef enum {
-	APP_ICON_VIEW,
-	APP_INFO_PAGE,
-	APP_LAST
-} APP_VIEW_TYPE;
-
 struct _GnomeAppApplication
 {
-	GtkApplication parent_instance;
+        ClutterStage           parent_instance;
+	
 	GnomeAppApplicationPrivate	*priv;
 };
 
 struct _GnomeAppApplicationClass
 {
-        GtkApplicationClass parent_class;
+        ClutterStageClass parent_class;
 };
 
-GType			gnome_app_application_get_type          (void);
-GnomeAppApplication *	gnome_app_application_new		(void);
-void			gnome_app_application_load 		(GnomeAppApplication *app, APP_VIEW_TYPE type, gpointer userdata);
+typedef enum {
+	UI_TYPE_FRAME_UI,
+	UI_TYPE_INFO_PAGE,
+	UI_LAST
+} UI_TYPE;
+
+GType				gnome_app_application_get_type		(void);
+GnomeAppApplication *		gnome_app_application_get_default	(void);
+GnomeAppApplication *		gnome_app_application_new		(void);
+void				gnome_app_application_load		(GnomeAppApplication *ui, UI_TYPE type, gpointer userdata);
+void				gnome_app_application_load_app_info	(GnomeAppApplication *ui, OpenResult *info);
+void				gnome_app_application_load_frame_ui	(GnomeAppApplication *ui);
 
 G_END_DECLS
 
