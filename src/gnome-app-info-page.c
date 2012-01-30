@@ -407,6 +407,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 {
 	g_return_if_fail (info != NULL);
 
+	GnomeAppInfoPagePrivate *priv;
 	gchar *filename;
 	const gchar *val;
 	gchar *str;
@@ -427,22 +428,35 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	ClutterActor *comments_details, *comments_details_actor;
 	ClutterActor *return_button;
 	ClutterAction *action;
+	GList *list;
 
-	page->priv->info = g_object_ref (info);
+	priv = page->priv;
 
-	error = NULL;
-	filename = open_app_get_ui_uri ("app-info-page");
-	page->priv->script = clutter_script_new ();
-	clutter_script_load_from_file (page->priv->script, filename, &error);
-	g_free (filename);
-	if (error) {
-		g_critical ("Error in load script %s.", error->message);
-		g_error_free (error);
-		return ;
-	}
-	 
-	clutter_script_get_objects (page->priv->script,
-			"info-page", &info_page,
+	if (priv->info)
+		g_object_unref (priv->info);
+	priv->info = g_object_ref (info);
+
+	if (!priv->script) {
+		error = NULL;
+		filename = open_app_get_ui_uri ("app-info-page");
+		priv->script = clutter_script_new ();
+		clutter_script_load_from_file (page->priv->script, filename, &error);
+		g_free (filename);
+		if (error) {
+			g_critical ("Error in load script %s.", error->message);
+			g_error_free (error);
+			return ;
+		}
+		info_page = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "info-page"));
+		clutter_container_add_actor (CLUTTER_CONTAINER (page), info_page);
+		clutter_actor_set_reactive (CLUTTER_ACTOR (page), TRUE);
+		action = clutter_drag_action_new ();
+		clutter_actor_add_action (CLUTTER_ACTOR (page), action);
+		clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
+			CLUTTER_DRAG_Y_AXIS);
+
+	} 
+	clutter_script_get_objects (priv->script,
 			"score", &score,
 			"license", &license,
 			"downloads", &downloads,
@@ -469,8 +483,8 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 			break;
 	}
 	/* assume we should at least one pic, if only one pic, donnot add to small pics */
-	page->priv->pic_count = count;
-	page->priv->current_pic = 1;
+	priv->pic_count = count;
+	priv->current_pic = 1;
 	filename = open_app_get_pixmap_uri ("go-previous");
 	clutter_texture_set_from_file (CLUTTER_TEXTURE (prev), filename, NULL);
 	g_free (filename);
@@ -480,6 +494,8 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	draw_pic (page);
 
 	score_actor = CLUTTER_ACTOR (gnome_app_score_ui_new_with_score (open_result_get (info, "score")));
+	for (list = clutter_container_get_children (CLUTTER_CONTAINER (score)); list; list = list->next)
+		clutter_container_remove_actor (CLUTTER_CONTAINER (score), CLUTTER_ACTOR (list->data));
 	clutter_container_add_actor (CLUTTER_CONTAINER (score), score_actor);
 	clutter_text_set_text (CLUTTER_TEXT (license), open_result_get (info, "license"));
 	str = g_strdup_printf ("%s downloads", open_result_get (info, "downloads"));
@@ -510,24 +526,23 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	clutter_text_set_text (CLUTTER_TEXT (name), open_result_get (info, "name"));
 	clutter_text_set_text (CLUTTER_TEXT (personid), open_result_get (info, "personid"));
 	description_actor = get_description_actor (open_result_get (info, "description"));
+	for (list = clutter_container_get_children (CLUTTER_CONTAINER (description)); list; list = list->next)
+		clutter_container_remove_actor (CLUTTER_CONTAINER (description), CLUTTER_ACTOR (list->data));
 	clutter_container_add_actor (CLUTTER_CONTAINER (description), CLUTTER_ACTOR (description_actor));
 	comments_details_actor = CLUTTER_ACTOR (gnome_app_comments_new_with_content (open_result_get (info, "id"), NULL));
+	for (list = clutter_container_get_children (CLUTTER_CONTAINER (comments_details)); list; list = list->next)
+		clutter_container_remove_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (list->data));
 	clutter_container_add_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (comments_details_actor));
 
 	g_signal_connect (prev, "button-press-event", G_CALLBACK (on_prev_button_press), page);
 	g_signal_connect (next, "button-press-event", G_CALLBACK (on_next_button_press), page);
 
-	clutter_container_add_actor (CLUTTER_CONTAINER (page), info_page);
-	clutter_actor_set_reactive (CLUTTER_ACTOR (page), TRUE);
-	action = clutter_drag_action_new ();
-	clutter_actor_add_action (CLUTTER_ACTOR (page), action);
-	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
-			CLUTTER_DRAG_Y_AXIS);
-
+//TODO: more it to action or remove action..
+#if 1
 	filename = open_app_get_pixmap_uri ("back");
 	clutter_texture_set_from_file (CLUTTER_TEXTURE (return_button), filename, NULL);
 	g_free (filename);
 	g_signal_connect (return_button, "button-press-event", G_CALLBACK (on_return_button_press), page);
-
+#endif
 	return ;
 }
