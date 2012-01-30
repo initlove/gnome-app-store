@@ -95,18 +95,13 @@ gnome_app_comments_init (GnomeAppComments *comments)
 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (priv->layout), TRUE);
 	priv->layout_box = clutter_box_new (priv->layout);
 #if 0
-	priv->action_x = clutter_drag_action_new ();
-    	clutter_actor_add_action (priv->layout_box, priv->action_x);
-   	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (priv->action_x),
-					CLUTTER_DRAG_X_AXIS);
-        g_signal_connect (priv->action_x, "drag-end", G_CALLBACK (on_drag_end), comments);
-#endif
 	priv->action_y = clutter_drag_action_new ();
     	clutter_actor_add_action (priv->layout_box, priv->action_y);
       	clutter_actor_set_reactive (priv->layout_box, TRUE);
    	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (priv->action_y),
 					CLUTTER_DRAG_Y_AXIS);
         g_signal_connect (priv->action_y, "drag-end", G_CALLBACK (on_drag_end), comments);
+#endif
   
 	clutter_container_add_actor (CLUTTER_CONTAINER (comments), priv->layout_box);
 

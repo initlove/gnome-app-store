@@ -397,9 +397,9 @@ on_comment_entry_paint (ClutterActor *actor,
    	clutter_actor_get_allocation_box (actor, &allocation);
  	clutter_actor_box_clamp_to_pixel (&allocation);
       	clutter_actor_box_get_size (&allocation, &width, &height);
-	/*TODO better color and fixed size */
-    	cogl_set_source_color4ub (0, 255, 0, 255);
-	cogl_rectangle (0, 0, width, height);
+    	cogl_set_source_color4ub (0, 0, 0, 255);
+	cogl_path_rectangle (0, 0, width, height);
+	cogl_path_stroke ();
 }
 
 void

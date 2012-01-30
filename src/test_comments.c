@@ -58,6 +58,8 @@ printf ("height %f vs %f\n", height, clutter_actor_get_height (stage));
 				FALSE, /*y-fill*/
 				CLUTTER_BOX_ALIGNMENT_START,
 				CLUTTER_BOX_ALIGNMENT_START);
+		if (i == 5)
+			clutter_actor_hide (text);
 	}
 
 	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout), comments,
