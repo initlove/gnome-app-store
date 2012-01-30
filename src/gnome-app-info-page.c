@@ -425,6 +425,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	ClutterActor *big_pic;
 	ClutterActor *description, *description_actor;
 	ClutterActor *comments_details, *comments_details_actor;
+	ClutterActor *return_button;
 	ClutterAction *action;
 
 	page->priv->info = g_object_ref (info);
@@ -455,6 +456,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 			"personicon", &personicon,
 			"description", &description,
 			"comments-details", &comments_details,
+			"return-button", &return_button,
 			NULL);
 
 
@@ -521,6 +523,11 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	clutter_actor_add_action (CLUTTER_ACTOR (page), action);
 	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
 			CLUTTER_DRAG_Y_AXIS);
+
+	filename = open_app_get_pixmap_uri ("back");
+	clutter_texture_set_from_file (CLUTTER_TEXTURE (return_button), filename, NULL);
+	g_free (filename);
+	g_signal_connect (return_button, "button-press-event", G_CALLBACK (on_return_button_press), page);
 
 	return ;
 }

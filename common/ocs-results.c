@@ -176,6 +176,8 @@ ocs_get_results (const gchar *ocs, gint len)
 
 	results->priv->timestamps = time (NULL);
 
+	xmlFreeDoc (doc_ptr);
+
 	return OPEN_RESULTS (results);
 }
 

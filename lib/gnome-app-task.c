@@ -24,6 +24,8 @@ Author: David Liang <dliang@novell.com>
 #include "common/open-result.h"
 #include "common/open-results.h"
 
+#define DEVEL_MODE
+
 struct _GnomeAppTaskPrivate
 {
 	gchar *url;
@@ -171,6 +173,26 @@ async_func (OAsyncWorkerTask *oasync_task, gpointer arguments)
 	proxy = gnome_app_store_get_proxy (store);
 	gnome_app_proxy_add (proxy, app_task, results);
 
+#ifdef DEVEL_MODE
+	if (ocs_results_get_status (results)) {
+		gchar *filename;
+		gchar *str;
+		gchar *md5;
+		GError *error = NULL;
+
+		str = gnome_app_task_to_str (app_task);
+		md5 = open_app_get_md5 (str);
+		filename = g_build_filename (g_get_user_cache_dir (), "gnome-app-store", "xml", md5, NULL);
+		g_file_set_contents (filename, payload, len, &error);
+		if (error) {
+			g_debug ("Unable to save file %s\n", filename);
+			g_error_free (error);
+		}
+		g_free (md5);
+		g_free (filename);
+		g_free (str);
+	}
+#endif
 	return results;
 }
 
@@ -268,14 +290,8 @@ gnome_app_task_set_priority (GnomeAppTask *task, TaskPriority priority)
 void
 gnome_app_task_push (GnomeAppTask *task)
 {
-#if 0
-	gchar *str;
-	str = gnome_app_task_to_str (task);
-	g_debug ("gnome_app_task_push %s", str);
-	g_free (str);
-#endif
 	const gchar *method;
-	OpenResults *results;
+	OpenResults *results = NULL;
 
 	if (!task->priv->url) {
 		method = rest_proxy_call_get_method (task->priv->call);
@@ -286,6 +302,7 @@ gnome_app_task_push (GnomeAppTask *task)
 
 			store = gnome_app_store_get_default ();
 			proxy = gnome_app_store_get_proxy (store);
+
 			results = gnome_app_proxy_find (proxy, task);
 			if (results) {
 				if (task->priv->callback)
@@ -294,6 +311,32 @@ gnome_app_task_push (GnomeAppTask *task)
 					g_debug ("Cannot find the callback ?");
 				return;
 			}
+#ifdef DEVEL_MODE
+		       	else {
+				gchar *filename;
+				gchar *str;
+				gchar *md5;
+				gchar *content;
+				gint len;
+
+				str = gnome_app_task_to_str (task);
+				md5 = open_app_get_md5 (str);
+				filename = g_build_filename (g_get_user_cache_dir (), "gnome-app-store", "xml", md5, NULL);
+				if (g_file_get_contents (filename, &content, &len, NULL)) {
+					results = ocs_get_results (content, len);
+					g_free (content);
+				}
+				g_free (md5);
+				g_free (str);
+				g_free (filename);
+
+				if (results) {
+					if (task->priv->callback)
+						task->priv->callback (task->priv->userdata, results);
+					return;
+				}
+			}
+#endif
 		}
 	} else {
 		gchar *img_local_cache;
