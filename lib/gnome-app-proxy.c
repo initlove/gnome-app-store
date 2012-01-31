@@ -81,6 +81,7 @@ gnome_app_proxy_add (GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *resu
 {
 /*TODO we should make the cache stronger. */
 	const gchar *method;
+	const gchar *function;
 	gchar *key;
 
 //	g_debug ("gnome_app_proxy_add!");
@@ -88,7 +89,11 @@ gnome_app_proxy_add (GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *resu
 	method = gnome_app_task_get_method (task);
 	if (strcasecmp (method, "GET") != 0)
 		return;
-
+	function = gnome_app_task_get_function (task);
+	//TODO: donnot proxy the fan status check, or if we post one ,remove it */
+	if (strstr (function, "fan")) {
+		return;
+	}
         if (ocs_results_get_status (results)) {
 		key = gnome_app_task_to_str (task);
 		g_hash_table_replace (proxy->priv->cache, key, g_object_ref (results));

@@ -103,6 +103,7 @@
         "type" : "ClutterText",
         "text" : "ADD TO FAN",
         "font-name" : "Sans 17px",
+        "reactive" : true,
         "color" : "green",
         "x" : 750,
         "y" : 180

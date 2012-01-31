@@ -178,7 +178,12 @@ async_func (OAsyncWorkerTask *oasync_task, gpointer arguments)
 		gchar *filename;
 		gchar *str;
 		gchar *md5;
+		const gchar *function;
 		GError *error = NULL;
+
+		function = gnome_app_task_get_function (app_task);
+		if (strstr (function, "fan"))
+			return results;
 
 		str = gnome_app_task_to_str (app_task);
 		md5 = open_app_get_md5 (str);
@@ -270,6 +275,8 @@ gnome_app_task_get_param_value (GnomeAppTask *task, const gchar *param)
 	RestParam *rest_param;
 	const gchar *content = NULL;
 
+	g_return_val_if_fail (param, NULL);
+
 	rest_param = rest_proxy_call_lookup_param (task->priv->call, param);
 	if (rest_param)
 		content = rest_param_get_content (rest_param);
@@ -327,6 +334,11 @@ gnome_app_task_push (GnomeAppTask *task)
 				gchar *md5;
 				gchar *content;
 				gint len;
+				const gchar *function;
+
+				function = gnome_app_task_get_function (task);
+				if (strstr (function, "fan"))
+					goto PUSH_OUT;
 
 				str = gnome_app_task_to_str (task);
 				md5 = open_app_get_md5 (str);
@@ -360,7 +372,7 @@ gnome_app_task_push (GnomeAppTask *task)
 			g_free (img_local_cache);
 		}
 	}
-
+PUSH_OUT:
         o_async_worker_task_set_arguments (task->priv->async, task);
 	gnome_app_store_add_task (gnome_app_store_get_default (), task);
 }

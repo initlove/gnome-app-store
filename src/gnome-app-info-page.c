@@ -23,12 +23,20 @@ Author: Lance Wang <lzwang@suse.com>
 #include "gnome-app-score-ui.h"
 #include "gnome-app-info-page.h"
 
+typedef enum {
+	FAN_NOT_DEFINED,
+	IS_FAN,
+	NOT_FAN,
+	FAN_ERROR
+} FAN_STATUS;
+
 struct _GnomeAppInfoPagePrivate
 {
 	GnomeAppApplication *app;
 	OpenResult *info;
 	ClutterScript *script;
 
+	gint fan_status;
 	gint pic_count;
 	gint current_pic;
 };
@@ -55,6 +63,7 @@ gnome_app_info_page_init (GnomeAppInfoPage *page)
 	priv->app = NULL;
 	priv->info = NULL;
 	priv->script = NULL;
+	priv->fan_status = FAN_NOT_DEFINED;
 }
 
 static void
@@ -198,6 +207,140 @@ on_download_button_press (ClutterActor *actor,
 	g_free (function);
 
         return TRUE;
+}
+
+static void
+draw_fan_status (GnomeAppInfoPage *page)
+{
+	GnomeAppInfoPagePrivate *priv;
+	ClutterActor *actor;
+
+	priv = page->priv;
+
+	actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "fan-button"));
+	switch (priv->fan_status) {
+		case IS_FAN:
+			clutter_text_set_text (CLUTTER_TEXT (actor), "- Remove Fan");
+			clutter_actor_show (actor);
+			break;
+		case NOT_FAN:
+			clutter_text_set_text (CLUTTER_TEXT (actor), "+ Add Fan");
+			clutter_actor_show (actor);
+			break;
+		default:
+			clutter_text_set_text (CLUTTER_TEXT (actor), "");
+			break;
+	}
+
+}
+
+/*TODO: after we POST the fan or something, we need to refresh the proxy info page */
+static gpointer
+add_remove_fan_callback (gpointer userdata, gpointer func_result)
+{
+	GnomeAppInfoPage *page;
+	GnomeAppInfoPagePrivate *priv;
+	OpenResults *results;
+
+	page = GNOME_APP_INFO_PAGE (userdata);
+	priv = page->priv;
+	results = OPEN_RESULTS (func_result);
+        if (!open_results_get_status (results)) {
+		g_debug ("Fail to add fan %s\n", open_results_get_meta (results, "message"));
+		return NULL;
+	} else {
+		const gchar *val;
+		gchar *str;
+		gint count;
+		ClutterActor *fans;
+
+		val = open_result_get (priv->info, "fans");
+		count = atoi (val);
+		if (priv->fan_status == NOT_FAN) {
+			priv->fan_status = IS_FAN;
+			count ++;
+		} else {
+			priv->fan_status = NOT_FAN;
+			count --;
+		}
+		str = g_strdup_printf ("%d fans", count);
+		fans = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "fans"));
+		clutter_text_set_text (CLUTTER_TEXT (fans), str);
+		g_free (str);
+
+		draw_fan_status (page);
+	}
+}
+
+static gboolean
+on_fan_button_press (ClutterActor *actor,
+                ClutterEvent *event,
+                gpointer      data)
+{
+	GnomeAppInfoPage *page;
+	GnomeAppInfoPagePrivate *priv;
+	GnomeAppTask *task;
+	gchar *function;
+
+	page = GNOME_APP_INFO_PAGE (data);
+	priv = page->priv;
+
+	function = g_strdup_printf ("/v1/fan/%s/%s", 
+			priv->fan_status == NOT_FAN ? "add" : "remove", 
+			open_result_get (priv->info, "id"));
+	task = gnome_app_task_new (NULL, "POST", function);
+	gnome_app_task_set_userdata (task, page);
+	gnome_app_task_set_callback (task, add_remove_fan_callback);
+	gnome_app_task_push (task);
+
+	g_free (function);
+}
+
+static gpointer
+fan_status_callback (gpointer userdata, gpointer func_result)
+{
+	OpenResults *results;
+	GnomeAppInfoPage *page;
+	GnomeAppInfoPagePrivate*priv;
+
+	results = OPEN_RESULTS (func_result);
+	page = GNOME_APP_INFO_PAGE (userdata);
+	priv = page->priv;
+        if (!open_results_get_status (results)) {
+		g_debug ("Fail to get the fan status info: %s\n", open_results_get_meta (results, "message"));
+		priv->fan_status = FAN_ERROR;
+	} else {
+		GList *list;
+		OpenResult *result;
+		const gchar *val;
+
+		list = open_results_get_data (results);
+		result = OPEN_RESULT (list->data);
+		val = open_result_get (result, "status");
+		if (strcmp (val, "fan") == 0)
+			priv->fan_status = IS_FAN;
+		else
+			priv->fan_status = NOT_FAN;
+	}
+
+	draw_fan_status (page);
+
+	return NULL;
+}
+
+static void
+set_fan_status (GnomeAppInfoPage *page)
+{
+	GnomeAppTask *task;
+	gchar *function;
+
+	function = g_strdup_printf ("v1/fan/status/%s", open_result_get (page->priv->info, "id"));
+	task = gnome_app_task_new (NULL, "GET", function);
+	gnome_app_task_set_userdata (task, page);
+	gnome_app_task_set_callback (task, fan_status_callback);
+	gnome_app_task_push (task);
+
+	g_free (function);
 }
 
 static gboolean
@@ -418,8 +561,8 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	ClutterActor *next, *prev;
 	ClutterActor *score, *score_actor;
 	ClutterActor *license;
-	ClutterActor *downloads;
-	ClutterActor *fans;
+	ClutterActor *downloads, *download_button;
+	ClutterActor *fans, *fan_button;
 	ClutterActor *comments, *comment_entry;
 	ClutterActor *name;
 	ClutterActor *personid, *personicon;
@@ -435,6 +578,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	if (priv->info)
 		g_object_unref (priv->info);
 	priv->info = g_object_ref (info);
+	priv->fan_status = FAN_NOT_DEFINED;
 
 	if (!priv->script) {
 		error = NULL;
@@ -460,7 +604,9 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 			"score", &score,
 			"license", &license,
 			"downloads", &downloads,
+			"download-button", &download_button,
 			"fans", &fans,
+			"fan-button", &fan_button,
 			"next", &next,
 			"prev", &prev,
 			"comments", &comments,
@@ -537,12 +683,17 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	g_signal_connect (prev, "button-press-event", G_CALLBACK (on_prev_button_press), page);
 	g_signal_connect (next, "button-press-event", G_CALLBACK (on_next_button_press), page);
 
+	draw_fan_status (page);
+	set_fan_status (page);
 //TODO: more it to action or remove action..
 #if 1
 	filename = open_app_get_pixmap_uri ("back");
 	clutter_texture_set_from_file (CLUTTER_TEXTURE (return_button), filename, NULL);
 	g_free (filename);
 	g_signal_connect (return_button, "button-press-event", G_CALLBACK (on_return_button_press), page);
+
+	g_signal_connect (fan_button, "button-press-event", G_CALLBACK (on_fan_button_press), page);
+	g_signal_connect (download_button, "button-press-event", G_CALLBACK (on_download_button_press), page);
 #endif
 	return ;
 }

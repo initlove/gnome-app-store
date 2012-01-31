@@ -152,6 +152,7 @@ ocs_get_results (const gchar *ocs, gint len)
 		doc_ptr = xmlRecoverMemory (ocs, len);
 		if (!doc_ptr) {
 			g_debug ("Cannot parse the document!\n");
+
 			return NULL;
 		} else {
 			g_debug ("We recover the memory !\n");
@@ -165,6 +166,8 @@ ocs_get_results (const gchar *ocs, gint len)
 		ocs_results_set_meta (OPEN_RESULTS (results), meta_node);
 	} else {
 		g_debug ("Error in get meta node!\n");
+		xmlFreeDoc (doc_ptr);
+
 		return NULL;
 	}
 
