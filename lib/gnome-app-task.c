@@ -325,6 +325,8 @@ gnome_app_task_push (GnomeAppTask *task)
 					task->priv->callback (task->priv->userdata, results);
 				else 
 					g_debug ("Cannot find the callback ?");
+				g_object_unref (task);
+				g_object_unref (results);
 				return;
 			}
 #ifdef DEVEL_MODE
@@ -354,6 +356,8 @@ gnome_app_task_push (GnomeAppTask *task)
 				if (results) {
 					if (task->priv->callback)
 						task->priv->callback (task->priv->userdata, results);
+					g_object_unref (task);
+					g_object_unref (results);
 					return;
 				}
 			}
@@ -366,6 +370,7 @@ gnome_app_task_push (GnomeAppTask *task)
 		if (img_local_cache) {
 			if (task->priv->callback) {
 				task->priv->callback (task->priv->userdata, img_local_cache);
+				g_object_unref (task);
 				g_free (img_local_cache);
 				return;
 			}
