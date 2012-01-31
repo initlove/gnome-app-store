@@ -141,7 +141,7 @@ async_func (OAsyncWorkerTask *oasync_task, gpointer arguments)
 		results = gnome_app_proxy_find (proxy, app_task);
 		if (results) {
 			gnome_app_proxy_predict (proxy, app_task);
-			return results;
+			return g_object_ref (results);
 		}
 	}
 
@@ -208,8 +208,14 @@ task_callback (OAsyncWorkerTask *oasync_task, gpointer func_result)
 		app_task->priv->callback (app_task->priv->userdata, func_result);
 		gnome_app_store_unlock (gnome_app_store_get_default ());
 	}
-//TODO when to unref it ? 
-//	g_object_unref (func_result);
+	if (func_result) {
+		/*Download task */
+	        if (app_task->priv->url)
+			g_free (func_result);
+		else
+			g_object_unref (func_result);
+	}
+	g_object_unref (app_task);
 }
 
 GnomeAppTask *
