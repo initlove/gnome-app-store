@@ -62,7 +62,13 @@ get_props (OpenResult *result)
         props = g_ptr_array_new ();
 
 	ocs_result = OCS_RESULT (result);
-	for (node = ocs_result->priv->data->xmlChildrenNode; node; node = node->next) {
+
+	node = ocs_result->priv->data;
+	name = (gchar *) node->name;
+	if (name && name [0])
+		g_ptr_array_add (props, g_strdup (name));
+
+	for (node = node->xmlChildrenNode; node; node = node->next) {
 		name = (gchar *)node->name;
 		if (name && name [0])
 			g_ptr_array_add (props, g_strdup (name));
@@ -83,7 +89,16 @@ get (OpenResult *result, const gchar *prop)
 	ocs_result = OCS_RESULT (result);
 	val = NULL;
 
-	for (node = ocs_result->priv->data->xmlChildrenNode; node; node = node->next) {
+	node = ocs_result->priv->data;
+	//FIXME: will it be TEXT_NODE?
+	if (node->type != XML_TEXT_NODE) {
+		if (strcmp (node->name, prop) == 0) {
+			val = (const char *) xmlNodeGetContent (node);
+			return val;
+		}
+	}
+
+	for (node = node->xmlChildrenNode; node; node = node->next) {
 		if (node->type == XML_TEXT_NODE)
 			continue;
 		if (strcmp (node->name, prop) == 0) {

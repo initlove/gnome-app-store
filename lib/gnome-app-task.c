@@ -238,6 +238,9 @@ gnome_app_task_new (gpointer userdata, const gchar *method, const gchar *functio
 void            
 gnome_app_task_add_param (GnomeAppTask *task, const gchar *param, const gchar *value)
 {
+	//This is because rest patch did not accepted 
+	if (rest_proxy_call_lookup_param (task->priv->call, param))
+		rest_proxy_call_remove_param (task->priv->call, param);
 	rest_proxy_call_add_param (task->priv->call, param, value);
 }
 
