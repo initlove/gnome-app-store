@@ -16,7 +16,6 @@ Author: David Liang <dliang@novell.com>
 #include <clutter/clutter.h>
 #include "gnome-app-task.h"
 #include "gnome-app-application.h"
-#include "gnome-app-info-icon.h"
 #include "gnome-app-icon-view.h"
 
 struct _GnomeAppIconViewPrivate
@@ -259,7 +258,7 @@ on_info_icon_event (ClutterActor *actor,
 	switch (event->type)
 	{
 		case CLUTTER_BUTTON_PRESS:
-			gnome_app_application_load (app, UI_TYPE_INFO_PAGE, info);
+			gnome_app_application_load (app, UI_TYPE_INFO_PAGE, info);  
 			break;
 		case CLUTTER_ENTER:
 			clutter_actor_set_scale (actor, 1.5, 1.5);
@@ -323,7 +322,7 @@ void
 gnome_app_icon_view_set_with_data (GnomeAppIconView *icon_view, const GList *data)
 {
 	OpenResult *info;
-	GnomeAppInfoIcon *info_icon;
+	ClutterActor *info_icon;
 	ClutterAction *action;
 	GList *l;
 

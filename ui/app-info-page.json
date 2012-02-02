@@ -122,12 +122,9 @@
         "ellipsize" : "none"
       },
       {
-        "id" : "download-button",
-        "type" : "ClutterText",
-        "text" : "DOWNLOAD",
-        "font-name" : "Sans 17px",
+        "id" : "download-group",
+        "type" : "ClutterGroup",
         "reactive" : true,
-        "color" : "green",
         "x" : 750,
         "y" : 210
       },

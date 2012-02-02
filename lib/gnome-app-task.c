@@ -13,6 +13,7 @@ Author: David Liang <dliang@novell.com>
 
 */
 #include <stdio.h>
+#include <string.h>
 #include <rest/rest-proxy.h>
 #include "gnome-app-task.h"
 #include "gnome-app-proxy.h"
@@ -24,7 +25,9 @@ Author: David Liang <dliang@novell.com>
 #include "common/open-result.h"
 #include "common/open-results.h"
 
+#ifndef DEVEL_MODE
 #define DEVEL_MODE
+#endif
 
 struct _GnomeAppTaskPrivate
 {
@@ -69,7 +72,7 @@ gnome_app_task_finalize (GObject *object)
 {
 	GnomeAppTask *task = GNOME_APP_TASK (object);
 	GnomeAppTaskPrivate *priv = task->priv;
-
+/*TODO: final all */
 	if (priv->url)
 		g_free (priv->url);
 	if (priv->async)
@@ -246,6 +249,33 @@ gnome_app_task_new (gpointer userdata, const gchar *method, const gchar *functio
 	return task;
 }
 
+GnomeAppTask *
+gnome_app_task_copy (GnomeAppTask *task)
+{
+	GnomeAppTask *new_task;
+	const gchar *method, *function;
+	const gchar *name;
+        const gchar *content;
+	RestParams *params;
+	RestParamsIter iter;
+        RestParam *param;
+
+	method = gnome_app_task_get_method (task);
+	function = gnome_app_task_get_function (task);
+printf ("method %s  func %s\n", method, function);
+	new_task = gnome_app_task_new (task->priv->userdata, method, function);
+	gnome_app_task_set_callback (new_task, task->priv->callback);
+
+	params = rest_proxy_call_get_params (task->priv->call);
+	rest_params_iter_init (&iter, params);
+	while (rest_params_iter_next (&iter, &name, &param)) {
+		content = rest_param_get_content (param);
+		rest_proxy_call_add_param (new_task->priv->call, name, content);
+	}
+
+	return new_task;
+}
+
 void            
 gnome_app_task_add_param (GnomeAppTask *task, const gchar *param, const gchar *value)
 {
@@ -325,8 +355,9 @@ gnome_app_task_push (GnomeAppTask *task)
 					task->priv->callback (task->priv->userdata, results);
 				else 
 					g_debug ("Cannot find the callback ?");
-				g_object_unref (task);
-				g_object_unref (results);
+				//TODO: the task and the result ... should not final currently
+//				g_object_unref (task);
+//				g_object_unref (results);
 				return;
 			}
 #ifdef DEVEL_MODE
@@ -346,7 +377,7 @@ gnome_app_task_push (GnomeAppTask *task)
 				md5 = open_app_get_md5 (str);
 				filename = g_build_filename (g_get_user_cache_dir (), "gnome-app-store", "xml", md5, NULL);
 				if (g_file_get_contents (filename, &content, &len, NULL)) {
-					results = ocs_get_results (content, len);
+					results = OPEN_RESULTS (ocs_get_results (content, len));
 					g_free (content);
 				}
 				g_free (md5);
@@ -356,8 +387,9 @@ gnome_app_task_push (GnomeAppTask *task)
 				if (results) {
 					if (task->priv->callback)
 						task->priv->callback (task->priv->userdata, results);
-					g_object_unref (task);
-					g_object_unref (results);
+					gnome_app_proxy_add (proxy, task, results);
+//					g_object_unref (task);
+//					g_object_unref (results);
 					return;
 				}
 			}

@@ -70,6 +70,7 @@ typedef enum {
 
 GType			gnome_app_task_get_type			(void);
 GnomeAppTask *		gnome_app_task_new 			(gpointer userdata, const gchar *method, const gchar *function);
+GnomeAppTask *		gnome_app_task_copy			(GnomeAppTask *task);
 GnomeAppTask *		gnome_download_task_new 		(gpointer userdata, const gchar *url);
 void			gnome_app_task_add_param 		(GnomeAppTask *task, const gchar *param, const gchar *value);
 void			gnome_app_task_add_params 		(GnomeAppTask *task, ...);

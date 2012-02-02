@@ -6,7 +6,6 @@
 
 #include "gnome-app-store.h"
 #include "gnome-app-application.h"
-#include "gnome-app-info-icon.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-frame-ui.h"
 

@@ -37,6 +37,8 @@ struct _GnomeAppInfoPagePrivate
 	ClutterScript *script;
 
 	gint fan_status;
+	gint fan_count;
+	gint download_count;
 	gint pic_count;
 	gint current_pic;
 };
@@ -134,8 +136,12 @@ gnome_app_info_page_class_init (GnomeAppInfoPageClass *klass)
 static gpointer
 download_callback (gpointer userdata, gpointer func_result)
 {
+	GnomeAppInfoPage *page;
+	GnomeAppInfoPagePrivate *priv;
 	OpenResults *results;
 
+	page = GNOME_APP_INFO_PAGE (userdata);
+	priv = page->priv;
 	results = OPEN_RESULTS (func_result);
         if (!open_results_get_status (results)) {
 		g_debug ("Fail to get the download info: %s\n", open_results_get_meta (results, "message"));
@@ -147,8 +153,27 @@ download_callback (gpointer userdata, gpointer func_result)
 
 		list = open_results_get_data (results);
 		result = OPEN_RESULT (list->data);
+
+open_result_debug (result);
+/*TODO: check mimetype, download it */
 		uri = open_result_get (result, "downloadlink");
-		printf ("download link is %s\n", uri);
+		GError *error = NULL;
+		gchar *cmd;
+		cmd = g_strdup_printf ("firefox \"%s\" ", uri);
+		if (!g_spawn_command_line_async (cmd, &error)) {
+			g_debug ("Error in run cmd %s: %s\n", cmd, error->message);
+			g_error_free (error);
+		}
+		g_free (cmd);
+
+		gchar *str;
+		ClutterActor *download;
+
+		priv->download_count ++;
+		str = g_strdup_printf ("%d downloads", priv->download_count);
+		download = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "downloads"));
+		clutter_text_set_text (CLUTTER_TEXT (download), str);
+		g_free (str);
 	}
 
 	return NULL;
@@ -191,16 +216,22 @@ on_download_button_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
+	GnomeAppInfoPage *page;
+	GnomeAppInfoPagePrivate *priv;
 	GnomeAppTask *task;
  	gchar *function;
-	gchar *content_id;
+	const gchar *content_id;
 	gint item_id;
 
-	content_id = (gchar *) g_object_get_data (G_OBJECT (actor), "contentid");
+	page = GNOME_APP_INFO_PAGE (data);
+	priv = page->priv;
+
+	content_id = open_result_get (priv->info, "id");
 	item_id = (gint) g_object_get_data (G_OBJECT (actor), "itemid");
 
 	function = g_strdup_printf ("/v1/content/download/%s/%d", content_id, item_id);
-	task = gnome_app_task_new (data, "GET", function);
+	task = gnome_app_task_new (NULL, "GET", function);
+	gnome_app_task_set_userdata (task, page);
 	gnome_app_task_set_callback (task, download_callback);
 	gnome_app_task_push (task);
 		
@@ -221,11 +252,9 @@ draw_fan_status (GnomeAppInfoPage *page)
 	switch (priv->fan_status) {
 		case IS_FAN:
 			clutter_text_set_text (CLUTTER_TEXT (actor), "- Remove Fan");
-			clutter_actor_show (actor);
 			break;
 		case NOT_FAN:
 			clutter_text_set_text (CLUTTER_TEXT (actor), "+ Add Fan");
-			clutter_actor_show (actor);
 			break;
 		default:
 			clutter_text_set_text (CLUTTER_TEXT (actor), "");
@@ -251,19 +280,17 @@ add_remove_fan_callback (gpointer userdata, gpointer func_result)
 	} else {
 		const gchar *val;
 		gchar *str;
-		gint count;
 		ClutterActor *fans;
 
 		val = open_result_get (priv->info, "fans");
-		count = atoi (val);
 		if (priv->fan_status == NOT_FAN) {
 			priv->fan_status = IS_FAN;
-			count ++;
+			priv->fan_count ++;
 		} else {
 			priv->fan_status = NOT_FAN;
-			count --;
+			priv->fan_count --;
 		}
-		str = g_strdup_printf ("%d fans", count);
+		str = g_strdup_printf ("%d fans", priv->fan_count);
 		fans = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "fans"));
 		clutter_text_set_text (CLUTTER_TEXT (fans), str);
 		g_free (str);
@@ -334,13 +361,66 @@ set_fan_status (GnomeAppInfoPage *page)
 	GnomeAppTask *task;
 	gchar *function;
 
-	function = g_strdup_printf ("v1/fan/status/%s", open_result_get (page->priv->info, "id"));
+	function = g_strdup_printf ("/v1/fan/status/%s", open_result_get (page->priv->info, "id"));
 	task = gnome_app_task_new (NULL, "GET", function);
 	gnome_app_task_set_userdata (task, page);
 	gnome_app_task_set_callback (task, fan_status_callback);
 	gnome_app_task_push (task);
 
 	g_free (function);
+}
+
+static void
+draw_download_buttons (GnomeAppInfoPage *page)
+{
+	GnomeAppInfoPagePrivate *priv;
+	ClutterActor *download_group;
+	ClutterActor *button;
+	ClutterLayoutManager *layout;
+	ClutterActor *layout_box;
+	GList *list;
+	gint i;
+	const gchar *val;
+	gchar *str;
+
+	priv = page->priv;
+	download_group = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "download-group"));
+
+	layout = clutter_box_layout_new ();
+	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (layout), TRUE);
+	layout_box = clutter_box_new (layout);
+	       
+	/*OCS standard, type begin with 1 .*/
+	for (i = 1; ; i++) {
+		str = g_strdup_printf ("downloadlink%d", i);
+		val = open_result_get (priv->info, str);
+		g_free (str);
+		if (val) {
+			button = clutter_text_new ();
+			str = g_strdup_printf ("downloadname%d", i);
+			val = open_result_get (priv->info, str);
+			g_free (str);
+			if (val && val [0]) {
+				clutter_text_set_text (CLUTTER_TEXT (button), val);
+			} else {
+				clutter_text_set_text (CLUTTER_TEXT (button), "Download");
+			}
+			clutter_actor_set_reactive (button, TRUE);
+			clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout), button,
+				TRUE,
+				TRUE,
+				TRUE,			
+				CLUTTER_BOX_ALIGNMENT_START,
+				CLUTTER_BOX_ALIGNMENT_START);
+			g_object_set_data (G_OBJECT (button), "itemid", (gpointer) i);
+			g_signal_connect (button, "button-press-event", G_CALLBACK (on_download_button_press), page);
+		} else {
+			break;
+		}
+	}	
+	for (list = clutter_container_get_children (CLUTTER_CONTAINER (download_group)); list; list = list->next)
+		clutter_container_remove_actor (CLUTTER_CONTAINER (download_group), CLUTTER_ACTOR (list->data));
+	clutter_container_add_actor (CLUTTER_CONTAINER (download_group), CLUTTER_ACTOR (layout_box));
 }
 
 static gboolean
@@ -360,35 +440,6 @@ on_return_button_press (ClutterActor *actor,
         return TRUE;
 }
 
-static void
-on_description_drag_end (ClutterDragAction   *action,
-		ClutterActor        *actor,
-		gfloat               event_x,
-		gfloat               event_y,
-		ClutterModifierType  modifiers,
-		gpointer             userdata)
-{
-	gfloat y, height, group_height;
-	ClutterActor *text;
-
-	text = CLUTTER_ACTOR (userdata);	
-	y = clutter_actor_get_y (actor);
-	height = clutter_actor_get_height (text);
-	//TODO
-	group_height = 300;
-	if (y > 0) {
-		clutter_actor_animate (actor, CLUTTER_EASE_OUT_BOUNCE, group_height,
-			"y", 0.0,
-			NULL);
-	}
-	
-	if (y < (group_height - height)) {
-	       	clutter_actor_animate (actor, CLUTTER_EASE_OUT_BOUNCE, group_height,
-			"y", group_height - height,
-			NULL);
-	}
-}
-
 static ClutterActor *
 get_description_actor (const gchar *desc)
 {
@@ -396,39 +447,8 @@ get_description_actor (const gchar *desc)
 	ClutterActor *layout_box;
 	ClutterActor *group, *ret;
 	ClutterActor *text;
-	ClutterAction *action;
-#if 0
-	/*TODO: in this if, the text cannot be displayed properly
-	 * it is a clutter bug ! */
-	group = clutter_group_new ();
-	clutter_actor_set_clip_to_allocation (group, TRUE);
-	text = clutter_text_new ();
-	/*TODO, not fixed width */
-	clutter_actor_set_width (text, 400);
-	clutter_text_set_text (text, desc);
-	clutter_text_set_line_wrap (text, TRUE);
 
-	layout = clutter_box_layout_new ();
-	layout_box = clutter_box_new (layout);
-	                
-	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout), text,
-			TRUE,
-			TRUE,
-			TRUE,			
-			CLUTTER_BOX_ALIGNMENT_START,
-			CLUTTER_BOX_ALIGNMENT_START);
-
-	clutter_actor_set_reactive (layout_box, TRUE);
-	action = clutter_drag_action_new ();
-	clutter_actor_add_action (layout_box, action);
-	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
-			CLUTTER_DRAG_Y_AXIS);
-	g_signal_connect (action, "drag-end", G_CALLBACK (on_description_drag_end), text);
-	clutter_container_add_actor (CLUTTER_CONTAINER (group), layout_box);
-#else
 	ret = clutter_group_new ();
-	//TODO: remove the height setting?
-//	clutter_actor_set_height (ret, 300);
 	clutter_actor_set_clip_to_allocation (ret, TRUE);
 
 	group = clutter_group_new ();
@@ -438,14 +458,8 @@ get_description_actor (const gchar *desc)
 	clutter_text_set_text (CLUTTER_TEXT (text), desc);
 	clutter_text_set_line_wrap (CLUTTER_TEXT (text), TRUE);
 	clutter_actor_set_reactive (group, TRUE);
-	action = clutter_drag_action_new ();
-	clutter_actor_add_action (group, action);
-	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
-			CLUTTER_DRAG_Y_AXIS);
-	g_signal_connect (action, "drag-end", G_CALLBACK (on_description_drag_end), text);
 	clutter_container_add_actor (CLUTTER_CONTAINER (group), text);
 	clutter_container_add_actor (CLUTTER_CONTAINER (ret), group);
-#endif
 
 	return ret;
 }
@@ -493,44 +507,6 @@ gnome_app_info_page_new_with_app (GnomeAppApplication *app)
 	return info_page;
 }
 
-ClutterActor *
-gnome_app_info_page_get_actions (GnomeAppInfoPage *page)
-{
-	GError *error;
-	gchar *filename;
-	ClutterScript *script;
-
-	ClutterActor *info_page_actions, *fan_button, *download_button, *comment_button, *return_button;
-
-	error = NULL;
-	filename = open_app_get_ui_uri ("app-info-page-actions");
-	script = clutter_script_new ();
-	clutter_script_load_from_file (script, filename, &error);
-	g_free (filename);
-	if (error) {
-		g_critical ("Error in load script %s.", error->message);
-		g_object_unref (script);
-		g_error_free (error);
-		return NULL;
-	}
-	 
-	clutter_script_get_objects (script,
-			"info-page-actions", &info_page_actions,
-			"fan-button", &fan_button,
-			"download-button", &download_button,
-			"comment-button", &comment_button,
-			"return-button", &return_button,
-			NULL);
-
-	filename = open_app_get_pixmap_uri ("back");
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (return_button), filename, NULL);
-	g_free (filename);
-	g_signal_connect (return_button, "button-press-event", G_CALLBACK (on_return_button_press), page);
-
-//TODO: unref the script ? 
-	return info_page_actions;
-}
-
 static void
 on_comment_entry_paint (ClutterActor *actor,
 		gpointer      data)
@@ -543,6 +519,64 @@ on_comment_entry_paint (ClutterActor *actor,
     	cogl_set_source_color4ub (0, 0, 0, 255);
 	cogl_path_rectangle (0, 0, width, height);
 	cogl_path_stroke ();
+}
+
+static gpointer
+load_details_info_callback (gpointer userdata, gpointer func_result)
+{
+	GnomeAppInfoPage *page;
+	GnomeAppInfoPagePrivate *priv;
+	OpenResults *results;
+
+	page = GNOME_APP_INFO_PAGE (userdata);
+	priv = page->priv;
+	results = OPEN_RESULTS (func_result);
+
+	if (!open_results_get_status (results)) {
+		g_debug ("Fail to get the details info: %s\n", open_results_get_meta (results, "message"));
+		return NULL;
+	} else {
+		ClutterActor *fans, *downloads;
+		GList *list;
+		OpenResult *result;
+		const gchar *val;
+		gchar *str;
+
+		list = open_results_get_data (results);
+		result = OPEN_RESULT (list->data);
+
+		fans = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "fans"));
+		val = open_result_get (result, "fans");
+		priv->fan_count = atoi (val);
+		str = g_strdup_printf ("%d fans", priv->fan_count);
+		clutter_text_set_text (CLUTTER_TEXT (fans), str);
+		g_free (str);
+
+		downloads = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "downloads"));
+		val = open_result_get (result, "downloads");
+		priv->download_count = atoi (val);
+		str = g_strdup_printf ("%d downloads", priv->download_count);
+		clutter_text_set_text (CLUTTER_TEXT (downloads), str);
+		g_free (str);
+
+
+	}
+}
+
+static void
+load_details_info (GnomeAppInfoPage *page)
+{
+	GnomeAppInfoPagePrivate *priv;
+	GnomeAppTask *task;
+	gchar *function;
+
+	priv = page->priv;
+	function = g_strdup_printf ("/v1/content/data/%s", open_result_get (priv->info, "id"));
+	task = gnome_app_task_new (page, "GET", function);
+	gnome_app_task_set_callback (task, load_details_info_callback);
+	gnome_app_task_push (task);
+
+	g_free (function);
 }
 
 void
@@ -561,7 +595,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	ClutterActor *next, *prev;
 	ClutterActor *score, *score_actor;
 	ClutterActor *license;
-	ClutterActor *downloads, *download_button;
+	ClutterActor *downloads, *download_group;
 	ClutterActor *fans, *fan_button;
 	ClutterActor *comments, *comment_entry;
 	ClutterActor *name;
@@ -604,7 +638,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 			"score", &score,
 			"license", &license,
 			"downloads", &downloads,
-			"download-button", &download_button,
+			"download-group", &download_group,
 			"fans", &fans,
 			"fan-button", &fan_button,
 			"next", &next,
@@ -644,12 +678,19 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 		clutter_container_remove_actor (CLUTTER_CONTAINER (score), CLUTTER_ACTOR (list->data));
 	clutter_container_add_actor (CLUTTER_CONTAINER (score), score_actor);
 	clutter_text_set_text (CLUTTER_TEXT (license), open_result_get (info, "license"));
-	str = g_strdup_printf ("%s downloads", open_result_get (info, "downloads"));
+
+	val = open_result_get (info, "downloads");
+	priv->download_count = atoi (val);
+	str = g_strdup_printf ("%d downloads", priv->download_count);
 	clutter_text_set_text (CLUTTER_TEXT (downloads), str);
 	g_free (str);
-	str = g_strdup_printf ("%s fans", open_result_get (info, "fans"));
+
+	val = open_result_get (info, "fans");
+	priv->fan_count = atoi (val);
+	str = g_strdup_printf ("%d fans", priv->fan_count);
 	clutter_text_set_text (CLUTTER_TEXT (fans), str);
 	g_free (str);
+
 	str = g_strdup_printf ("%s comments", open_result_get (info, "comments"));
 	clutter_text_set_text (CLUTTER_TEXT (comments), str);
 	g_free (str);
@@ -685,15 +726,15 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 
 	draw_fan_status (page);
 	set_fan_status (page);
-//TODO: more it to action or remove action..
-#if 1
+	g_signal_connect (fan_button, "button-press-event", G_CALLBACK (on_fan_button_press), page);
+
+	draw_download_buttons (page);
+
 	filename = open_app_get_pixmap_uri ("back");
 	clutter_texture_set_from_file (CLUTTER_TEXTURE (return_button), filename, NULL);
 	g_free (filename);
 	g_signal_connect (return_button, "button-press-event", G_CALLBACK (on_return_button_press), page);
 
-	g_signal_connect (fan_button, "button-press-event", G_CALLBACK (on_fan_button_press), page);
-	g_signal_connect (download_button, "button-press-event", G_CALLBACK (on_download_button_press), page);
-#endif
+	load_details_info (page);
 	return ;
 }

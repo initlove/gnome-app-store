@@ -90,7 +90,7 @@ frame_ui_load_results (GnomeAppFrameUI *ui, OpenResults *results)
 	if (total_items > 0) {
 		gchar *total_items_text;
 		const gchar *val;
-printf ("total %d\n", total_items);
+
 		total_items_text = g_strdup_printf ("%d apps", total_items);
 		clutter_text_set_text (CLUTTER_TEXT (priv->total_items), total_items_text);
 		g_free (total_items_text);
@@ -128,9 +128,8 @@ task_callback (gpointer userdata, gpointer func_result)
 	GnomeAppFrameUI *ui;
 	OpenResults *results;
 
-	ui = GNOME_APP_FRAME_UI (userdata);
 	results = OPEN_RESULTS (func_result);
-
+	ui = GNOME_APP_FRAME_UI (userdata);
 	frame_ui_load_results (ui, results);
 
 	return NULL;
@@ -209,14 +208,16 @@ on_search_entry_activate (ClutterActor *actor,
 
 	if (priv->task)
 		g_object_unref (priv->task);
-        priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data");
-	gnome_app_task_add_params (priv->task,
+        task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+	/*We need to ref it right after task_new, as some task may finished fast cause of proxy */
+	priv->task = g_object_ref (priv->task);
+	gnome_app_task_add_params (task,
 				"search", search,
 				"pagesize", pagesize,
 				"page", "0",
 				NULL);
-	gnome_app_task_set_callback (priv->task, task_callback);
-	gnome_app_task_push (priv->task);
+	gnome_app_task_set_callback (task, task_callback);
+	gnome_app_task_push (task);
 
 	g_free (pagesize);
 }
@@ -290,15 +291,15 @@ printf ("click on %s\n", name);
 /*TODO where to final the task */
 		if (priv->task)
 			g_object_unref (priv->task);
-        	priv->task = gnome_app_task_new (NULL, "GET", "/v1/content/data");
-		gnome_app_task_set_userdata (priv->task, ui);
-		gnome_app_task_add_params (priv->task,
+        	task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+		priv->task = g_object_ref (task);
+		gnome_app_task_add_params (task,
 				"categories", cids,
 				"pagesize", pagesize,
 				"page", "0",
 				NULL);
-		gnome_app_task_set_callback (priv->task, task_callback);
-		gnome_app_task_push (ui->priv->task);
+		gnome_app_task_set_callback (task, task_callback);
+		gnome_app_task_push (task);
 
 		g_free (pagesize);
 		break;
@@ -350,6 +351,7 @@ on_icon_press (ClutterActor *actor,
 	if (actor == priv->search_icon) {
 		on_search_entry_activate (priv->search_entry, ui);
 	} else {
+		GnomeAppTask *task;
 		const gchar *val;
 		gchar *page;
 		int cur_page;
@@ -369,8 +371,12 @@ on_icon_press (ClutterActor *actor,
 		}
         
 		page = g_strdup_printf ("%d", cur_page);
-        	gnome_app_task_add_param (priv->task, "page", page);
-		gnome_app_task_push (priv->task);
+
+		task = gnome_app_task_copy (priv->task);
+		g_object_unref (priv->task);
+		priv->task = g_object_ref (task);
+        	gnome_app_task_add_param (task, "page", page);
+		gnome_app_task_push (task);
 
 		g_free (page);
 	}
@@ -422,7 +428,7 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
         gchar *filename;
 	GError *error;
         gint i;
-printf ("ui init\n");
+
         filename = open_app_get_ui_uri ("frame-ui");
 
         priv->script = clutter_script_new ();
@@ -558,19 +564,21 @@ static void
 frame_ui_set_default_data (GnomeAppFrameUI *ui)
 {
 	GnomeAppFrameUIPrivate *priv;
+	GnomeAppTask *task;
 	gchar *pagesize;
 
 	priv = ui->priv;
 	pagesize = g_strdup_printf ("%d", priv->pagesize);
-		
-        priv->task = gnome_app_task_new (ui, "GET", "/v1/content/data");
-	gnome_app_task_add_params (priv->task,
+printf ("ui addr %ld\n", ui);
+        task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+	priv->task = g_object_ref (task);
+	gnome_app_task_add_params (task,
 				"sortmode", "new",
 				"pagesize", pagesize,
 				"page", "0",
 				NULL);
-	gnome_app_task_set_callback (priv->task, task_callback);
-	gnome_app_task_push (priv->task);
+	gnome_app_task_set_callback (task, task_callback);
+	gnome_app_task_push (task);
 
 	g_free (pagesize);
 }

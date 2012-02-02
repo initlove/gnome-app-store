@@ -13,18 +13,88 @@ Author: David Liang <dliang@novell.com>
 
 */
 #include <stdio.h>
+#include <string.h>
 #include "gnome-app-proxy.h"
 #include "common/open-app-utils.h"
 #include "common/open-app-config.h"
 #include "common/open-result.h"
 #include "common/open-results.h"
 
+typedef struct _ProxyData {
+	OpenResults *results;
+	GnomeAppTask *task;
+} ProxyData;
+
+typedef enum {
+	TYPE_FIRST,
+	TYPE_CONTENT_GET,
+	TYPE_FAN_GET,
+	TYPE_FAN_IS_FAN,
+	TYPE_FAN_ADD,
+	TYPE_FAN_REMOVE,
+	TYPE_LAST,
+} FUNC_TYPE;
+
 struct _GnomeAppProxyPrivate
 {
 	GHashTable *cache;
+
+	gboolean refresh_array [TYPE_LAST][TYPE_LAST];
+	gchar *func_prefix [TYPE_LAST];
 };
 
 G_DEFINE_TYPE (GnomeAppProxy, gnome_app_proxy, G_TYPE_OBJECT)
+
+static void
+init_function (GnomeAppProxy *proxy)
+{
+	GnomeAppProxyPrivate *priv;
+	gint i, j;
+
+	priv = proxy->priv;
+
+	for (i = TYPE_FIRST + 1; i < TYPE_LAST; i++)
+		for (j = TYPE_FIRST + 1; j < TYPE_LAST; j++)
+			priv->refresh_array [i][j] = FALSE;
+
+	priv->refresh_array [TYPE_FAN_ADD][TYPE_CONTENT_GET] = TRUE;
+	priv->refresh_array [TYPE_FAN_ADD][TYPE_FAN_GET] = TRUE;
+	priv->refresh_array [TYPE_FAN_ADD][TYPE_FAN_IS_FAN] = TRUE;
+	priv->refresh_array [TYPE_FAN_REMOVE][TYPE_CONTENT_GET] = TRUE;
+	priv->refresh_array [TYPE_FAN_REMOVE][TYPE_FAN_GET] = TRUE;
+	priv->refresh_array [TYPE_FAN_REMOVE][TYPE_FAN_IS_FAN] = TRUE;
+
+	priv->func_prefix [TYPE_FIRST] = NULL;
+	priv->func_prefix [TYPE_CONTENT_GET] = "/v1/content/data/";
+	priv->func_prefix [TYPE_FAN_GET] = "/v1/fan/data/";
+	priv->func_prefix [TYPE_FAN_IS_FAN] = "/v1/fan/status/";
+	priv->func_prefix [TYPE_FAN_ADD] = "/v1/fan/add/";
+	priv->func_prefix [TYPE_FAN_REMOVE] = "/v1/fan/remove/";
+	priv->func_prefix [TYPE_LAST] = NULL;
+}
+
+static ProxyData *
+proxy_data_new (GnomeAppTask *task, OpenResults *results)
+{
+	ProxyData *data;
+
+	data = g_new0 (ProxyData, 1);
+	data->results = g_object_ref (results);
+	data->task = g_object_ref (task);
+
+	return data;
+}
+
+static void
+proxy_data_unref (gpointer userdata)
+{
+	ProxyData *data;
+
+	data = (ProxyData *) userdata;
+	g_object_unref (data->results);
+	g_object_unref (data->task);
+	g_free (data);
+}
 
 static void
 gnome_app_proxy_init (GnomeAppProxy *proxy)
@@ -34,7 +104,8 @@ gnome_app_proxy_init (GnomeAppProxy *proxy)
 	proxy->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (proxy,
                                                    GNOME_APP_TYPE_PROXY,
                                                    GnomeAppProxyPrivate);
-	priv->cache = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
+	priv->cache = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, proxy_data_unref);
+	init_function (proxy);
 }
 
 static void
@@ -76,6 +147,103 @@ gnome_app_proxy_new ()
         return proxy;
 }
 
+static gboolean
+refresh_cache (gpointer key,
+		gpointer value,
+		gpointer user_data)
+{
+	const gchar *function;
+	gchar *refresh_function;
+	ProxyData *data;
+
+	data = (ProxyData *) value;
+	refresh_function = (gchar *) user_data;
+	function = gnome_app_task_get_function (data->task);
+	if (strcmp (function, refresh_function) == 0) {
+printf ("we remove it %s\n", function);
+#ifndef DEVEL_MODE
+#define DEVEL_MODE
+#endif
+#ifdef DEVEL_MODE
+		gchar *str;
+		gchar *md5;
+		gchar *filename;
+
+		str = gnome_app_task_to_str (data->task);
+		md5 = open_app_get_md5 (str);
+		filename = g_build_filename (g_get_user_cache_dir (), "gnome-app-store", "xml", md5, NULL);
+		g_unlink (filename);
+
+		g_free (filename);
+		g_free (md5);
+		g_free (str);
+
+#endif
+		return TRUE;
+	} else
+		return FALSE;
+}
+
+static void
+refresh_task (GnomeAppProxy *proxy, GnomeAppTask *task, gint cur_type, gint refresh_type)
+{
+	GnomeAppProxyPrivate *priv;
+	const gchar *function;
+	const gchar *contentid;
+	gchar *refresh_function = NULL;
+
+	priv = proxy->priv;
+	function = gnome_app_task_get_function (task);
+	switch (cur_type) {
+		case TYPE_FAN_ADD:
+		case TYPE_FAN_REMOVE:
+			contentid = function + strlen (priv->func_prefix [cur_type]);
+			refresh_function = g_strdup_printf ("%s%s", priv->func_prefix [refresh_type], contentid);
+printf ("composed %s %s\n", contentid, refresh_function);
+			break;
+		default:
+			break;
+	}
+	if (refresh_function) {
+		g_hash_table_foreach_remove (priv->cache, refresh_cache, refresh_function);
+		g_free (refresh_function);
+	}
+}
+
+static gboolean
+should_be_proxy (GnomeAppProxy *proxy, GnomeAppTask *task)
+{
+	GnomeAppProxyPrivate *priv;
+	const gchar *method;
+	const gchar *function;
+	gint type, i;
+
+	priv = proxy->priv;
+	method = gnome_app_task_get_method (task);
+	if (strcasecmp (method, "GET") == 0) {
+		return TRUE;
+	}
+
+	/*If we POST, refresh the relevant cached data */
+	function = gnome_app_task_get_function (task);
+	for (i = TYPE_FIRST + 1; i < TYPE_LAST; i++)
+		if (strncmp (function, priv->func_prefix [i], strlen (priv->func_prefix [i])) == 0) {
+			type = i;
+			break;
+		}
+
+	if (type == TYPE_LAST) {
+		return FALSE;
+	}
+	for (i = TYPE_FIRST + 1; i < TYPE_LAST; i++) {
+		if (priv->refresh_array [type][i]) {
+			refresh_task (proxy, task, type, i);
+		}
+	}
+		
+	return FALSE;
+}
+
 void
 gnome_app_proxy_add (GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *results)
 {
@@ -83,20 +251,17 @@ gnome_app_proxy_add (GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *resu
 	const gchar *method;
 	const gchar *function;
 	gchar *key;
+	ProxyData *data;
 
 //	g_debug ("gnome_app_proxy_add!");
 
-	method = gnome_app_task_get_method (task);
-	if (strcasecmp (method, "GET") != 0)
-		return;
-	function = gnome_app_task_get_function (task);
-	//TODO: donnot proxy the fan status check, or if we post one ,remove it */
-	if (strstr (function, "fan")) {
-		return;
-	}
         if (ocs_results_get_status (results)) {
+		if (!should_be_proxy (proxy, task))
+			return;
+
 		key = gnome_app_task_to_str (task);
-		g_hash_table_replace (proxy->priv->cache, key, g_object_ref (results));
+		data = proxy_data_new (task, results);
+		g_hash_table_replace (proxy->priv->cache, key, data);
 		                
 		if (gnome_app_task_get_priority (task) >= TASK_PRIORITY_NORMAL)			
 			gnome_app_proxy_predict (proxy, task);
@@ -107,16 +272,19 @@ gnome_app_proxy_add (GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *resu
 OpenResults *
 gnome_app_proxy_find (GnomeAppProxy *proxy, GnomeAppTask *task)
 {
+	ProxyData *data;
 	OpenResults *results;
 	gchar *key;
+
 /*TODO if the proxy was in cache, but not done yet, make priority higher */
 	key = gnome_app_task_to_str (task);
-	results = (OpenResults *) g_hash_table_lookup (proxy->priv->cache, key);
-	if (results)
-		g_debug ("proxy found <%s>", key);
+	data = (ProxyData *) g_hash_table_lookup (proxy->priv->cache, key);
 	g_free (key);
-
-	return results;
+	if (data) {
+printf ("we find it %s\n", gnome_app_task_get_function (task));
+		return data->results;
+	} else
+		return NULL;
 }
 
 /*TODO REMOVE */
