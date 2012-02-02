@@ -211,6 +211,79 @@ on_prev_button_press (ClutterActor *actor,
 	return TRUE;
 }
 
+//TODO move to common ?
+static gboolean
+is_blank_text (const gchar *text)
+{
+	if (!text)
+		return TRUE;
+
+ 	gint i, len;
+
+	len = strlen (text);
+	for (i = 0; i < len; i++) {
+		if (*(text + i) == '\t' || *(text + i) == ' ') {
+			continue;
+		} else
+			return FALSE;
+	}
+		
+	return TRUE;
+}
+
+static gpointer
+comment_callback (gpointer userdata, gpointer func_result)
+{
+	GnomeAppInfoPage *page;
+	GnomeAppInfoPagePrivate *priv;
+	OpenResults *results;
+
+	page = GNOME_APP_INFO_PAGE (userdata);
+	priv = page->priv;
+	results = OPEN_RESULTS (func_result);
+        if (!open_results_get_status (results)) {
+		g_debug ("Fail to comment: %s\n", open_results_get_meta (results, "message"));
+		return NULL;
+	} else {
+		printf ("commented!\n");
+		//TODO: we need to refresh it , force comment entry to reload ..
+	}
+}
+
+static gboolean
+on_comment_button_press (ClutterActor *actor,
+                ClutterEvent *event,
+                gpointer      data)
+{
+	GnomeAppInfoPage *page;
+	GnomeAppInfoPagePrivate *priv;
+	ClutterActor *comment_entry;
+	const gchar *subject;
+	const gchar *message;
+
+	page = GNOME_APP_INFO_PAGE (data);
+	priv = page->priv;
+	comment_entry = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "comment-entry"));
+	subject = "thanks!";
+	message = clutter_text_get_text (CLUTTER_TEXT (comment_entry));
+	if (is_blank_text (message))
+		return FALSE;
+
+	GnomeAppTask *task;
+	gchar *function;
+
+	task = gnome_app_task_new (page, "POST", "/v1/comments/add");
+	gnome_app_task_add_params (task,
+				"type", "0",
+				"content", open_result_get (priv->info, "id"),
+				"content2", "0",
+				"subject", subject,
+				"message", message,
+				NULL);
+	gnome_app_task_set_callback (task, comment_callback);
+	gnome_app_task_push (task);
+}
+
 static gboolean
 on_download_button_press (ClutterActor *actor,
                 ClutterEvent *event,
@@ -230,8 +303,8 @@ on_download_button_press (ClutterActor *actor,
 	item_id = (gint) g_object_get_data (G_OBJECT (actor), "itemid");
 
 	function = g_strdup_printf ("/v1/content/download/%s/%d", content_id, item_id);
-	task = gnome_app_task_new (NULL, "GET", function);
-	gnome_app_task_set_userdata (task, page);
+printf ("download %s\n", function);
+	task = gnome_app_task_new (page, "GET", function);
 	gnome_app_task_set_callback (task, download_callback);
 	gnome_app_task_push (task);
 		
@@ -315,8 +388,7 @@ on_fan_button_press (ClutterActor *actor,
 	function = g_strdup_printf ("/v1/fan/%s/%s", 
 			priv->fan_status == NOT_FAN ? "add" : "remove", 
 			open_result_get (priv->info, "id"));
-	task = gnome_app_task_new (NULL, "POST", function);
-	gnome_app_task_set_userdata (task, page);
+	task = gnome_app_task_new (page, "POST", function);
 	gnome_app_task_set_callback (task, add_remove_fan_callback);
 	gnome_app_task_push (task);
 
@@ -362,8 +434,7 @@ set_fan_status (GnomeAppInfoPage *page)
 	gchar *function;
 
 	function = g_strdup_printf ("/v1/fan/status/%s", open_result_get (page->priv->info, "id"));
-	task = gnome_app_task_new (NULL, "GET", function);
-	gnome_app_task_set_userdata (task, page);
+	task = gnome_app_task_new (page, "GET", function);
 	gnome_app_task_set_callback (task, fan_status_callback);
 	gnome_app_task_push (task);
 
@@ -467,30 +538,35 @@ get_description_actor (const gchar *desc)
 static void
 draw_pic (GnomeAppInfoPage *page)
 {
+	GnomeAppInfoPagePrivate *priv;
 	ClutterActor *big_pic, *next, *prev;
 	gchar *str;
 
-	clutter_script_get_objects (page->priv->script,
+	priv = page->priv;
+	clutter_script_get_objects (priv->script,
 			"big-pic", &big_pic,
 			"next", &next,
 			"prev", &prev,
 			NULL);
-	str = g_strdup_printf ("previewpic%d", page->priv->current_pic);
-	gnome_app_ui_set_icon (big_pic, open_result_get (page->priv->info, str));
+	/*Use the small icon first, as it was already cached*/
+	gnome_app_ui_set_icon (big_pic, open_result_get (priv->info, "smallpreviewpic1"));
+
+	str = g_strdup_printf ("previewpic%d", priv->current_pic);
+	gnome_app_ui_set_icon (big_pic, open_result_get (priv->info, str));
 	g_free (str);
 
-	if (page->priv->current_pic > page->priv->pic_count) {
+	if (priv->current_pic > priv->pic_count) {
 		g_critical ("current pic is over pic count !");
-	} else if (page->priv->current_pic == page->priv->pic_count) {
+	} else if (priv->current_pic == priv->pic_count) {
 		clutter_actor_hide (next);
 	} else {
 		clutter_actor_show (next);
 	}
-	if (page->priv->current_pic < 1) {
+	if (priv->current_pic < 1) {
 		g_critical ("current pic is less than zero ? ");
-	} else if (page->priv->current_pic == 1) {
+	} else if (priv->current_pic == 1) {
 		clutter_actor_hide (prev);
-	} else if (page->priv->current_pic > 1) {
+	} else if (priv->current_pic > 1) {
 		clutter_actor_show (prev);
 	}
 }
@@ -537,6 +613,7 @@ load_details_info_callback (gpointer userdata, gpointer func_result)
 		return NULL;
 	} else {
 		ClutterActor *fans, *downloads;
+		ClutterActor *comments_details, *comments_details_actor;
 		GList *list;
 		OpenResult *result;
 		const gchar *val;
@@ -559,7 +636,11 @@ load_details_info_callback (gpointer userdata, gpointer func_result)
 		clutter_text_set_text (CLUTTER_TEXT (downloads), str);
 		g_free (str);
 
-
+		comments_details = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "comments-details"));
+		comments_details_actor = CLUTTER_ACTOR (gnome_app_comments_new_with_content (open_result_get (priv->info, "id"), NULL));
+		for (list = clutter_container_get_children (CLUTTER_CONTAINER (comments_details)); list; list = list->next)
+			clutter_container_remove_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (list->data));
+		clutter_container_add_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (comments_details_actor));
 	}
 }
 
@@ -597,7 +678,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	ClutterActor *license;
 	ClutterActor *downloads, *download_group;
 	ClutterActor *fans, *fan_button;
-	ClutterActor *comments, *comment_entry;
+	ClutterActor *comments, *comment_entry, *comment_button;
 	ClutterActor *name;
 	ClutterActor *personid, *personicon;
 	ClutterActor *big_pic;
@@ -645,6 +726,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 			"prev", &prev,
 			"comments", &comments,
 			"comment-entry", &comment_entry,
+			"comment-button", &comment_button,
 			"name", &name,
 			"personid", &personid,
 			"personicon", &personicon,
@@ -695,14 +777,12 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	clutter_text_set_text (CLUTTER_TEXT (comments), str);
 	g_free (str);
 
+	g_signal_connect (comment_button, "button-press-event", G_CALLBACK (on_comment_button_press), page);
+
 	ClutterColor  cursor_color     = { 0xff, 0x33, 0x33, 0xff };
       	ClutterColor  selected_text_color = { 0x00, 0x00, 0xff, 0xff };
 
 	clutter_text_set_line_wrap (CLUTTER_TEXT (comment_entry), TRUE);
-	clutter_actor_set_reactive (comment_entry, TRUE);
- 	clutter_text_set_editable (CLUTTER_TEXT (comment_entry), TRUE);
-      	clutter_text_set_selectable (CLUTTER_TEXT (comment_entry), TRUE);
-	clutter_text_set_activatable (CLUTTER_TEXT (comment_entry), TRUE);
     	clutter_text_set_cursor_color (CLUTTER_TEXT (comment_entry), &cursor_color);
   	clutter_text_set_selected_text_color (CLUTTER_TEXT (comment_entry), &selected_text_color);
 	  
@@ -716,10 +796,10 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	for (list = clutter_container_get_children (CLUTTER_CONTAINER (description)); list; list = list->next)
 		clutter_container_remove_actor (CLUTTER_CONTAINER (description), CLUTTER_ACTOR (list->data));
 	clutter_container_add_actor (CLUTTER_CONTAINER (description), CLUTTER_ACTOR (description_actor));
-	comments_details_actor = CLUTTER_ACTOR (gnome_app_comments_new_with_content (open_result_get (info, "id"), NULL));
+
+	/*clean the comments_details .. */
 	for (list = clutter_container_get_children (CLUTTER_CONTAINER (comments_details)); list; list = list->next)
 		clutter_container_remove_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (list->data));
-	clutter_container_add_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (comments_details_actor));
 
 	g_signal_connect (prev, "button-press-event", G_CALLBACK (on_prev_button_press), page);
 	g_signal_connect (next, "button-press-event", G_CALLBACK (on_next_button_press), page);

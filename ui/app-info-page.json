@@ -144,7 +144,9 @@
 	"id" : "comment-entry",
 	"type" : "ClutterText",
 	"text" : "comment here",
-	"editable" : "true",
+	"selectable" : true,
+	"editable" : true,
+	"reactive" : true,
 	"x" : 550,
 	"y" : 300,
 	"width" : 300,
@@ -155,6 +157,7 @@
         "type" : "ClutterText",
         "text" : "Comment",
         "font-name" : "Sans 16px",
+        "reactive" : true,
         "x" : 760,
         "y" : 410
       },

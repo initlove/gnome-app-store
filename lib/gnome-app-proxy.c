@@ -32,6 +32,8 @@ typedef enum {
 	TYPE_FAN_IS_FAN,
 	TYPE_FAN_ADD,
 	TYPE_FAN_REMOVE,
+	TYPE_COMMENTS_GET,
+	TYPE_COMMENTS_ADD,
 	TYPE_LAST,
 } FUNC_TYPE;
 
@@ -63,6 +65,8 @@ init_function (GnomeAppProxy *proxy)
 	priv->refresh_array [TYPE_FAN_REMOVE][TYPE_CONTENT_GET] = TRUE;
 	priv->refresh_array [TYPE_FAN_REMOVE][TYPE_FAN_GET] = TRUE;
 	priv->refresh_array [TYPE_FAN_REMOVE][TYPE_FAN_IS_FAN] = TRUE;
+	priv->refresh_array [TYPE_COMMENTS_ADD][TYPE_COMMENTS_GET] = TRUE;
+	priv->refresh_array [TYPE_COMMENTS_ADD][TYPE_CONTENT_GET] = TRUE;
 
 	priv->func_prefix [TYPE_FIRST] = NULL;
 	priv->func_prefix [TYPE_CONTENT_GET] = "/v1/content/data/";
@@ -70,6 +74,8 @@ init_function (GnomeAppProxy *proxy)
 	priv->func_prefix [TYPE_FAN_IS_FAN] = "/v1/fan/status/";
 	priv->func_prefix [TYPE_FAN_ADD] = "/v1/fan/add/";
 	priv->func_prefix [TYPE_FAN_REMOVE] = "/v1/fan/remove/";
+	priv->func_prefix [TYPE_COMMENTS_GET] = "/v1/comments/data/";
+	priv->func_prefix [TYPE_COMMENTS_ADD] = "/v1/comments/add";
 	priv->func_prefix [TYPE_LAST] = NULL;
 }
 
@@ -148,7 +154,7 @@ gnome_app_proxy_new ()
 }
 
 static gboolean
-refresh_cache (gpointer key,
+refresh_by_function (gpointer key,
 		gpointer value,
 		gpointer user_data)
 {
@@ -159,8 +165,9 @@ refresh_cache (gpointer key,
 	data = (ProxyData *) value;
 	refresh_function = (gchar *) user_data;
 	function = gnome_app_task_get_function (data->task);
+printf ("refresh function is %s,  in cache %s\n", refresh_function, function);
 	if (strcmp (function, refresh_function) == 0) {
-printf ("we remove it %s\n", function);
+printf ("remove the cached\n");
 #ifndef DEVEL_MODE
 #define DEVEL_MODE
 #endif
@@ -189,23 +196,39 @@ refresh_task (GnomeAppProxy *proxy, GnomeAppTask *task, gint cur_type, gint refr
 {
 	GnomeAppProxyPrivate *priv;
 	const gchar *function;
+	const gchar *type;
 	const gchar *contentid;
-	gchar *refresh_function = NULL;
+	const gchar *contentid2;
+	gchar *refresh_function;
+	gchar *key;
 
 	priv = proxy->priv;
-	function = gnome_app_task_get_function (task);
+	g_debug ("refresh_task %s %s\n", priv->func_prefix [cur_type], priv->func_prefix [refresh_type]);
+	refresh_function = NULL;
 	switch (cur_type) {
 		case TYPE_FAN_ADD:
 		case TYPE_FAN_REMOVE:
+			function = gnome_app_task_get_function (task);
 			contentid = function + strlen (priv->func_prefix [cur_type]);
 			refresh_function = g_strdup_printf ("%s%s", priv->func_prefix [refresh_type], contentid);
-printf ("composed %s %s\n", contentid, refresh_function);
+			break;
+		case TYPE_COMMENTS_ADD:
+			if (refresh_type == TYPE_CONTENT_GET) {
+				contentid = gnome_app_task_get_param_value (task, "content");
+				refresh_function = g_strdup_printf ("%s%s", priv->func_prefix [refresh_type], contentid);
+			} else if (refresh_type == TYPE_COMMENTS_GET) {
+				type = gnome_app_task_get_param_value (task, "type");
+				contentid = gnome_app_task_get_param_value (task, "content");
+				contentid2 = gnome_app_task_get_param_value (task, "content2");
+				refresh_function = g_strdup_printf ("%s%s/%s/%s", priv->func_prefix [refresh_type],
+							type, contentid, contentid2);
+			}
 			break;
 		default:
 			break;
 	}
 	if (refresh_function) {
-		g_hash_table_foreach_remove (priv->cache, refresh_cache, refresh_function);
+		g_hash_table_foreach_remove (priv->cache, refresh_by_function, refresh_function);
 		g_free (refresh_function);
 	}
 }
