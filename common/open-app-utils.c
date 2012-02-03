@@ -353,3 +353,21 @@ open_app_is_compatible_distribution (const gchar *distribution)
 	return val;
 }
 
+gboolean
+is_blank_text (const gchar *text)
+{
+	if (!text)
+		return TRUE;
+
+ 	gint i, len;
+		
+	len = strlen (text);
+	for (i = 0; i < len; i++) {
+		if (*(text + i) == '\t' || *(text + i) == ' ') {
+			continue;
+		} else
+			return FALSE;
+	}
+		
+	return TRUE;
+}

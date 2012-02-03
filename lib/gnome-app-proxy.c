@@ -65,8 +65,8 @@ init_function (GnomeAppProxy *proxy)
 	priv->refresh_array [TYPE_FAN_REMOVE][TYPE_CONTENT_GET] = TRUE;
 	priv->refresh_array [TYPE_FAN_REMOVE][TYPE_FAN_GET] = TRUE;
 	priv->refresh_array [TYPE_FAN_REMOVE][TYPE_FAN_IS_FAN] = TRUE;
-	priv->refresh_array [TYPE_COMMENTS_ADD][TYPE_COMMENTS_GET] = TRUE;
 	priv->refresh_array [TYPE_COMMENTS_ADD][TYPE_CONTENT_GET] = TRUE;
+	priv->refresh_array [TYPE_COMMENTS_ADD][TYPE_COMMENTS_GET] = TRUE;
 
 	priv->func_prefix [TYPE_FIRST] = NULL;
 	priv->func_prefix [TYPE_CONTENT_GET] = "/v1/content/data/";
@@ -167,7 +167,6 @@ refresh_by_function (gpointer key,
 	function = gnome_app_task_get_function (data->task);
 printf ("refresh function is %s,  in cache %s\n", refresh_function, function);
 	if (strcmp (function, refresh_function) == 0) {
-printf ("remove the cached\n");
 #ifndef DEVEL_MODE
 #define DEVEL_MODE
 #endif
@@ -177,6 +176,7 @@ printf ("remove the cached\n");
 		gchar *filename;
 
 		str = gnome_app_task_to_str (data->task);
+		g_debug ("remove from the proxy %s\n", str);
 		md5 = open_app_get_md5 (str);
 		filename = g_build_filename (g_get_user_cache_dir (), "gnome-app-store", "xml", md5, NULL);
 		g_unlink (filename);
@@ -283,6 +283,7 @@ gnome_app_proxy_add (GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *resu
 			return;
 
 		key = gnome_app_task_to_str (task);
+		g_debug ("Add to proxy %s\n", key);
 		data = proxy_data_new (task, results);
 		g_hash_table_replace (proxy->priv->cache, key, data);
 		                
@@ -304,7 +305,6 @@ gnome_app_proxy_find (GnomeAppProxy *proxy, GnomeAppTask *task)
 	data = (ProxyData *) g_hash_table_lookup (proxy->priv->cache, key);
 	g_free (key);
 	if (data) {
-printf ("we find it %s\n", gnome_app_task_get_function (task));
 		return data->results;
 	} else
 		return NULL;

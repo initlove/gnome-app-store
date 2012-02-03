@@ -211,26 +211,6 @@ on_prev_button_press (ClutterActor *actor,
 	return TRUE;
 }
 
-//TODO move to common ?
-static gboolean
-is_blank_text (const gchar *text)
-{
-	if (!text)
-		return TRUE;
-
- 	gint i, len;
-
-	len = strlen (text);
-	for (i = 0; i < len; i++) {
-		if (*(text + i) == '\t' || *(text + i) == ' ') {
-			continue;
-		} else
-			return FALSE;
-	}
-		
-	return TRUE;
-}
-
 static gpointer
 comment_callback (gpointer userdata, gpointer func_result)
 {
@@ -247,6 +227,15 @@ comment_callback (gpointer userdata, gpointer func_result)
 	} else {
 		printf ("commented!\n");
 		//TODO: we need to refresh it , force comment entry to reload ..
+		ClutterActor *comments_details;
+	        ClutterActor *comments_details_actor;
+		GList *list;
+
+		comments_details = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "comments-details"));
+		comments_details_actor = CLUTTER_ACTOR (gnome_app_comments_new_with_content (open_result_get (priv->info, "id"), NULL));
+		for (list = clutter_container_get_children (CLUTTER_CONTAINER (comments_details)); list; list = list->next)
+			clutter_container_remove_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (list->data));
+		clutter_container_add_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (comments_details_actor));
 	}
 }
 
@@ -274,7 +263,7 @@ on_comment_button_press (ClutterActor *actor,
 
 	task = gnome_app_task_new (page, "POST", "/v1/comments/add");
 	gnome_app_task_add_params (task,
-				"type", "0",
+				"type", "1",
 				"content", open_result_get (priv->info, "id"),
 				"content2", "0",
 				"subject", subject,
@@ -303,7 +292,6 @@ on_download_button_press (ClutterActor *actor,
 	item_id = (gint) g_object_get_data (G_OBJECT (actor), "itemid");
 
 	function = g_strdup_printf ("/v1/content/download/%s/%d", content_id, item_id);
-printf ("download %s\n", function);
 	task = gnome_app_task_new (page, "GET", function);
 	gnome_app_task_set_callback (task, download_callback);
 	gnome_app_task_push (task);

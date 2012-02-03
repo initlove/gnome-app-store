@@ -135,23 +135,6 @@ task_callback (gpointer userdata, gpointer func_result)
 	return NULL;
 }
 
-static gboolean
-is_blank_text (const gchar *text)
-{
-	if (!text)
-		return TRUE;
-
-	int i, len;
-	len = strlen (text);
-	for (i = 0; i < len; i++) {
-		if (*(text + i) == '\t' || *(text + i) == ' ') {
-			continue;
-		} else
-			return FALSE;
-	}
-	return TRUE;
-}
-
 static GnomeAppFrameUI *
 gnome_app_frame_ui_get_default (void)
 {
@@ -569,7 +552,7 @@ frame_ui_set_default_data (GnomeAppFrameUI *ui)
 
 	priv = ui->priv;
 	pagesize = g_strdup_printf ("%d", priv->pagesize);
-printf ("ui addr %ld\n", ui);
+
         task = gnome_app_task_new (ui, "GET", "/v1/content/data");
 	priv->task = g_object_ref (task);
 	gnome_app_task_add_params (task,

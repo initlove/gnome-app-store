@@ -14,7 +14,6 @@ Author: David Liang <dliang@novell.com>
 */
 #include <clutter/clutter.h>
 #include "open-result.h"
-#include "gnome-app-store.h"
 #include "gnome-app-task.h"
 #include "gnome-app-comment.h"
 #include "gnome-app-comments.h"
@@ -23,8 +22,6 @@ Author: David Liang <dliang@novell.com>
 
 struct _GnomeAppCommentsPrivate
 {
-	GnomeAppStore *store;
-
 	ClutterActor *viewport;
 	ClutterAction *action_x;
 	ClutterAction *action_y;
@@ -37,6 +34,8 @@ struct _GnomeAppCommentsPrivate
 
 	gchar *content;
 	gchar *content2;
+
+	GnomeAppTask *task;
 };
 
 G_DEFINE_TYPE (GnomeAppComments, gnome_app_comments, CLUTTER_TYPE_GROUP)
@@ -109,6 +108,7 @@ gnome_app_comments_init (GnomeAppComments *comments)
 	priv->view_height = 600.0;
 	priv->content = NULL;
 	priv->content2 = NULL;
+	priv->task = NULL;
 }
 
 static void
@@ -123,6 +123,8 @@ gnome_app_comments_finalize (GObject *object)
 	GnomeAppComments *comments = GNOME_APP_COMMENTS (object);
 	GnomeAppCommentsPrivate *priv = comments->priv;
 
+	if (priv->task)
+		g_object_unref (priv->task);
 	if (priv->content)
 		g_free (priv->content);
 	if (priv->content2)
@@ -151,12 +153,12 @@ gnome_app_comments_new (void)
 static gpointer
 set_comments_callback (gpointer userdata, gpointer func_result)
 {
-	GnomeAppComments *ui_comments;
+	GnomeAppComments *app_comments;
 	OpenResults *results;
 
 	results = OPEN_RESULTS (func_result);
-	ui_comments = GNOME_APP_COMMENTS (userdata);
-	gnome_app_comments_load (ui_comments, results);
+	app_comments = GNOME_APP_COMMENTS (userdata);
+	gnome_app_comments_load (app_comments, results);
 
 	return NULL;
 }
@@ -165,18 +167,21 @@ GnomeAppComments *
 gnome_app_comments_new_with_content (const gchar *content, const gchar *content2)
 {
 	GnomeAppComments *comments;
+	GnomeAppCommentsPrivate *priv;
 	GnomeAppTask *task;
 	gchar *function;
 
 	comments = g_object_new (GNOME_APP_TYPE_COMMENTS, NULL);
+	priv = comments->priv;
 	if (content)
-		comments->priv->content = g_strdup (content);
+		priv->content = g_strdup (content);
 	if (content2)
-		comments->priv->content2 = g_strdup (content2);
+		priv->content2 = g_strdup (content2);
 
 	
 	function = g_strdup_printf ("/v1/comments/data/1/%s/0", content);
 	task = gnome_app_task_new (comments, "GET", function);
+	priv->task = g_object_ref (task);
 	gnome_app_task_add_params (task,
 			"pagesize", "10",
 			"page", "0",
@@ -192,8 +197,12 @@ gnome_app_comments_new_with_content (const gchar *content, const gchar *content2
 void
 gnome_app_comments_clean (GnomeAppComments *comments)
 {
-	GnomeAppCommentsPrivate *priv = comments->priv;
-
+	GList *list;
+	GnomeAppCommentsPrivate *priv;
+       
+	priv = comments->priv;
+	for (list = clutter_container_get_children (CLUTTER_CONTAINER (priv->layout_box)); list; list = list->next)
+		clutter_container_remove_actor (CLUTTER_CONTAINER (priv->layout_box), CLUTTER_ACTOR (list->data));
 }
 
 void
@@ -203,23 +212,38 @@ gnome_app_comments_add_actor (GnomeAppComments *comments, ClutterActor *actor)
 }
 
 static void
+on_comment_refresh_cb (GnomeAppComment *comment, gpointer userdata)
+{
+	printf ("signal caught\n");
+	GnomeAppComments *comments;
+	GnomeAppCommentsPrivate *priv;
+	GnomeAppTask *task;
+
+	comments = GNOME_APP_COMMENTS (userdata);
+	priv = comments->priv;
+	task = g_object_ref (priv->task);
+	gnome_app_task_push (task);
+}
+
+static void
 add_child_comments (GnomeAppComments *comments,
 		    OpenResult *comment, gint level)
 {
-	ClutterLayoutManager *layout;
 	OpenResult *child_comment;
 	GnomeAppComment *ui_comment;
+	GnomeAppCommentsPrivate *priv;
+	ClutterLayoutManager *layout;
 	ClutterLayoutManager *child_layout;
 	ClutterActor *child_box;
 	ClutterActor *space_actor;
 	GList *l;
 
-	layout = comments->priv->layout;
+	priv = comments->priv;
+	layout = priv->layout;
 	for (l = open_result_get_child (comment); l; l = l->next) {
 		child_comment = l->data;
 		ui_comment = gnome_app_comment_new_with_comment (child_comment);
-		gnome_app_comment_set_content (ui_comment, comments->priv->content, comments->priv->content2);
-
+		gnome_app_comment_set_content (ui_comment, priv->content, priv->content2);
 		child_layout = clutter_box_layout_new ();
 	        clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (child_layout), FALSE);
 		child_box = clutter_box_new (child_layout);
@@ -246,6 +270,8 @@ add_child_comments (GnomeAppComments *comments,
 					     CLUTTER_BOX_ALIGNMENT_START);
 
 		add_child_comments (comments, child_comment, level + 1);
+
+		g_signal_connect (G_OBJECT (ui_comment), "refresh", G_CALLBACK (on_comment_refresh_cb), comments);
 	}
 }
 
@@ -277,6 +303,7 @@ gnome_app_comments_load (GnomeAppComments *comments, OpenResults *results)
 					     CLUTTER_BOX_ALIGNMENT_START,
 					     CLUTTER_BOX_ALIGNMENT_START);
 		add_child_comments (comments, comment, level);
+		g_signal_connect (G_OBJECT (ui_comment), "refresh", G_CALLBACK (on_comment_refresh_cb), comments);
 	}
 }
 

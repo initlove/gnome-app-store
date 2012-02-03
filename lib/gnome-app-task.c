@@ -262,7 +262,7 @@ gnome_app_task_copy (GnomeAppTask *task)
 
 	method = gnome_app_task_get_method (task);
 	function = gnome_app_task_get_function (task);
-printf ("method %s  func %s\n", method, function);
+
 	new_task = gnome_app_task_new (task->priv->userdata, method, function);
 	gnome_app_task_set_callback (new_task, task->priv->callback);
 
@@ -378,6 +378,7 @@ gnome_app_task_push (GnomeAppTask *task)
 				filename = g_build_filename (g_get_user_cache_dir (), "gnome-app-store", "xml", md5, NULL);
 				if (g_file_get_contents (filename, &content, &len, NULL)) {
 					results = OPEN_RESULTS (ocs_get_results (content, len));
+					g_debug ("Load from cached file %s %s\n", str, md5);
 					g_free (content);
 				}
 				g_free (md5);

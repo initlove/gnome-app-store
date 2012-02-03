@@ -48,10 +48,13 @@ struct _GnomeAppComment
 struct _GnomeAppCommentClass
 {
         ClutterGroupClass parent_class;
+	/* signal */
+	void (* refresh) (GnomeAppComment *self);
 };
 
 GType			gnome_app_comment_get_type              	(void);
 GnomeAppComment *	gnome_app_comment_new_with_comment		(OpenResult *comment);
+void			gnome_app_comment_set_content			(GnomeAppComment *comment, gchar *content, gchar *content2);
 
 G_END_DECLS
 
