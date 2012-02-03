@@ -217,6 +217,9 @@ refresh_task (GnomeAppProxy *proxy, GnomeAppTask *task, gint cur_type, gint refr
 				contentid = gnome_app_task_get_param_value (task, "content");
 				refresh_function = g_strdup_printf ("%s%s", priv->func_prefix [refresh_type], contentid);
 			} else if (refresh_type == TYPE_COMMENTS_GET) {
+				/*TODO: in reply case, we may just remove the certain page, but now we remove all
+				 * it maybe good, so donnot handle it yet 
+				 */
 				type = gnome_app_task_get_param_value (task, "type");
 				contentid = gnome_app_task_get_param_value (task, "content");
 				contentid2 = gnome_app_task_get_param_value (task, "content2");
