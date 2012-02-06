@@ -64,7 +64,6 @@ GnomeAppStore *		gnome_app_store_new				(void);
 GnomeAppStore *		gnome_app_store_get_default 			(void);
 const gchar *		gnome_app_store_get_username			(GnomeAppStore *store);
 void			gnome_app_store_init_category 			(GnomeAppStore *store);
-const gchar *		gnome_app_store_get_url				(GnomeAppStore *store);
 const gchar *		gnome_app_store_get_cids_by_name		(GnomeAppStore *store, const gchar *name);
 //FIXME: why ?? the following cannot be compiled!!
 //GnomeAppProxy *		gnome_app_store_get_proxy			(GnomeAppStore *store);

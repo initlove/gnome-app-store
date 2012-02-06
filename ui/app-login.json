@@ -1,0 +1,95 @@
+{
+  "Login Info" : {
+    "id" : "app-login",
+    "type" : "ClutterStage",
+    "width" : 320,
+    "height" : 240,
+    "reactive" : true,
+    "children" : [
+      {
+        "id" : "username",
+        "type" : "ClutterText",
+        "text" : "Username:",
+	"x" : 10,
+	"y" : 10,
+        "width" : 100,
+        "font-name" : "Sans 14px",
+        "color" : "blue",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      },
+      {
+        "id" : "username-entry",
+        "type" : "ClutterText",
+	"x" : 120,
+	"y" : 10,
+        "width" : 100,
+	"editable" : true,
+        "font-name" : "Sans 15px",
+        "color" : "black",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      },
+      {
+        "id" : "password",
+        "type" : "ClutterText",
+        "text" : "Password:",
+	"x" : 10,
+	"y" : 50,
+        "width" : 100,
+        "font-name" : "Sans 14px",
+        "color" : "blue",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      },
+      {
+        "id" : "password-entry",
+        "type" : "ClutterText",
+	"x" : 120,
+	"y" : 50,
+        "width" : 100,
+	"editable" : true,
+        "font-name" : "Sans 15px",
+        "color" : "black",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      },
+      {
+        "id" : "register",
+        "type" : "ClutterText",
+        "text" : "Register",
+	"x" : 60,
+	"y" : 100,
+        "width" : 100,
+        "font-name" : "Sans 14px",
+        "color" : "red",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      },
+      {
+        "id" : "login",
+        "type" : "ClutterText",
+        "text" : "Login",
+	"x" : 200,
+	"y" : 100,
+        "width" : 100,
+        "font-name" : "Sans 14px",
+        "color" : "red",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      }
+    ]
+  }
+}

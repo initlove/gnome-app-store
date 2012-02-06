@@ -32,15 +32,11 @@ main (int argc, char *argv[])
 	loop = g_main_loop_new (NULL, FALSE);
 
 #if 1
+	gnome_app_auth ();
+#else
 	app = gnome_app_application_new ();
 	stage = CLUTTER_ACTOR (app);
 	clutter_actor_show_all (stage);
-#else
-	GnomeAppInfoIcon *info_icon;
-	        
-	info_icon = g_object_new (GNOME_APP_TYPE_INFO_ICON, NULL);
-	g_signal_connect (info_icon, "selected", G_CALLBACK (on_info_icon_clicked), NULL);
-	g_object_unref (info_icon);
 #endif
 
 	g_main_loop_run (loop);

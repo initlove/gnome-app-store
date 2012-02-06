@@ -9,13 +9,14 @@ License along with this program; if not, write to the
 Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.
 
-Author: Liang chenye <liangchenye@gmail.com>
+Author: David Liang <dliang@novell.com>
 
 */
 #include <string.h>
 #include <glib/gi18n.h>
 #include <clutter/clutter.h>
 
+#include "gnome-app-task.h"
 #include "gnome-app-store.h"
 #include "gnome-app-application.h"
 #include "gnome-app-info-page.h"
@@ -27,6 +28,12 @@ struct _GnomeAppApplicationPrivate
 	GnomeAppInfoPage *info_page;
 	GnomeAppFrameUI *frame_ui;
 //	GnomeAppActions *actions;
+};
+
+enum {
+	PROP_0,
+	PROP_APP_STORE,
+	PROP_LAST
 };
 
 G_DEFINE_TYPE (GnomeAppApplication, gnome_app_application, CLUTTER_TYPE_STAGE)
@@ -83,11 +90,13 @@ gnome_app_application_init (GnomeAppApplication *app)
 	app->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (app,
 							 GNOME_APP_TYPE_APPLICATION,
 							 GnomeAppApplicationPrivate);
+
 	clutter_stage_set_title (CLUTTER_STAGE (app), _("AppStore"));
 	clutter_actor_set_size (CLUTTER_ACTOR (app), 1000, 800);
         g_signal_connect (app, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
 	priv->store = gnome_app_store_get_default ();
+
 	gnome_app_store_set_lock_function (priv->store, clutter_threads_enter);
 	gnome_app_store_set_unlock_function (priv->store, clutter_threads_leave);
 	gnome_app_store_init_category (priv->store);
@@ -127,13 +136,44 @@ gnome_app_application_finalize (GObject *object)
 }
 
 static void
+application_get_property (GObject    *object,
+		guint       prop_id,
+		GValue     *value,
+		GParamSpec *pspec)
+{
+	GnomeAppApplication *self;
+
+		
+	self = GNOME_APP_APPLICATION (object);
+
+	switch (prop_id) {
+		case PROP_APP_STORE:
+			g_value_set_object (value, self->priv->store);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
 gnome_app_application_class_init (GnomeAppApplicationClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->dispose = gnome_app_application_dispose;
 	object_class->finalize = gnome_app_application_finalize;
-	 
+	
+	object_class->get_property = application_get_property;
+
+	g_object_class_install_property (object_class,
+			PROP_APP_STORE,
+			g_param_spec_object ("app-store",
+				"app store",
+				"app store",
+				GNOME_APP_TYPE_STORE,
+				G_PARAM_READABLE));
+
 	g_type_class_add_private (object_class, sizeof (GnomeAppApplicationPrivate));
 }
 

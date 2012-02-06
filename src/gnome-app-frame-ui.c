@@ -269,7 +269,7 @@ on_category_event (ClutterActor *actor,
 		pagesize = g_strdup_printf ("%d", priv->pagesize);
 	        name = st_button_get_label (ST_BUTTON (actor));
 printf ("click on %s\n", name);
-		store = gnome_app_store_get_default ();
+		g_object_get (priv->app, "app-store", &store, NULL);
 		cids = gnome_app_store_get_cids_by_name (store, name);
 /*TODO where to final the task */
 		if (priv->task)

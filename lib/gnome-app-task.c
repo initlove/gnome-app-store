@@ -15,6 +15,7 @@ Author: David Liang <dliang@novell.com>
 #include <stdio.h>
 #include <string.h>
 #include <rest/rest-proxy.h>
+#include <rest/rest-proxy-call.h>
 #include "gnome-app-task.h"
 #include "gnome-app-proxy.h"
 #include "gnome-app-store.h"
@@ -34,6 +35,7 @@ struct _GnomeAppTaskPrivate
 	gchar *url;
         RestProxyCall *call;
 	OAsyncWorkerTask *async;
+	gint type;	//TODO: download, sync, async ..
 
 	GnomeAppTaskFunc callback;
 	gpointer userdata;
@@ -90,6 +92,59 @@ gnome_app_task_class_init (GnomeAppTaskClass *klass)
 	object_class->finalize = gnome_app_task_finalize;
 	 
 	g_type_class_add_private (object_class, sizeof (GnomeAppTaskPrivate));
+}
+
+GnomeAppTask *
+gnome_app_sync_task_new (const char *method, const char *function)
+{
+	GnomeAppStore *store;
+        GnomeAppTask *task;
+	GnomeAppTaskPrivate *priv;
+	RestProxy *proxy;
+
+	task = g_object_new (GNOME_APP_TYPE_TASK, NULL);
+	priv = task->priv;
+	store = gnome_app_store_get_default ();
+        proxy = gnome_app_store_get_rest_proxy (store);
+        priv->call = rest_proxy_new_call ((RestProxy *)proxy);
+	rest_proxy_call_set_method (priv->call, method);
+        rest_proxy_call_set_function (priv->call, function);
+
+	return task;
+}
+
+OpenResults *
+gnome_app_sync_task_push (GnomeAppTask *task)
+{
+	GnomeAppTaskPrivate *priv;
+	GError *error;
+	OpenResults *results;
+        const gchar *payload;
+        goffset len;
+
+	priv = task->priv;
+	error = NULL;
+	rest_proxy_call_sync (priv->call, &error);
+	if (error) {
+		g_debug ("error in get task %s\n", error->message);
+		g_error_free (error);
+		return NULL;
+	}
+
+        payload = rest_proxy_call_get_payload (priv->call);
+printf ("we get %s\n", payload);
+        len = rest_proxy_call_get_payload_length (priv->call);
+        results = (OpenResults *) ocs_get_results (payload, len);
+	if (!results) {
+		gchar *str;
+
+		str = gnome_app_task_to_str (task);
+		g_debug ("Error in get results %s\n", str);
+		g_free (str);
+		return NULL;
+	}
+
+	return results;
 }
 
 static gpointer
