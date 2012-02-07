@@ -151,7 +151,10 @@ open_app_config_get_server_uri (OpenAppConfig *config)
 		return NULL;
 	}
 
-	return (const gchar *) val;
+	if (val && val [0])
+		return (const gchar *) val;
+	else
+		return NULL;
 }
 
 const gchar *
@@ -168,7 +171,10 @@ open_app_config_get_server_type (OpenAppConfig *config)
 		return NULL;
 	}
 
-	return (const gchar *) val;
+	if (val && val [0])
+		return (const gchar *) val;
+	else
+		return NULL;
 }
 
 const gchar *
@@ -185,7 +191,10 @@ open_app_config_get_username (OpenAppConfig *config)
 		return NULL;
 	}
 
-	return (const gchar *) val;
+	if (val && val [0])
+		return (const gchar *) val;
+	else
+		return NULL;
 }
 
 const gchar *
@@ -195,14 +204,15 @@ open_app_config_get_password (OpenAppConfig *config)
 	gchar *val;
 
 	val = g_key_file_get_value (config->priv->key_file, "Server", "password", &error);
-
 	if (error) {
 		g_warning ("Failed to load server password %s", error->message);
 		g_error_free (error);
 		return NULL;
 	}
-
-	return (const gchar *) val;
+	if (val && val [0])
+		return (const gchar *) val;
+	else
+		return NULL;
 }
 
 
