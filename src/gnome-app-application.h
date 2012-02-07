@@ -61,6 +61,7 @@ typedef enum {
 GType				gnome_app_application_get_type		(void);
 GnomeAppApplication *		gnome_app_application_get_default	(void);
 GnomeAppApplication *		gnome_app_application_new		(void);
+void				gnome_app_application_run		(void);
 void				gnome_app_application_load		(GnomeAppApplication *ui, UI_TYPE type, gpointer userdata);
 void				gnome_app_application_load_app_info	(GnomeAppApplication *ui, OpenResult *info);
 void				gnome_app_application_load_frame_ui	(GnomeAppApplication *ui);

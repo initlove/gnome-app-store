@@ -13,6 +13,7 @@ Author: David Liang <dliang@novell.com>
 
 */
 #include <clutter/clutter.h>
+#include <clutter/x11/clutter-x11.h>
 #include "gnome-app-task.h"
 #include "gnome-app-ui-utils.h"
 
@@ -37,5 +38,51 @@ gnome_app_ui_set_icon (ClutterActor *actor, const gchar *uri)
 	task = gnome_download_task_new (actor, uri);
 	gnome_app_task_set_callback (task, set_pic_callback);
 	gnome_app_task_push (task);
+}
+
+void
+gnome_app_ui_stage_move (ClutterActor *stage, gint x, gint y)
+{
+	Window xwindow;
+	Display *display;
+		
+	xwindow = clutter_x11_get_stage_window (CLUTTER_STAGE (stage));
+	display = clutter_x11_get_default_display ();
+	
+	XMoveWindow (display, xwindow, x, y);
+}
+
+void
+gnome_app_ui_stage_set_position (ClutterActor *stage, gint position)
+{
+	Window xwindow;
+	Display *display;
+	gint screen;
+	gint width, height;
+	gfloat stage_width, stage_height;
+	gint x, y;
+	
+	xwindow = clutter_x11_get_stage_window (CLUTTER_STAGE (stage));
+	display = clutter_x11_get_default_display ();
+	screen = clutter_x11_get_default_screen ();
+
+	switch (position) {
+		case GNOME_APP_POSITION_CENTER:
+			width = XDisplayWidth (display, screen);
+			height = XDisplayHeight (display, screen);
+			clutter_actor_get_size (stage, &stage_width, &stage_height);
+			x = (width - stage_width) / 2;
+			y = (height - stage_height) / 2;
+			if (x < 0)
+				x = 0;
+			if (y < 0)
+				y = 0;
+			XMoveWindow (display, xwindow, x, y);
+			break;
+		case GNOME_APP_POSITION_MOUSE:
+			break;
+		default:
+			break;
+	}
 }
 

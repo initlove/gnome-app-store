@@ -2,6 +2,7 @@ uidir = $(datadir)/@PACKAGE@/ui
 
 ui_DATA =	\
 	app-login.json \
+	app-register.json \
 	message-info-page.json \
 	app-account-ui.json \
 	app-comment.json	\

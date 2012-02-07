@@ -20,9 +20,6 @@ on_info_icon_clicked (ClutterActor *info_icon,
 int
 main (int argc, char *argv[])
 {
-	ClutterActor *stage;
-	GnomeAppApplication *app;
-
   	g_type_init ();
 	g_thread_init (NULL);
 	if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
@@ -31,13 +28,7 @@ main (int argc, char *argv[])
 	GMainLoop *loop;
 	loop = g_main_loop_new (NULL, FALSE);
 
-#if 1
 	gnome_app_auth ();
-#else
-	app = gnome_app_application_new ();
-	stage = CLUTTER_ACTOR (app);
-	clutter_actor_show_all (stage);
-#endif
 
 	g_main_loop_run (loop);
   	g_main_loop_unref (loop);

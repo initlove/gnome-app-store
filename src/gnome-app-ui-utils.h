@@ -27,7 +27,14 @@
 
 G_BEGIN_DECLS
 
-void gnome_app_ui_set_icon (ClutterActor *actor, const gchar *uri);
+enum {
+	GNOME_APP_POSITION_CENTER,
+	GNOME_APP_POSITION_MOUSE,
+};
+
+void	gnome_app_ui_set_icon (ClutterActor *actor, const gchar *uri);
+void	gnome_app_ui_stage_move (ClutterActor *stage, gint x, gint y);
+void	gnome_app_ui_stage_set_position (ClutterActor *stage, gint position);
 
 G_END_DECLS
 

@@ -194,3 +194,11 @@ gnome_app_application_get_default ()
 	return app;
 }
 
+void
+gnome_app_application_run ()
+{
+	GnomeAppApplication *app;
+
+	app = g_object_new (GNOME_APP_TYPE_APPLICATION, NULL);
+	clutter_actor_show (CLUTTER_ACTOR (app));
+}
