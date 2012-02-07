@@ -537,10 +537,10 @@ draw_pic (GnomeAppInfoPage *page)
 			"prev", &prev,
 			NULL);
 	/*Use the small icon first, as it was already cached*/
-	gnome_app_ui_set_icon (big_pic, open_result_get (priv->info, "smallpreviewpic1"));
+	gnome_app_set_icon (big_pic, open_result_get (priv->info, "smallpreviewpic1"));
 
 	str = g_strdup_printf ("previewpic%d", priv->current_pic);
-	gnome_app_ui_set_icon (big_pic, open_result_get (priv->info, str));
+	gnome_app_set_icon (big_pic, open_result_get (priv->info, str));
 	g_free (str);
 
 	if (priv->current_pic > priv->pic_count) {

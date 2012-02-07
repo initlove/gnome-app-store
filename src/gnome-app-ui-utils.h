@@ -32,9 +32,12 @@ enum {
 	GNOME_APP_POSITION_MOUSE,
 };
 
-void	gnome_app_ui_set_icon (ClutterActor *actor, const gchar *uri);
-void	gnome_app_ui_stage_move (ClutterActor *stage, gint x, gint y);
-void	gnome_app_ui_stage_set_position (ClutterActor *stage, gint position);
+void gnome_app_set_icon 		(ClutterActor *actor, const gchar *uri);
+void gnome_app_stage_move 		(ClutterActor *stage, gint x, gint y);
+void gnome_app_stage_set_position 	(ClutterActor *stage, gint position);
+
+ClutterActor *				gnome_app_entry_new ();
+void					gnome_app_entry_binding (ClutterActor *actor);
 
 G_END_DECLS
 

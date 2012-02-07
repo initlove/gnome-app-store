@@ -17,6 +17,12 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-task.h"
 #include "gnome-app-ui-utils.h"
 
+enum {
+	MOUSE_NONE,
+	MOUSE_ENTER,
+	MOUSE_LEAVE,
+};
+
 static gpointer
 set_pic_callback (gpointer userdata, gpointer func_re)
 {
@@ -31,7 +37,7 @@ set_pic_callback (gpointer userdata, gpointer func_re)
 }
 
 void
-gnome_app_ui_set_icon (ClutterActor *actor, const gchar *uri)
+gnome_app_set_icon (ClutterActor *actor, const gchar *uri)
 {
 	GnomeAppTask *task;
 		
@@ -41,7 +47,7 @@ gnome_app_ui_set_icon (ClutterActor *actor, const gchar *uri)
 }
 
 void
-gnome_app_ui_stage_move (ClutterActor *stage, gint x, gint y)
+gnome_app_stage_move (ClutterActor *stage, gint x, gint y)
 {
 	Window xwindow;
 	Display *display;
@@ -53,7 +59,7 @@ gnome_app_ui_stage_move (ClutterActor *stage, gint x, gint y)
 }
 
 void
-gnome_app_ui_stage_set_position (ClutterActor *stage, gint position)
+gnome_app_stage_set_position (ClutterActor *stage, gint position)
 {
 	Window xwindow;
 	Display *display;
@@ -84,5 +90,91 @@ gnome_app_ui_stage_set_position (ClutterActor *stage, gint position)
 		default:
 			break;
 	}
+}
+
+static void
+on_gnome_app_entry_paint (ClutterActor *actor,
+		gpointer      data)
+{
+	ClutterActorBox allocation = { 0, };
+	gfloat width, height;
+	gint mouse_status;
+printf ("paint\n");
+	clutter_actor_get_allocation_box (actor, &allocation);
+	clutter_actor_box_clamp_to_pixel (&allocation);
+	clutter_actor_box_get_size (&allocation, &width, &height);
+
+	if (clutter_actor_has_key_focus (actor)) {
+		cogl_set_source_color4ub (128, 128, 255, 255);
+		cogl_path_rectangle (1, 1, width, height);
+		cogl_path_stroke ();
+		cogl_set_source_color4ub (128, 128, 128, 64);
+		cogl_path_rectangle (2, 2, width - 1, height - 1);
+		cogl_path_stroke ();
+	} else {
+		cogl_set_source_color4ub (128, 128, 128, 255);
+		cogl_path_rectangle (1, 1, width, height);
+		cogl_path_stroke ();
+
+		mouse_status = g_object_get_data (actor, "mouse-status");
+		switch (mouse_status) {
+			case MOUSE_ENTER:
+				cogl_set_source_color4ub (128, 128, 128, 64);
+				cogl_path_rectangle (2, 2, width - 1, height - 1);
+				cogl_path_stroke ();
+				break;
+		}
+	}
+}
+
+static gboolean
+on_gnome_app_entry_enter (ClutterActor *actor,
+		ClutterEvent *event)
+{
+	g_object_set_data (actor, "mouse-status", MOUSE_ENTER);
+	clutter_actor_queue_redraw (actor);
+
+	return FALSE;
+}
+
+static gboolean
+on_gnome_app_entry_leave (ClutterActor *actor,
+		          ClutterEvent *event)
+{
+	g_object_set_data (actor, "mouse-status", MOUSE_LEAVE);
+	clutter_actor_queue_redraw (actor);
+
+	return FALSE;
+}
+
+void
+gnome_app_entry_binding (ClutterActor *actor)
+{
+	g_object_set_data (actor, "mouse-status", MOUSE_NONE);
+	g_signal_connect (actor, "enter-event", G_CALLBACK (on_gnome_app_entry_enter), NULL);
+	g_signal_connect (actor, "leave-event", G_CALLBACK (on_gnome_app_entry_leave), NULL);
+	g_signal_connect (actor, "paint", G_CALLBACK (on_gnome_app_entry_paint), NULL);
+}
+
+ClutterActor *
+gnome_app_entry_new ()
+{
+	ClutterActor *actor;
+
+	actor = clutter_text_new ();
+	clutter_actor_set_size (actor, 100, 50);
+	clutter_text_set_text (actor, "test");
+	clutter_actor_set_reactive (actor, TRUE);
+	clutter_text_set_editable (CLUTTER_TEXT (actor), TRUE);
+	clutter_text_set_selectable (CLUTTER_TEXT (actor), TRUE);
+	clutter_text_set_single_line_mode (CLUTTER_TEXT (actor), TRUE);
+
+	        
+	g_object_set_data (actor, "mouse-status", MOUSE_NONE);
+	g_signal_connect (actor, "enter-event", G_CALLBACK (on_gnome_app_entry_enter), NULL);
+	g_signal_connect (actor, "leave-event", G_CALLBACK (on_gnome_app_entry_leave), NULL);
+	g_signal_connect (actor, "paint", G_CALLBACK (on_gnome_app_entry_paint), NULL);
+
+	return actor;
 }
 

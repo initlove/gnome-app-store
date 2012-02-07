@@ -307,7 +307,7 @@ info_icon_new_with_app (OpenResult *info, GnomeAppApplication *app)
 	val = open_result_get (info, "smallpreviewpic1");
 
 	if (val) {
-		gnome_app_ui_set_icon (actor, val);
+		gnome_app_set_icon (actor, val);
 	} else {
 	}
 

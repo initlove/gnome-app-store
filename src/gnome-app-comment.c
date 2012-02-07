@@ -63,7 +63,7 @@ _set_user_icon_1 (gpointer userdata, gpointer func_result)
 		if (val && (strcmp (val, "1") == 0)) {
 			pic = open_result_get (result, "avatarpic");
 			if (pic) {
-				gnome_app_ui_set_icon (userdata, pic);
+				gnome_app_set_icon (userdata, pic);
 				return NULL;
 			}
 		} else {
@@ -71,7 +71,7 @@ _set_user_icon_1 (gpointer userdata, gpointer func_result)
 			if (val && (strcmp (val, "1") == 0)) {
 				pic = open_result_get (result, "bigavatarpic");
 				if (pic) {
-					gnome_app_ui_set_icon (userdata, pic);
+					gnome_app_set_icon (userdata, pic);
 					return NULL;
 				}
 			}

@@ -195,7 +195,7 @@ on_register_press (ClutterActor *actor,
 	clutter_stage_set_title (CLUTTER_STAGE (stage), "register");
 	clutter_actor_set_name (stage, "register");
 	clutter_actor_show (stage);
-	gnome_app_ui_stage_set_position (stage, GNOME_APP_POSITION_CENTER);
+	gnome_app_stage_set_position (stage, GNOME_APP_POSITION_CENTER);
 
 	g_signal_connect (register_button, "button-press-event", G_CALLBACK (on_real_register_press), script);
 }
@@ -270,13 +270,16 @@ gnome_app_login (gchar *username_content)
 			"login", &login_button,
 			NULL);
 
-	if (username_content)
-		clutter_text_set_text (CLUTTER_TEXT (username_entry), username_content);
-
 	clutter_stage_set_title (CLUTTER_STAGE (stage), "login");
 	clutter_actor_set_name (stage, "login");
 	clutter_actor_show (stage);
-	gnome_app_ui_stage_set_position (stage, GNOME_APP_POSITION_CENTER);
+	gnome_app_stage_set_position (stage, GNOME_APP_POSITION_CENTER);
+
+	if (username_content)
+		clutter_text_set_text (CLUTTER_TEXT (username_entry), username_content);
+
+	gnome_app_entry_binding (username_entry);
+	gnome_app_entry_binding (password_entry);
 
 	g_signal_connect (register_button, "button-press-event", G_CALLBACK (on_register_press), script);
 	g_signal_connect (login_button, "button-press-event", G_CALLBACK (on_login_press), script);

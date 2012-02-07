@@ -102,14 +102,14 @@ add_friend_callback (gpointer userdata, gpointer func_result)
 		if (val && (strcmp (val, "1") == 0)) {
 			pic = open_result_get (result, "avatarpic");
 			if (pic) {
-				gnome_app_ui_set_icon (data->icon, pic);
+				gnome_app_set_icon (data->icon, pic);
 			}
 		} else {
 			val = open_result_get (result, "bigavatarpicfound");
 			if (val && (strcmp (val, "1") == 0)) {
 				pic = open_result_get (result, "bigavatarpic");
 				if (pic) {
-					gnome_app_ui_set_icon (data->icon, pic);
+					gnome_app_set_icon (data->icon, pic);
 				}
 			}				
 		}
