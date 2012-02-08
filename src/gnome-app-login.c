@@ -243,8 +243,9 @@ static void
 gnome_app_login (gchar *username_content)
 {
 	ClutterActor *stage;
-	ClutterActor *username, *username_entry;
-	ClutterActor *password, *password_entry;
+	ClutterActor *username_entry;
+	ClutterActor *password_entry;
+	ClutterActor *auto_login_check_box, *auto_login_label;
 	ClutterActor *register_button, *login_button;
 	ClutterScript *script;
 	GError *error;
@@ -262,10 +263,10 @@ gnome_app_login (gchar *username_content)
 	}
 	                                      
 	clutter_script_get_objects (script, "app-login", &stage,
-			"username", &username,
 			"username-entry", &username_entry,
-			"password", &password,
 			"password-entry", &password_entry,
+			"auto-login-check-box", &auto_login_check_box,
+			"auto-login-label", &auto_login_label,
 			"register", &register_button,
 			"login", &login_button,
 			NULL);
@@ -279,12 +280,14 @@ gnome_app_login (gchar *username_content)
 		clutter_text_set_text (CLUTTER_TEXT (username_entry), username_content);
 
 	gnome_app_entry_binding (username_entry);
+	gnome_app_entry_add_hint (username_entry, "user name");
 	gnome_app_entry_binding (password_entry);
+	gnome_app_entry_add_hint (password_entry, "password");
+	gnome_app_check_box_binding (auto_login_check_box, auto_login_label);
 
 	g_signal_connect (register_button, "button-press-event", G_CALLBACK (on_register_press), script);
 	g_signal_connect (login_button, "button-press-event", G_CALLBACK (on_login_press), script);
 
-	//  g_signal_connect (new_stage, "destroy", G_CALLBACK (on_destroy), NULL);
 }
 
 void
