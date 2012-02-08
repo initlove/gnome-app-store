@@ -305,17 +305,22 @@ on_gnome_app_check_box_press (ClutterActor *self,
 }
 
 void
-gnome_app_check_box_binding (ClutterActor *actor, ClutterActor *label)
+gnome_app_check_box_binding (ClutterActor *actor)
 {
 	g_object_set_data (G_OBJECT (actor), "mouse-status", (gpointer) MOUSE_NONE);
 	g_object_set_data (G_OBJECT (actor), "selected", (gpointer) FALSE);
 	g_signal_connect (actor, "enter-event", G_CALLBACK (on_gnome_app_widget_enter), actor);
 	g_signal_connect (actor, "leave-event", G_CALLBACK (on_gnome_app_widget_leave), actor);
-	g_signal_connect (label, "enter-event", G_CALLBACK (on_gnome_app_widget_enter), actor);
-	g_signal_connect (label, "leave-event", G_CALLBACK (on_gnome_app_widget_leave), actor);
 	g_signal_connect (actor, "paint", G_CALLBACK (on_gnome_app_check_box_paint), NULL);
 	g_signal_connect (actor, "button-press-event", G_CALLBACK (on_gnome_app_check_box_press), actor);
-	g_signal_connect (label, "button-press-event", G_CALLBACK (on_gnome_app_check_box_press), actor);
+}
+
+void
+gnome_app_check_box_add_connector (ClutterActor *actor, ClutterActor *connector)
+{
+	g_signal_connect (connector, "enter-event", G_CALLBACK (on_gnome_app_widget_enter), actor);
+	g_signal_connect (connector, "leave-event", G_CALLBACK (on_gnome_app_widget_leave), actor);
+	g_signal_connect (connector, "button-press-event", G_CALLBACK (on_gnome_app_check_box_press), actor);
 }
 
 gboolean
