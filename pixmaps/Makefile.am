@@ -1,6 +1,7 @@
 pixmapsdir = $(datadir)/pixmaps/@PACKAGE@
 
 pixmaps_DATA =	\
+	login.png \
 	missing.png \
 	read.png \
 	unread.png \

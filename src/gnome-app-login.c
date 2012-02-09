@@ -15,7 +15,6 @@ Author: David Liang <dliang@novell.com>
 #include <string.h>
 #include <glib/gi18n.h>
 #include <clutter/clutter.h>
-
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
 #include "gnome-app-ui-utils.h"
@@ -194,8 +193,9 @@ on_register_press (ClutterActor *actor,
 
 	clutter_stage_set_title (CLUTTER_STAGE (stage), "register");
 	clutter_actor_set_name (stage, "register");
-	clutter_actor_show (stage);
+	gnome_app_stage_remove_decorate (stage);
 	gnome_app_stage_set_position (stage, GNOME_APP_POSITION_CENTER);
+	clutter_actor_show (stage);
 
 	g_signal_connect (register_button, "button-press-event", G_CALLBACK (on_real_register_press), script);
 }
@@ -270,11 +270,13 @@ gnome_app_login (gchar *username_content)
 			"register", &register_button,
 			"login", &login_button,
 			NULL);
-
-	clutter_stage_set_title (CLUTTER_STAGE (stage), "login");
-	clutter_actor_set_name (stage, "login");
-	clutter_actor_show (stage);
+	gnome_app_stage_remove_decorate (stage);
 	gnome_app_stage_set_position (stage, GNOME_APP_POSITION_CENTER);
+	filename = open_app_get_pixmap_uri ("login");
+	gnome_app_actor_add_background (stage, filename);
+	g_free (filename);
+
+	clutter_actor_show (stage);
 
 	if (username_content)
 		clutter_text_set_text (CLUTTER_TEXT (username_entry), username_content);
