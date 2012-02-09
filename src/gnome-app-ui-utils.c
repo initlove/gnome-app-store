@@ -236,6 +236,9 @@ on_gnome_app_entry_paint (ClutterActor *actor,
 		cogl_set_source_color4ub (128, 128, 128, 64);
 		cogl_path_rectangle (2, 2, width - 1, height - 1);
 		cogl_path_stroke ();
+
+		cogl_set_source_color4ub (255, 255, 255, 64);
+		cogl_rectangle (2, 2, width - 2, height - 2);
 	} else {
 		cogl_set_source_color4ub (128, 128, 128, 255);
 		cogl_path_rectangle (1, 1, width, height);
@@ -247,6 +250,8 @@ on_gnome_app_entry_paint (ClutterActor *actor,
 				cogl_set_source_color4ub (128, 128, 128, 64);
 				cogl_path_rectangle (2, 2, width - 1, height - 1);
 				cogl_path_stroke ();
+				cogl_set_source_color4ub (255, 255, 255, 64);
+				cogl_rectangle (2, 2, width - 2, height - 2);
 				break;
 		}
 	}
@@ -346,6 +351,8 @@ on_gnome_app_check_box_paint (ClutterActor *actor,
 			cogl_set_source_color4ub (128, 128, 128, 64);
 			cogl_path_rectangle (2, 2, width - 1, height - 1);
 			cogl_path_stroke ();
+			cogl_set_source_color4ub (255, 255, 255, 64);
+			cogl_rectangle (2, 2, width - 2, height - 2);
 			break;
 	}
 
@@ -448,4 +455,6 @@ gnome_app_actor_add_background (ClutterActor *actor, gchar *filename)
 		clutter_actor_get_position (actor, &x, &y);
 		clutter_actor_set_position (texture, x, y);
 	}
+	/*This make it real background ... */
+	clutter_actor_lower_bottom (texture);
 }
