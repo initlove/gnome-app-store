@@ -35,6 +35,8 @@ enum {
 	MOUSE_LEAVE,
 };
 
+#define SCALE_UP_RATE  1.5
+
 static gpointer
 set_pic_callback (gpointer userdata, gpointer func_re)
 {
@@ -109,6 +111,7 @@ remove_decorate_on_show (ClutterActor *stage,
  * 		remove -> set_position -> actor_show
  *
  * TODO: maybe a bug or may have better way, it is very tricky currently.
+ * Still we have problem in the first gui ...
  */
 void
 gnome_app_stage_remove_decorate (ClutterActor *stage)
@@ -164,7 +167,7 @@ set_position_on_show (ClutterActor *stage, gint position)
 void
 gnome_app_stage_set_position (ClutterActor *stage, gint position)
 {
-	g_signal_connect (stage, "show", G_CALLBACK (set_position_on_show), position);
+	g_signal_connect (stage, "show", G_CALLBACK (set_position_on_show), (gpointer) position);
 }
 
 static gboolean
@@ -370,14 +373,12 @@ on_gnome_app_check_box_paint (ClutterActor *actor,
 }
 
 static gboolean
-on_gnome_app_check_box_press (ClutterActor *self,
+on_gnome_app_check_box_press (ClutterActor *actor,
       		ClutterEvent *event,
 		gpointer      userdata)
 {
-	ClutterActor *actor;
 	gboolean selected;
 
-	actor = CLUTTER_ACTOR (userdata);
 	selected = (gboolean) g_object_get_data (G_OBJECT (actor), "selected");
 	selected = !selected;
 	g_object_set_data (G_OBJECT (actor), "selected", (gpointer) selected);
@@ -389,12 +390,27 @@ on_gnome_app_check_box_press (ClutterActor *self,
 void
 gnome_app_check_box_binding (ClutterActor *actor)
 {
+	gnome_app_actor_add_scale_state (actor);
+
 	g_object_set_data (G_OBJECT (actor), "mouse-status", (gpointer) MOUSE_NONE);
 	g_object_set_data (G_OBJECT (actor), "selected", (gpointer) FALSE);
 	g_signal_connect (actor, "enter-event", G_CALLBACK (on_gnome_app_widget_enter), actor);
 	g_signal_connect (actor, "leave-event", G_CALLBACK (on_gnome_app_widget_leave), actor);
 	g_signal_connect (actor, "paint", G_CALLBACK (on_gnome_app_check_box_paint), NULL);
-	g_signal_connect (actor, "button-press-event", G_CALLBACK (on_gnome_app_check_box_press), actor);
+	g_signal_connect (actor, "button-press-event", G_CALLBACK (on_gnome_app_check_box_press), NULL);
+}
+
+static gboolean
+on_gnome_app_connector_button_press (ClutterActor *self,
+      		ClutterEvent *event,
+		gpointer      userdata)
+{
+	ClutterActor *actor;
+
+	actor = CLUTTER_ACTOR (userdata);
+	g_signal_emit_by_name (actor, "button-press-event", NULL);
+
+	return FALSE;
 }
 
 void
@@ -402,7 +418,7 @@ gnome_app_check_box_add_connector (ClutterActor *actor, ClutterActor *connector)
 {
 	g_signal_connect (connector, "enter-event", G_CALLBACK (on_gnome_app_widget_enter), actor);
 	g_signal_connect (connector, "leave-event", G_CALLBACK (on_gnome_app_widget_leave), actor);
-	g_signal_connect (connector, "button-press-event", G_CALLBACK (on_gnome_app_check_box_press), actor);
+	g_signal_connect (connector, "button-press-event", G_CALLBACK (on_gnome_app_connector_button_press), actor);
 }
 
 gboolean
@@ -415,16 +431,40 @@ gnome_app_check_box_get_selected (ClutterActor *actor)
 	return selected;
 }
 
+
+static void
+on_gnome_app_button_paint (ClutterActor *actor,
+		gpointer      userdata)
+{
+	ClutterActorBox allocation = { 0, };
+	gfloat width, height;
+	gint mouse_status;
+
+	clutter_actor_get_allocation_box (actor, &allocation);
+	clutter_actor_box_clamp_to_pixel (&allocation);
+	clutter_actor_box_get_size (&allocation, &width, &height);
+
+	mouse_status = (gint) g_object_get_data (G_OBJECT (actor), "mouse-status");
+	switch (mouse_status) {
+		case MOUSE_ENTER:
+			cogl_set_source_color4ub (128, 128, 128, 255);
+			cogl_path_rectangle (-5, -5, width+5, height+5);
+			cogl_path_stroke ();
+			cogl_set_source_color4ub (0, 0, 0, 16);
+			cogl_rectangle (-4, -4, width + 4, height + 4);
+			break;
+	}
+}
+
 void
 gnome_app_button_binding (ClutterActor *actor)
 {
+	gnome_app_actor_add_scale_state (actor);
+
 	g_object_set_data (G_OBJECT (actor), "mouse-status", (gpointer) MOUSE_NONE);
-	g_object_set_data (G_OBJECT (actor), "selected", (gpointer) FALSE);
 	g_signal_connect (actor, "enter-event", G_CALLBACK (on_gnome_app_widget_enter), actor);
 	g_signal_connect (actor, "leave-event", G_CALLBACK (on_gnome_app_widget_leave), actor);
-	g_signal_connect (actor, "paint", G_CALLBACK (on_gnome_app_check_box_paint), NULL);
-	g_signal_connect (actor, "button-press-event", G_CALLBACK (on_gnome_app_check_box_press), actor);
-
+	g_signal_connect (actor, "paint", G_CALLBACK (on_gnome_app_button_paint), NULL);
 }
 
 void
@@ -457,4 +497,63 @@ gnome_app_actor_add_background (ClutterActor *actor, gchar *filename)
 	}
 	/*This make it real background ... */
 	clutter_actor_lower_bottom (texture);
+}
+
+static void
+scale_state_complete (ClutterState *state, gpointer userdata)
+{
+	ClutterActor *actor;
+
+	actor = CLUTTER_ACTOR (userdata);
+	  
+	if (clutter_actor_is_scaled (actor))
+	      clutter_state_set_state (state, "not-scaled");
+}
+
+static void
+on_scale_state_destroy (ClutterActor *actor,
+		gpointer userdata)
+{
+	ClutterState *state;
+
+	state = CLUTTER_STATE (userdata);
+
+	g_object_unref (G_OBJECT (state));
+}
+
+static gboolean
+on_scale_state_button_press (ClutterActor *self,
+      		ClutterEvent *event,
+		gpointer      userdata)
+{
+	ClutterState *state;
+
+	state = CLUTTER_STATE (userdata);
+	clutter_state_set_state (state, "scaled-up");
+//TODO
+	return FALSE;
+}
+
+void
+gnome_app_actor_add_scale_state (ClutterActor *actor)
+{
+	ClutterState *state;
+
+	g_object_set (G_OBJECT (actor),
+		"scale-gravity", CLUTTER_GRAVITY_CENTER,
+		NULL);
+	state = clutter_state_new ();
+	clutter_state_set_duration (state, NULL, NULL, 100);
+      	clutter_state_set (state, NULL, "not-scaled",
+		      	actor, "scale-x", CLUTTER_LINEAR, 1.0,
+			actor, "scale-y", CLUTTER_LINEAR, 1.0,
+			NULL);
+	clutter_state_set (state, NULL, "scaled-up",
+			actor, "scale-x", CLUTTER_LINEAR, SCALE_UP_RATE,
+			actor, "scale-y", CLUTTER_LINEAR, SCALE_UP_RATE,
+			NULL);
+	clutter_state_warp_to_state (state, "not-scaled");
+	g_signal_connect (state, "completed", G_CALLBACK (scale_state_complete), actor);
+	g_signal_connect (actor, "button-press-event", G_CALLBACK (on_scale_state_button_press), state);
+	g_signal_connect (actor, "destroy", G_CALLBACK (on_scale_state_destroy), state);
 }

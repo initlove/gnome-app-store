@@ -287,6 +287,7 @@ gnome_app_login (gchar *username_content)
 	gnome_app_entry_add_hint (password_entry, "password");
 	gnome_app_check_box_binding (auto_login_check_box);
 	gnome_app_check_box_add_connector (auto_login_check_box, auto_login_label);
+	gnome_app_button_binding (login_button);
 
 	g_signal_connect (register_button, "button-press-event", G_CALLBACK (on_register_press), script);
 	g_signal_connect (login_button, "button-press-event", G_CALLBACK (on_login_press), script);

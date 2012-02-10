@@ -78,12 +78,10 @@
         "id" : "login",
         "type" : "ClutterText",
         "text" : "Login",
-	"x" : 100,
+	"x" : 110,
 	"y" : 220,
-        "width" : 100,
         "font-name" : "Sans 25px",
         "color" : "blue",
-        "line-alignment" : "start",
         "line-wrap" : false,
     	"reactive" : true,
         "ellipsize" : "end"
