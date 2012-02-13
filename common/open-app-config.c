@@ -13,6 +13,8 @@ Author: David Liang <dliang@novell.com>
 
 */
 #include <stdio.h>
+#include <string.h>
+#include <glib/gbase64.h>
 #include "config.h"
 #include "open-app-config.h"
 
@@ -32,25 +34,23 @@ create_default_key_file (gchar *file_url)
 	GKeyFile *key_file;
 	const gchar *default_url;
 	const gchar *default_type;
-	gchar *data;
+	GError *error;
+	gchar *content;
 	gint len;
-	FILE *fp;
-
-	fp = fopen (file_url, "w");
-	if (fp == NULL) {
-		printf ("Cannot create key file!\n");
-		return NULL;
-	}
 
 	key_file = g_key_file_new ();
 	default_url = "api.opendesktop.org";
 	default_type = "ocs";
 	g_key_file_set_value (key_file, "Server", "uri", default_url);
 	g_key_file_set_value (key_file, "Server", "type", default_type);
-	data = g_key_file_to_data (key_file, &len, NULL);
-	fwrite (data, 1, len, fp);
-	fclose (fp);
-	g_free (data);
+	content = g_key_file_to_data (key_file, &len, NULL);
+
+	error = NULL;
+	if (!g_file_set_contents (file_url, content, len, &error)) {
+		g_error ("Error in save user file %s\n", error->message);
+		g_error_free (error);
+	}
+	g_free (content);
 
 	return key_file;	
 }
@@ -135,15 +135,18 @@ open_app_config_new (void)
 	return g_object_new (OPEN_APP_TYPE_CONFIG, NULL);
 }
 
-const gchar *
+gchar *
 open_app_config_get_server_uri (OpenAppConfig *config)
 {
 	g_return_val_if_fail (config->priv->key_file != NULL, NULL);
 
-        GError  *error = NULL;
+	OpenAppConfigPrivate *priv;
+        GError  *error;
 	gchar *val;
 
-	val = g_key_file_get_value (config->priv->key_file, "Server", "uri", &error);
+	priv = config->priv;
+	error = NULL;
+	val = g_key_file_get_value (priv->key_file, "Server", "uri", &error);
 
 	if (error) {
 		g_warning ("Failed to load server uri %s", error->message);
@@ -152,18 +155,21 @@ open_app_config_get_server_uri (OpenAppConfig *config)
 	}
 
 	if (val && val [0])
-		return (const gchar *) val;
+		return val;
 	else
 		return NULL;
 }
 
-const gchar *
+gchar *
 open_app_config_get_server_type (OpenAppConfig *config)
 {
-        GError  *error = NULL;
+	OpenAppConfigPrivate *priv;
+        GError  *error;
 	gchar *val;
 
-	val = g_key_file_get_value (config->priv->key_file, "Server", "type", &error);
+	priv = config->priv;
+	error = NULL;
+	val = g_key_file_get_value (priv->key_file, "Server", "type", &error);
 
 	if (error) {
 		g_warning ("Failed to load server type %s", error->message);
@@ -172,47 +178,105 @@ open_app_config_get_server_type (OpenAppConfig *config)
 	}
 
 	if (val && val [0])
-		return (const gchar *) val;
+		return val;
 	else
 		return NULL;
 }
 
-const gchar *
+gchar *
 open_app_config_get_username (OpenAppConfig *config)
 {
-        GError  *error = NULL;
+	OpenAppConfigPrivate *priv;
+        GError  *error;
 	gchar *val;
 
-	val = g_key_file_get_value (config->priv->key_file, "Server", "username", &error);
-
+	priv = config->priv;
+	error = NULL;
+	val = g_key_file_get_value (priv->key_file, "Server", "username", &error);
 	if (error) {
-		g_warning ("Failed to load server username %s", error->message);
 		g_error_free (error);
 		return NULL;
 	}
 
 	if (val && val [0])
-		return (const gchar *) val;
+		return val;
 	else
 		return NULL;
 }
 
-const gchar *
+gchar *
 open_app_config_get_password (OpenAppConfig *config)
 {
-        GError  *error = NULL;
+	OpenAppConfigPrivate *priv;
+        GError  *error;
 	gchar *val;
 
-	val = g_key_file_get_value (config->priv->key_file, "Server", "password", &error);
+	priv = config->priv;
+	error = NULL;
+	val = g_key_file_get_value (priv->key_file, "Server", "password", &error);
 	if (error) {
-		g_warning ("Failed to load server password %s", error->message);
 		g_error_free (error);
 		return NULL;
 	}
-	if (val && val [0])
-		return (const gchar *) val;
-	else
+	if (val && val [0]) {
+		gchar *real;
+		gint len;
+
+		real = g_base64_decode (val, &len);
+		g_free (val);
+
+		return real;
+	} else
 		return NULL;
 }
 
+gboolean
+open_app_config_save (OpenAppConfig *config, gchar *username, gchar *password)
+{
+	OpenAppConfigPrivate *priv;
+	GError *error;
+	gchar *filename;
+	gchar *content;
+	gint len;
+	gboolean val;
 
+	priv = config->priv;
+	g_key_file_set_value (priv->key_file, "Server", "username", username);
+	if (password) {
+		const gchar *warning;
+		gchar *encode;
+
+		encode = g_base64_encode (password, strlen (password));
+		g_key_file_set_value (priv->key_file, "Server", "password", encode);
+		g_free (encode);
+
+		warning = "The password is base64 encoded, should not save it to local ";
+		error = NULL;
+		if (!g_key_file_set_comment (priv->key_file, "Server", "password", warning, &error)) {
+			g_error ("Error in set comment %s\n", error->message);
+			g_error_free (error);
+			error = NULL;
+		}
+	}
+	error = NULL;
+	content = g_key_file_to_data (priv->key_file, &len, &error);
+	if (error) {
+		g_error ("Error in get data %s\n", error->message);
+		g_error_free (error);
+		return FALSE;
+	}
+
+        filename = g_build_filename (g_get_user_config_dir (), PACKAGE_NAME, "config", NULL);
+	error = NULL;
+	if (!g_file_set_contents (filename, content, len, &error)) {
+		val = FALSE;
+		g_error ("Error in save user file %s\n", error->message);
+		g_error_free (error);
+	} else {
+		val = TRUE;
+	}
+	g_free (content);
+	g_free (filename);
+
+	return val;
+}

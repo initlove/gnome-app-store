@@ -199,19 +199,6 @@ on_register_press (ClutterActor *actor,
 	stage = CLUTTER_ACTOR (clutter_script_get_object (priv->login_script, "app-login"));
 	clutter_actor_hide (stage);
 	
-	if (!priv->register_script) {
-		filename = open_app_get_ui_uri ("app-register");
-		priv->register_script = clutter_script_new ();
-		error = NULL;
-		clutter_script_load_from_file (priv->register_script, filename, &error);
-		g_free (filename);
-		if (error) {
-			g_error_free (error);
-			g_object_unref (priv->register_script);
-			return FALSE;
-		}
-	}
-	                                      
 	clutter_script_get_objects (priv->register_script, "app-register", &stage,
 			"username", &username,
 			"username-entry", &username_entry,
@@ -295,20 +282,26 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 	if (results && open_results_get_status (results)) {
 		GnomeAppStore *store;
 		ClutterActor *stage;
+		ClutterActor *auto_login_check_box;
 		ClutterActor *username_entry;
 	        ClutterActor *password_entry;
 		const gchar *username;
         	const gchar *password;
+		gboolean save;
 
 		clutter_script_get_objects (priv->login_script,
 				"app-login", &stage,
+				"auto-login-check-box", &auto_login_check_box,
 				"username-entry", &username_entry,
 				"password-entry", &password_entry,
 				NULL);
+		save = gnome_app_check_box_get_selected (auto_login_check_box);
 		username = clutter_text_get_text (CLUTTER_TEXT (username_entry));
 		password = clutter_text_get_text (CLUTTER_TEXT (password_entry));
 		store = gnome_app_store_get_default ();
-		g_object_set (store, "username", username, "password", password, NULL);
+		g_object_set (store, "username", username, "password", password,
+				"save", save,
+				NULL);
 
 		g_signal_emit (login, login_signals [AUTH], 0);
 	} else {
@@ -440,11 +433,37 @@ GnomeAppLogin *
 gnome_app_login_new (void)
 {
 	GnomeAppLogin *login;
+	GnomeAppLoginPrivate *priv;
 	GnomeAppStore *store;
+	GError *error;
+	gchar *filename;
 	gchar *username;
         gchar *password;
 
 	login = g_object_new (GNOME_APP_TYPE_LOGIN, NULL);
+	priv = login->priv;
+	filename = open_app_get_ui_uri ("app-login");
+	priv->login_script = clutter_script_new ();
+	error = NULL;
+	clutter_script_load_from_file (priv->login_script, filename, &error);
+	g_free (filename);
+	if (error) {
+		g_error_free (error);
+		g_object_unref (login);
+		return NULL;
+	}
+
+	filename = open_app_get_ui_uri ("app-register");
+	priv->register_script = clutter_script_new ();
+	error = NULL;
+	clutter_script_load_from_file (priv->register_script, filename, &error);
+	g_free (filename);
+	if (error) {
+		g_error_free (error);
+		g_object_unref (login);
+		return NULL;
+	}
+
 	store = gnome_app_store_get_default ();
 	g_object_get (store, "username", &username, "password", &password, NULL);
 	if (username && password) {
@@ -459,6 +478,8 @@ gnome_app_login_new (void)
 void
 gnome_app_login_run (GnomeAppLogin *login)
 {
+	g_return_if_fail (login);
+
 	GnomeAppLoginPrivate *priv;
 	GnomeAppStore *store;
 	ClutterActor *stage;
@@ -466,23 +487,11 @@ gnome_app_login_run (GnomeAppLogin *login)
 	ClutterActor *password_entry;
 	ClutterActor *auto_login_check_box, *auto_login_label;
 	ClutterActor *register_button, *login_button;
-	GError *error;
 	gchar *filename;
+	GError *error;
 	gchar *default_username;
 
 	priv = login->priv;
-
-	filename = open_app_get_ui_uri ("app-login");
-	priv->login_script = clutter_script_new ();
-	error = NULL;
-	clutter_script_load_from_file (priv->login_script, filename, &error);
-	g_free (filename);
-	if (error) {
-		g_error_free (error);
-		g_object_unref (login);
-		return ;
-	}
-	                                      
 	clutter_script_get_objects (priv->login_script, "app-login", &stage,
 			"username-entry", &username_entry,
 			"password-entry", &password_entry,
@@ -505,6 +514,7 @@ gnome_app_login_run (GnomeAppLogin *login)
 	gnome_app_check_box_add_connector (auto_login_check_box, auto_login_label);
 	gnome_app_button_binding (login_button);
 	gnome_app_button_binding (register_button);
+
 	store = gnome_app_store_get_default ();
 	g_object_get (store, "username", &default_username, NULL);
 	if (default_username)

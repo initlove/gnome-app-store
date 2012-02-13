@@ -48,40 +48,13 @@ struct _GnomeAppStorePrivate
 
 enum {
 	PROP_0,
+	PROP_SAVE,
 	PROP_USERNAME,
 	PROP_PASSWORD,
 	PROP_LAST,
 };
 
 G_DEFINE_TYPE (GnomeAppStore, gnome_app_store, G_TYPE_OBJECT)
-
-static void
-set_username (GnomeAppStore *store, gchar *username)
-{
-	GnomeAppStorePrivate *priv;
-
-	priv = store->priv;
-	if (priv->username)
-		g_free (priv->username);
-	if (username)
-		priv->username = g_strdup (username);
-	else
-		priv->username = NULL;
-}
-
-static void
-set_password (GnomeAppStore *store, gchar *password)
-{
-	GnomeAppStorePrivate *priv;
-
-	priv = store->priv;
-	if (priv->password)
-		g_free (priv->password);
-	if (password)
-		priv->password = g_strdup (password);
-	else
-		priv->password = NULL;
-}
 
 static void
 set_rest_proxy (GnomeAppStore *store)
@@ -228,25 +201,14 @@ gnome_app_store_init (GnomeAppStore *store)
         priv->categories = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	priv->proxy = gnome_app_proxy_new ();
 
-	const gchar *username;
-	const gchar *password;
-	const gchar *server_url;
-
-	server_url = open_app_config_get_server_uri (priv->config);
-	if (!server_url) {
+	priv->server_url = open_app_config_get_server_uri (priv->config);
+	if (!priv->server_url) {
 		g_critical ("Cannot get the server uri !\n");
 		return;
 	}
+	priv->username = open_app_config_get_username (priv->config);
+	priv->password = open_app_config_get_password (priv->config);
 
-	priv->server_url = g_strdup (server_url);
-	priv->username = NULL;
-	priv->password = NULL;
-
-	username = open_app_config_get_username (priv->config);
-	password = open_app_config_get_password (priv->config);
-
-	set_username (store, username);
-	set_password (store, password);
 	set_rest_proxy (store);
 	priv->queue = o_async_worker_new ();
 //FIXME: ?        o_async_worker_join (queue);
@@ -295,16 +257,39 @@ gnome_app_store_set_property (GObject      *object,
 		GParamSpec   *pspec)
 {
 	GnomeAppStore *store;        
+	GnomeAppStorePrivate *priv;
+	const gchar *username;
+	const gchar *password;
+	gboolean save;
 
 	store = GNOME_APP_STORE (object);
-			       
+	priv = store->priv;		       
        	switch (prop_id) {
+		case PROP_SAVE:
+			save = g_value_get_boolean (value);
+			if (save)
+				open_app_config_save (priv->config, priv->username, priv->password);
+			else
+				open_app_config_save (priv->config, priv->username, NULL);
+			break;
 		case PROP_USERNAME:
-			set_username (store, g_value_get_string (value));
+			if (priv->username)
+				g_free (priv->username);
+			username = g_value_get_string (value);
+			if (username)
+				priv->username = g_strdup (username);
+			else
+				priv->username = NULL;
 			set_rest_proxy (store);
 			break;
 		case PROP_PASSWORD:
-			set_password (store, g_value_get_string (value));
+			if (priv->password)
+				g_free (priv->password);
+			password = g_value_get_string (value);
+			if (password)
+				priv->password = g_strdup (password);
+			else
+				priv->password = NULL;
 			set_rest_proxy (store);
 			break;
 		default:
@@ -348,6 +333,14 @@ gnome_app_store_class_init (GnomeAppStoreClass *klass)
 	
         klass->lock = NULL;
 	klass->unlock = NULL;
+
+        g_object_class_install_property (object_class,
+			PROP_SAVE,
+                        g_param_spec_boolean ("save",
+				"save",
+				"save",
+			        FALSE,
+				G_PARAM_WRITABLE));
 
         g_object_class_install_property (object_class,
 			PROP_USERNAME,
