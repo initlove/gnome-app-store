@@ -32,16 +32,16 @@ enum {
 	GNOME_APP_POSITION_MOUSE,
 };
 
-void		gnome_app_set_icon 		(ClutterActor *actor, const gchar *uri);
-void		gnome_app_stage_move 		(ClutterActor *stage, gint x, gint y);
-void		gnome_app_stage_set_position 	(ClutterActor *stage, gint position);
+void		gnome_app_set_icon 			(ClutterActor *actor, const gchar *uri);
+void		gnome_app_stage_move 			(ClutterActor *stage, gint x, gint y);
+void		gnome_app_stage_set_position	 	(ClutterActor *stage, gint position);
 
-void		gnome_app_actor_add_scale_state (ClutterActor *actor);
-void		gnome_app_entry_binding (ClutterActor *actor);
-void		gnome_app_entry_add_hint (ClutterActor *actor, const gchar *hint);
-void		gnome_app_check_box_binding (ClutterActor *actor);
-void		gnome_app_check_box_add_connector (ClutterActor *actor, ClutterActor *connector);
-gboolean	gnome_app_check_box_get_selected (ClutterActor *actor);
+void		gnome_app_actor_add_scale_state 	(ClutterActor *actor);
+void		gnome_app_entry_binding 		(ClutterActor *actor);
+void		gnome_app_entry_add_hint 		(ClutterActor *actor, const gchar *hint);
+void		gnome_app_check_box_binding		(ClutterActor *actor);
+void		gnome_app_check_box_add_connector 	(ClutterActor *actor, ClutterActor *connector);
+gboolean	gnome_app_check_box_get_selected 	(ClutterActor *actor);
 
 
 G_END_DECLS

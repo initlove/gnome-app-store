@@ -234,27 +234,27 @@ on_gnome_app_entry_paint (ClutterActor *actor,
 
 	if (clutter_actor_has_key_focus (actor)) {
 		cogl_set_source_color4ub (128, 128, 255, 255);
-		cogl_path_rectangle (1, 1, width, height);
+		cogl_path_rectangle (-2, -2, width + 2, height + 2);
 		cogl_path_stroke ();
 		cogl_set_source_color4ub (128, 128, 128, 64);
-		cogl_path_rectangle (2, 2, width - 1, height - 1);
+		cogl_path_rectangle (-1, -1, width + 1, height + 1);
 		cogl_path_stroke ();
 
 		cogl_set_source_color4ub (255, 255, 255, 64);
-		cogl_rectangle (2, 2, width - 2, height - 2);
+		cogl_rectangle (0, 0, width, height);
 	} else {
 		cogl_set_source_color4ub (128, 128, 128, 255);
-		cogl_path_rectangle (1, 1, width, height);
+		cogl_path_rectangle (-2, -2, width + 2, height + 2);
 		cogl_path_stroke ();
 
 		mouse_status = (gint) g_object_get_data (G_OBJECT (actor), "mouse-status");
 		switch (mouse_status) {
 			case MOUSE_ENTER:
 				cogl_set_source_color4ub (128, 128, 128, 64);
-				cogl_path_rectangle (2, 2, width - 1, height - 1);
+				cogl_path_rectangle (-1, -1, width + 1, height + 1);
 				cogl_path_stroke ();
 				cogl_set_source_color4ub (255, 255, 255, 64);
-				cogl_rectangle (2, 2, width - 2, height - 2);
+				cogl_rectangle (0, 0, width, height);
 				break;
 		}
 	}
@@ -262,14 +262,21 @@ on_gnome_app_entry_paint (ClutterActor *actor,
 
 static void
 on_gnome_app_entry_key_focus_in (ClutterActor *actor,
-		gpointer user_data)
+		gpointer userdata)
 {
 	set_hint_status (actor);
 }
 
 static void
 on_gnome_app_entry_key_focus_out (ClutterActor *actor,
-		gpointer user_data)
+		gpointer userdata)
+{
+	set_hint_status (actor);
+}
+
+static void
+on_gnome_app_entry_text_changed (ClutterActor *actor,
+		gpointer userdata)
 {
 	set_hint_status (actor);
 }
@@ -277,12 +284,21 @@ on_gnome_app_entry_key_focus_out (ClutterActor *actor,
 void
 gnome_app_entry_binding (ClutterActor *actor)
 {
+	gchar *binding;
+
+	binding = g_object_get_data (G_OBJECT (actor), "binding");
+	if (binding)
+		return;
+	else
+		g_object_set_data (G_OBJECT (actor), "binding", (gpointer) "binding");
+
 	g_object_set_data (G_OBJECT (actor), "mouse-status", (gpointer) MOUSE_NONE);
 	g_signal_connect (actor, "enter-event", G_CALLBACK (on_gnome_app_widget_enter), actor);
 	g_signal_connect (actor, "leave-event", G_CALLBACK (on_gnome_app_widget_leave), actor);
 	g_signal_connect (actor, "paint", G_CALLBACK (on_gnome_app_entry_paint), NULL);
 	g_signal_connect (actor, "key_focus_in", G_CALLBACK (on_gnome_app_entry_key_focus_in), NULL);
 	g_signal_connect (actor, "key_focus_out", G_CALLBACK (on_gnome_app_entry_key_focus_out), NULL);
+	g_signal_connect (actor, "text_changed", G_CALLBACK (on_gnome_app_entry_text_changed), NULL);
 }
 
 void
@@ -295,10 +311,15 @@ gnome_app_entry_add_hint (ClutterActor *actor, const gchar *hint)
 	gfloat x, y;
 	gfloat width, height;
 	gfloat hint_x, hint_y;
-	gfloat hint_width, hint_height;
 	PangoFontDescription *desc, *hint_desc;
 	gint size, hint_size;
 
+	hint_actor = CLUTTER_ACTOR (g_object_get_data (G_OBJECT (actor), "hint-actor"));
+	if (hint_actor) {
+		clutter_text_set_text (CLUTTER_TEXT (hint_actor), hint);
+		set_hint_status (actor);
+		return;
+	}
 	hint_actor = clutter_text_new ();
 	clutter_actor_set_opacity (hint_actor, 128);
 	clutter_actor_set_reactive (hint_actor, FALSE);
@@ -309,10 +330,8 @@ gnome_app_entry_add_hint (ClutterActor *actor, const gchar *hint)
 
 	clutter_actor_get_position (actor, &x, &y);
 	clutter_actor_get_size (actor, &width, &height);
-	hint_width = width * 4/5;
-	hint_height = height * 4/5;
 	clutter_actor_set_position (hint_actor, x + height/4, y + height/4 - 2);
-	clutter_actor_set_size (hint_actor, hint_width, hint_height);
+	clutter_actor_set_width (hint_actor, width - height/2);
 
 	desc = clutter_text_get_font_description (CLUTTER_TEXT (actor));
 	size = pango_font_description_get_size (desc);
@@ -390,8 +409,15 @@ on_gnome_app_check_box_press (ClutterActor *actor,
 void
 gnome_app_check_box_binding (ClutterActor *actor)
 {
-	gnome_app_actor_add_scale_state (actor);
+	gchar *binding;
 
+	binding = g_object_get_data (G_OBJECT (actor), "binding");
+	if (binding)
+		return;
+	else
+		g_object_set_data (G_OBJECT (actor), "binding", (gpointer) "binding");
+
+	gnome_app_actor_add_scale_state (actor);
 	g_object_set_data (G_OBJECT (actor), "mouse-status", (gpointer) MOUSE_NONE);
 	g_object_set_data (G_OBJECT (actor), "selected", (gpointer) FALSE);
 	g_signal_connect (actor, "enter-event", G_CALLBACK (on_gnome_app_widget_enter), actor);
@@ -406,11 +432,12 @@ on_gnome_app_connector_button_press (ClutterActor *self,
 		gpointer      userdata)
 {
 	ClutterActor *actor;
+	gboolean retval;
 
 	actor = CLUTTER_ACTOR (userdata);
-	g_signal_emit_by_name (actor, "button-press-event", NULL);
+	g_signal_emit_by_name (actor, "button-press-event", NULL, event, &retval);
 
-	return FALSE;
+	return retval;
 }
 
 void
@@ -450,7 +477,7 @@ on_gnome_app_button_paint (ClutterActor *actor,
 			cogl_set_source_color4ub (128, 128, 128, 255);
 			cogl_path_rectangle (-5, -5, width+5, height+5);
 			cogl_path_stroke ();
-			cogl_set_source_color4ub (0, 0, 0, 16);
+			cogl_set_source_color4ub (255, 255, 255, 64);
 			cogl_rectangle (-4, -4, width + 4, height + 4);
 			break;
 	}
@@ -459,6 +486,14 @@ on_gnome_app_button_paint (ClutterActor *actor,
 void
 gnome_app_button_binding (ClutterActor *actor)
 {
+	gchar *binding;
+
+	binding = g_object_get_data (G_OBJECT (actor), "binding");
+	if (binding)
+		return;
+	else
+		g_object_set_data (G_OBJECT (actor), "binding", (gpointer) "binding");
+
 	gnome_app_actor_add_scale_state (actor);
 
 	g_object_set_data (G_OBJECT (actor), "mouse-status", (gpointer) MOUSE_NONE);
@@ -495,7 +530,8 @@ gnome_app_actor_add_background (ClutterActor *actor, gchar *filename)
 		clutter_actor_get_position (actor, &x, &y);
 		clutter_actor_set_position (texture, x, y);
 	}
-	/*This make it real background ... */
+	/*This make it real background ...
+	 * TODO: how about both par/child actor with background */
 	clutter_actor_lower_bottom (texture);
 }
 

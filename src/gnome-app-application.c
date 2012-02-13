@@ -18,6 +18,7 @@ Author: David Liang <dliang@novell.com>
 
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
+#include "gnome-app-login.h"
 #include "gnome-app-application.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-frame-ui.h"
@@ -25,6 +26,8 @@ Author: David Liang <dliang@novell.com>
 struct _GnomeAppApplicationPrivate
 {
 	GnomeAppStore *store;
+	ClutterActor *stage;
+	GnomeAppLogin *login;
 	GnomeAppInfoPage *info_page;
 	GnomeAppFrameUI *frame_ui;
 //	GnomeAppActions *actions;
@@ -36,7 +39,9 @@ enum {
 	PROP_LAST
 };
 
-G_DEFINE_TYPE (GnomeAppApplication, gnome_app_application, CLUTTER_TYPE_STAGE)
+G_DEFINE_TYPE (GnomeAppApplication, gnome_app_application, G_TYPE_OBJECT)
+
+static void	gnome_app_application_run (GnomeAppLogin *login, GnomeAppApplication *app);
 
 static void
 application_load_app_info (GnomeAppApplication *app, OpenResult *info)
@@ -61,6 +66,7 @@ application_load_frame_ui (GnomeAppApplication *app)
 	ClutterActor *actions;
 
 	priv = app->priv;
+	clutter_actor_show (priv->stage);
 #if 0
 	actions = gnome_app_frame_ui_get_actions (priv->frame_ui);
 	gnome_app_actions_set_with_data (app->actions, actions);
@@ -91,24 +97,41 @@ gnome_app_application_init (GnomeAppApplication *app)
 							 GNOME_APP_TYPE_APPLICATION,
 							 GnomeAppApplicationPrivate);
 
-	clutter_stage_set_title (CLUTTER_STAGE (app), _("AppStore"));
-	clutter_actor_set_size (CLUTTER_ACTOR (app), 1000, 800);
-        g_signal_connect (app, "destroy", G_CALLBACK (clutter_main_quit), NULL);
-
 	priv->store = gnome_app_store_get_default ();
-
 	gnome_app_store_set_lock_function (priv->store, clutter_threads_enter);
 	gnome_app_store_set_unlock_function (priv->store, clutter_threads_leave);
+
+	priv->login = gnome_app_login_new ();
+	g_signal_connect (priv->login, "auth", G_CALLBACK (gnome_app_application_run), app);
+
+	priv->frame_ui = NULL;
+	priv->info_page = NULL;
+}
+
+static void
+gnome_app_application_run (GnomeAppLogin *login, GnomeAppApplication *app)
+{
+	GnomeAppApplicationPrivate *priv;
+
+	priv = app->priv;
+
 	gnome_app_store_init_category (priv->store);
+
+	priv->stage = clutter_stage_new ();
+	clutter_stage_set_title (CLUTTER_STAGE (priv->stage), _("AppStore"));
+	clutter_actor_set_size (CLUTTER_ACTOR (priv->stage), 1000, 800);
+        g_signal_connect (priv->stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
 	priv->info_page = gnome_app_info_page_new_with_app (app);
 	priv->frame_ui = gnome_app_frame_ui_new_with_app (app);
 	  
-	clutter_container_add (CLUTTER_CONTAINER (app), CLUTTER_ACTOR (priv->info_page), NULL);
-	clutter_container_add (CLUTTER_CONTAINER (app), CLUTTER_ACTOR (priv->frame_ui), NULL);
+	clutter_container_add (CLUTTER_CONTAINER (priv->stage), CLUTTER_ACTOR (priv->info_page), NULL);
+	clutter_container_add (CLUTTER_CONTAINER (priv->stage), CLUTTER_ACTOR (priv->frame_ui), NULL);
 //	priv->actions = gnome_app_actions_new_with_app (app);
 
 	application_load_frame_ui (app);
+	g_object_unref (priv->login);
+	priv->login = NULL;
 }
 
 static void
@@ -123,6 +146,8 @@ gnome_app_application_finalize (GObject *object)
 	GnomeAppApplication *app = GNOME_APP_APPLICATION (object);
 	GnomeAppApplicationPrivate *priv = app->priv;
 
+	if (priv->login)
+		g_object_unref (priv->login);
 	if (priv->frame_ui)
 		g_object_unref (priv->frame_ui);
 	if (priv->info_page)
@@ -192,13 +217,4 @@ gnome_app_application_get_default ()
 		app = g_object_new (GNOME_APP_TYPE_APPLICATION, NULL);
 
 	return app;
-}
-
-void
-gnome_app_application_run ()
-{
-	GnomeAppApplication *app;
-
-	app = g_object_new (GNOME_APP_TYPE_APPLICATION, NULL);
-	clutter_actor_show (CLUTTER_ACTOR (app));
 }

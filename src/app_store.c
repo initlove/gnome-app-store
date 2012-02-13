@@ -28,7 +28,7 @@ main (int argc, char *argv[])
 	GMainLoop *loop;
 	loop = g_main_loop_new (NULL, FALSE);
 
-	gnome_app_auth ();
+	gnome_app_application_new ();
 
 	g_main_loop_run (loop);
   	g_main_loop_unref (loop);

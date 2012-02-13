@@ -1,4 +1,4 @@
-/* libgnome-app-login.h - 
+/* gnome-app-login.h 
 
    Copyright 2011, Novell, Inc.
 
@@ -24,11 +24,37 @@
 #define __GNOME_APP_LOGIN_H__
 
 #include <clutter/clutter.h>
-#include "open-result.h"
+#include "gnome-app-application.h"
 
 G_BEGIN_DECLS
 
-void		gnome_app_auth (void);
+#define GNOME_APP_TYPE_LOGIN            (gnome_app_login_get_type ())
+#define GNOME_APP_LOGIN(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GNOME_APP_TYPE_LOGIN, GnomeAppLogin))
+#define GNOME_APP_LOGIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  GNOME_APP_TYPE_LOGIN, GnomeAppLoginClass))
+#define GNOME_APP_IS_LOGIN(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GNOME_APP_TYPE_LOGIN))
+#define GNOME_APP_IS_LOGIN_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  GNOME_APP_TYPE_LOGIN))
+#define GNOME_APP_LOGIN_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  GNOME_APP_TYPE_LOGIN, GnomeAppLoginClass))
+
+typedef struct _GnomeAppLogin GnomeAppLogin;
+typedef struct _GnomeAppLoginClass GnomeAppLoginClass;
+typedef struct _GnomeAppLoginPrivate GnomeAppLoginPrivate;
+
+struct _GnomeAppLogin
+{
+	GObject parent_instance;
+	GnomeAppLoginPrivate	*priv;
+};
+
+struct _GnomeAppLoginClass
+{
+        GObjectClass parent_class;
+	/* signal */
+	void (*auth) (GnomeAppLogin *self);
+};
+
+GType			gnome_app_login_get_type              	(void);
+GnomeAppLogin *		gnome_app_login_new			(void);
+void			gnome_app_login_run	               	(GnomeAppLogin *login);
 
 G_END_DECLS
 
