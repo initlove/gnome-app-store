@@ -483,6 +483,9 @@ on_gnome_app_button_paint (ClutterActor *actor,
 	}
 }
 
+/*TODO: the touch screen and PC is different, click to show the effect is good for touch screen
+ * move in to show effect is good for PC.
+ */
 void
 gnome_app_button_binding (ClutterActor *actor)
 {

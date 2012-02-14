@@ -2,7 +2,6 @@
 #include <gmodule.h>
 #include <clutter/clutter.h>
 #include <glib/gi18n.h>
-#include "st.h"
 #include "gnome-app-store.h"
 #include "gnome-app-comment.h"
 #include "gnome-app-comments.h"

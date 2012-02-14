@@ -12,7 +12,6 @@ Boston, MA 02111-1307, USA.
 Author: Liang chenye <liangchenye@gmail.com>
 
 */
-#include "st.h"
 #include <stdio.h>
 #include <string.h>
 #include <clutter/clutter.h>
@@ -267,7 +266,7 @@ on_category_event (ClutterActor *actor,
         {
         case CLUTTER_BUTTON_PRESS:
 		pagesize = g_strdup_printf ("%d", priv->pagesize);
-	        name = st_button_get_label (ST_BUTTON (actor));
+	        name = clutter_text_get_text (CLUTTER_TEXT (actor));
 printf ("click on %s\n", name);
 		g_object_get (priv->app, "app-store", &store, NULL);
 		cids = gnome_app_store_get_cids_by_name (store, name);
@@ -387,7 +386,10 @@ create_category_list (GnomeAppFrameUI *ui)
 	categories = open_app_get_default_categories ();
 	for (categories; *categories; categories ++) {
 		name = (gchar *)*categories;
-		actor = (ClutterActor *)st_button_new_with_label (name);
+		actor = clutter_text_new ();
+		clutter_text_set_editable (CLUTTER_TEXT (actor), FALSE);
+		clutter_text_set_text (CLUTTER_TEXT (actor), name);
+		clutter_actor_set_reactive (actor, TRUE);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), col, row);
 		row ++;
 		g_signal_connect (actor, "event", G_CALLBACK (on_category_event), ui);

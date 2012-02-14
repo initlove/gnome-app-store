@@ -1,4 +1,4 @@
-SUBDIRS = pixmaps ui common liboasyncworker lib new-src src po
+SUBDIRS = pixmaps ui common liboasyncworker lib src po
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 

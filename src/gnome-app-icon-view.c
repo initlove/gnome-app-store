@@ -313,6 +313,7 @@ info_icon_new_with_app (OpenResult *info, GnomeAppApplication *app)
 
 	g_object_set_data (G_OBJECT (actor), "info", info);
         g_object_set_data (G_OBJECT (actor), "application", app);
+	gnome_app_button_binding (actor);
 	g_signal_connect (actor, "event", G_CALLBACK (on_info_icon_event), info_icon);
 
 	return info_icon;

@@ -112,7 +112,6 @@ ui/Makefile
 common/Makefile
 liboasyncworker/Makefile
 lib/Makefile
-new-src/Makefile
 src/Makefile
 lib/gnome-app-store-0.1.pc
 po/Makefile.in

@@ -121,21 +121,23 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
         	const gchar *password;
 		gboolean save;
 
-		clutter_script_get_objects (priv->script,
+		if (priv->script) {
+			clutter_script_get_objects (priv->script,
 				"app-login", &stage,
 				"auto-login-check-box", &auto_login_check_box,
 				"username-entry", &username_entry,
 				"password-entry", &password_entry,
 				NULL);
-		save = gnome_app_check_box_get_selected (auto_login_check_box);
-		username = clutter_text_get_text (CLUTTER_TEXT (username_entry));
-		password = clutter_text_get_text (CLUTTER_TEXT (password_entry));
-		store = gnome_app_store_get_default ();
-		g_object_set (store, "username", username, "password", password,
+			save = gnome_app_check_box_get_selected (auto_login_check_box);
+			username = clutter_text_get_text (CLUTTER_TEXT (username_entry));
+			password = clutter_text_get_text (CLUTTER_TEXT (password_entry));
+			store = gnome_app_store_get_default ();
+			g_object_set (store, "username", username, "password", password,
 				"save", save,
 				NULL);
 
-		g_signal_emit (login, login_signals [AUTH], 0);
+			g_signal_emit (login, login_signals [AUTH], 0);
+		}
 
 		g_object_unref (login);
 		gnome_app_application_new ();
@@ -272,16 +274,6 @@ gnome_app_login_new (void)
 
 	login = g_object_new (GNOME_APP_TYPE_LOGIN, NULL);
 	priv = login->priv;
-	filename = open_app_get_ui_uri ("app-login");
-	priv->script = clutter_script_new ();
-	error = NULL;
-	clutter_script_load_from_file (priv->script, filename, &error);
-	g_free (filename);
-	if (error) {
-		g_error_free (error);
-		g_object_unref (login);
-		return NULL;
-	}
 
 	store = gnome_app_store_get_default ();
 	g_object_get (store, "username", &username, "password", &password, NULL);
@@ -311,6 +303,19 @@ gnome_app_login_run (GnomeAppLogin *login)
 	gchar *default_username;
 
 	priv = login->priv;
+	if (!priv->script) {
+		filename = open_app_get_ui_uri ("app-login");
+		priv->script = clutter_script_new ();
+		error = NULL;
+		clutter_script_load_from_file (priv->script, filename, &error);
+		g_free (filename);
+		if (error) {
+			g_error ("fail to load app login script %s\n", error->message);
+			g_error_free (error);
+			return;
+		}
+	}
+
 	clutter_script_get_objects (priv->script, "app-login", &stage,
 			"username-entry", &username_entry,
 			"password-entry", &password_entry,

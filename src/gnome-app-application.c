@@ -101,6 +101,13 @@ gnome_app_application_init (GnomeAppApplication *app)
 	clutter_actor_set_size (CLUTTER_ACTOR (priv->stage), 1000, 800);
         g_signal_connect (priv->stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
+	/*TODO: no background? or background with theme? */
+#if 0
+	gchar *filename;
+	filename = open_app_get_pixmap_uri ("frame-background");
+	gnome_app_actor_add_background (priv->stage, filename);
+	g_free (filename);
+#endif
 	priv->info_page = gnome_app_info_page_new_with_app (app);
 	priv->frame_ui = gnome_app_frame_ui_new_with_app (app);
 	  
