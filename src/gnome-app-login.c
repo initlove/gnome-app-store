@@ -140,6 +140,8 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 		g_object_unref (login);
 		gnome_app_application_new ();
 	} else {
+		g_debug ("error in auth %s\n", open_results_get_meta (results, "message"));
+		gnome_app_login_run (login);
 	}
 	return NULL;
 }
