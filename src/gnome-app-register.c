@@ -327,6 +327,11 @@ gnome_app_register_run (GnomeAppRegister *regist)
 
 	gnome_app_stage_remove_decorate (stage);
 	gnome_app_stage_set_position (stage, GNOME_APP_POSITION_CENTER);
+	
+	filename = open_app_get_pixmap_uri ("login");
+	gnome_app_actor_add_background (stage, filename);
+	g_free (filename);
+
 	clutter_actor_show (stage);
 
 	g_signal_connect (register_button, "button-press-event", G_CALLBACK (on_register_button_press), regist);

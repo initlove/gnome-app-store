@@ -221,7 +221,7 @@ set_hint_status (ClutterActor *actor)
 }
 
 static void
-on_gnome_app_entry_paint (ClutterActor *actor,
+on_hint_entry_paint (ClutterActor *actor,
 		gpointer      userdata)
 {
 	ClutterActorBox allocation = { 0, };
@@ -261,21 +261,21 @@ on_gnome_app_entry_paint (ClutterActor *actor,
 }
 
 static void
-on_gnome_app_entry_key_focus_in (ClutterActor *actor,
+on_hint_entry_key_focus_in (ClutterActor *actor,
 		gpointer userdata)
 {
 	set_hint_status (actor);
 }
 
 static void
-on_gnome_app_entry_key_focus_out (ClutterActor *actor,
+on_hint_entry_key_focus_out (ClutterActor *actor,
 		gpointer userdata)
 {
 	set_hint_status (actor);
 }
 
 static void
-on_gnome_app_entry_text_changed (ClutterActor *actor,
+on_hint_entry_text_changed (ClutterActor *actor,
 		gpointer userdata)
 {
 	set_hint_status (actor);
@@ -295,10 +295,10 @@ gnome_app_entry_binding (ClutterActor *actor)
 	g_object_set_data (G_OBJECT (actor), "mouse-status", (gpointer) MOUSE_NONE);
 	g_signal_connect (actor, "enter-event", G_CALLBACK (on_gnome_app_widget_enter), actor);
 	g_signal_connect (actor, "leave-event", G_CALLBACK (on_gnome_app_widget_leave), actor);
-	g_signal_connect (actor, "paint", G_CALLBACK (on_gnome_app_entry_paint), NULL);
-	g_signal_connect (actor, "key_focus_in", G_CALLBACK (on_gnome_app_entry_key_focus_in), NULL);
-	g_signal_connect (actor, "key_focus_out", G_CALLBACK (on_gnome_app_entry_key_focus_out), NULL);
-	g_signal_connect (actor, "text_changed", G_CALLBACK (on_gnome_app_entry_text_changed), NULL);
+	g_signal_connect (actor, "paint", G_CALLBACK (on_hint_entry_paint), NULL);
+	g_signal_connect (actor, "key_focus_in", G_CALLBACK (on_hint_entry_key_focus_in), NULL);
+	g_signal_connect (actor, "key_focus_out", G_CALLBACK (on_hint_entry_key_focus_out), NULL);
+	g_signal_connect (actor, "text_changed", G_CALLBACK (on_hint_entry_text_changed), NULL);
 }
 
 void
@@ -321,7 +321,7 @@ gnome_app_entry_add_hint (ClutterActor *actor, const gchar *hint)
 		return;
 	}
 	hint_actor = clutter_text_new ();
-	clutter_actor_set_opacity (hint_actor, 128);
+	clutter_actor_set_opacity (hint_actor, 64);
 	clutter_actor_set_reactive (hint_actor, FALSE);
 	clutter_text_set_editable (CLUTTER_TEXT (hint_actor), FALSE);
 	clutter_text_set_ellipsize (CLUTTER_TEXT (hint_actor), PANGO_ELLIPSIZE_END);
