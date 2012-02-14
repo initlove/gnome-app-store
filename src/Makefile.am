@@ -29,6 +29,7 @@ noinst_PROGRAMS +=      \
 
 app_store_SOURCES =        \
 	gnome-app-login.c gnome-app-login.h \
+	gnome-app-register.c gnome-app-register.h \
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
 	gnome-app-application.c gnome-app-application.h \
 	gnome-app-frame-ui.c gnome-app-frame-ui.h \

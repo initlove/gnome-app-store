@@ -1,5 +1,4 @@
-/* gnome-app-login.h 
-
+/*
    Copyright 2011, Novell, Inc.
 
    The Gnome applogin lib is free software; you can redistribute it and/or
@@ -24,7 +23,6 @@
 #define __GNOME_APP_LOGIN_H__
 
 #include <clutter/clutter.h>
-#include "gnome-app-application.h"
 
 G_BEGIN_DECLS
 

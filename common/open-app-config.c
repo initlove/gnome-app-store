@@ -224,7 +224,6 @@ open_app_config_get_password (OpenAppConfig *config)
 
 		real = g_base64_decode (val, &len);
 		g_free (val);
-
 		return real;
 	} else
 		return NULL;

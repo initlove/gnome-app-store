@@ -20,15 +20,20 @@ on_info_icon_clicked (ClutterActor *info_icon,
 int
 main (int argc, char *argv[])
 {
+	GnomeAppStore *store;
+	GMainLoop *loop;
   	g_type_init ();
 	g_thread_init (NULL);
 	if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
 	  return 1;
 	clutter_threads_init ();
-	GMainLoop *loop;
 	loop = g_main_loop_new (NULL, FALSE);
 
-	gnome_app_application_new ();
+	store = gnome_app_store_get_default ();
+	gnome_app_store_set_lock_function (store, clutter_threads_enter);
+	gnome_app_store_set_unlock_function (store, clutter_threads_leave);
+
+	gnome_app_login_new ();
 
 	g_main_loop_run (loop);
   	g_main_loop_unref (loop);

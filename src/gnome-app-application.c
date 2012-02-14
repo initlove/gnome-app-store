@@ -18,7 +18,6 @@ Author: David Liang <dliang@novell.com>
 
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
-#include "gnome-app-login.h"
 #include "gnome-app-application.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-frame-ui.h"
@@ -27,7 +26,6 @@ struct _GnomeAppApplicationPrivate
 {
 	GnomeAppStore *store;
 	ClutterActor *stage;
-	GnomeAppLogin *login;
 	GnomeAppInfoPage *info_page;
 	GnomeAppFrameUI *frame_ui;
 //	GnomeAppActions *actions;
@@ -40,8 +38,6 @@ enum {
 };
 
 G_DEFINE_TYPE (GnomeAppApplication, gnome_app_application, G_TYPE_OBJECT)
-
-static void	gnome_app_application_run (GnomeAppLogin *login, GnomeAppApplication *app);
 
 static void
 application_load_app_info (GnomeAppApplication *app, OpenResult *info)
@@ -98,23 +94,6 @@ gnome_app_application_init (GnomeAppApplication *app)
 							 GnomeAppApplicationPrivate);
 
 	priv->store = gnome_app_store_get_default ();
-	gnome_app_store_set_lock_function (priv->store, clutter_threads_enter);
-	gnome_app_store_set_unlock_function (priv->store, clutter_threads_leave);
-
-	priv->login = gnome_app_login_new ();
-	g_signal_connect (priv->login, "auth", G_CALLBACK (gnome_app_application_run), app);
-
-	priv->frame_ui = NULL;
-	priv->info_page = NULL;
-}
-
-static void
-gnome_app_application_run (GnomeAppLogin *login, GnomeAppApplication *app)
-{
-	GnomeAppApplicationPrivate *priv;
-
-	priv = app->priv;
-
 	gnome_app_store_init_category (priv->store);
 
 	priv->stage = clutter_stage_new ();
@@ -130,8 +109,6 @@ gnome_app_application_run (GnomeAppLogin *login, GnomeAppApplication *app)
 //	priv->actions = gnome_app_actions_new_with_app (app);
 
 	application_load_frame_ui (app);
-	g_object_unref (priv->login);
-	priv->login = NULL;
 }
 
 static void
@@ -146,8 +123,6 @@ gnome_app_application_finalize (GObject *object)
 	GnomeAppApplication *app = GNOME_APP_APPLICATION (object);
 	GnomeAppApplicationPrivate *priv = app->priv;
 
-	if (priv->login)
-		g_object_unref (priv->login);
 	if (priv->frame_ui)
 		g_object_unref (priv->frame_ui);
 	if (priv->info_page)
