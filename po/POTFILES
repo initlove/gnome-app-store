@@ -1,0 +1,16 @@
+	../src/gnome-app-login.c \
+	../src/gnome-app-account-ui.c \
+	../src/gnome-app-score-ui.c \
+	../src/gnome-app-comment.c \
+	../src/gnome-app-comments.c \
+	../src/gnome-app-message-ui.c \
+	../src/gnome-app-application.c \
+	../src/app_store.c \
+	../src/gnome-app-info-page.c \
+	../src/gnome-app-register.c \
+	../src/gnome-app-friends-ui.c \
+	../src/gnome-app-actions.c \
+	../src/gnome-app-frame-ui.c \
+	../src/gnome-app-ui-utils.c \
+	../src/gnome-app-icon-view.c \
+	../ui/app-login.json

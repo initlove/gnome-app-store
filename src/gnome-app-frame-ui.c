@@ -9,9 +9,11 @@ License along with this program; if not, write to the
 Free Software Foundation, Inc., 59 Temple Place - 330,
 Boston, MA 02111-1307, USA.
 
-Author: Liang chenye <liangchenye@gmail.com>
+Author: David Liang <dliang@novell.com>
 
 */
+#include <config.h>
+#include <glib/gi18n.h>
 #include <stdio.h>
 #include <string.h>
 #include <clutter/clutter.h>
@@ -90,7 +92,7 @@ frame_ui_load_results (GnomeAppFrameUI *ui, OpenResults *results)
 		gchar *total_items_text;
 		const gchar *val;
 
-		total_items_text = g_strdup_printf ("%d apps", total_items);
+		total_items_text = g_strdup_printf (_("%d apps"), total_items);
 		clutter_text_set_text (CLUTTER_TEXT (priv->total_items), total_items_text);
 		g_free (total_items_text);
         

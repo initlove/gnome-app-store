@@ -12,6 +12,8 @@ Boston, MA 02111-1307, USA.
 Author: Lance Wang <lzwang@suse.com>
 
 */
+#include <config.h>
+#include <glib/gi18n.h>
 #include <string.h>
 #include <clutter/clutter.h>
 
@@ -312,10 +314,10 @@ draw_fan_status (GnomeAppInfoPage *page)
 	actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "fan-button"));
 	switch (priv->fan_status) {
 		case IS_FAN:
-			clutter_text_set_text (CLUTTER_TEXT (actor), "- Remove Fan");
+			clutter_text_set_text (CLUTTER_TEXT (actor), _("- Remove Fan"));
 			break;
 		case NOT_FAN:
-			clutter_text_set_text (CLUTTER_TEXT (actor), "+ Add Fan");
+			clutter_text_set_text (CLUTTER_TEXT (actor), _("+ Add Fan"));
 			break;
 		default:
 			clutter_text_set_text (CLUTTER_TEXT (actor), "");
@@ -462,7 +464,7 @@ draw_download_buttons (GnomeAppInfoPage *page)
 			if (val && val [0]) {
 				clutter_text_set_text (CLUTTER_TEXT (button), val);
 			} else {
-				clutter_text_set_text (CLUTTER_TEXT (button), "Download");
+				clutter_text_set_text (CLUTTER_TEXT (button), _("Download"));
 			}
 			clutter_actor_set_reactive (button, TRUE);
 			clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout), button,
@@ -613,14 +615,14 @@ load_details_info_callback (gpointer userdata, gpointer func_result)
 		fans = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "fans"));
 		val = open_result_get (result, "fans");
 		priv->fan_count = atoi (val);
-		str = g_strdup_printf ("%d fans", priv->fan_count);
+		str = g_strdup_printf (_("%d fans"), priv->fan_count);
 		clutter_text_set_text (CLUTTER_TEXT (fans), str);
 		g_free (str);
 
 		downloads = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "downloads"));
 		val = open_result_get (result, "downloads");
 		priv->download_count = atoi (val);
-		str = g_strdup_printf ("%d downloads", priv->download_count);
+		str = g_strdup_printf (_("%d downloads"), priv->download_count);
 		clutter_text_set_text (CLUTTER_TEXT (downloads), str);
 		g_free (str);
 
@@ -751,17 +753,17 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 
 	val = open_result_get (info, "downloads");
 	priv->download_count = atoi (val);
-	str = g_strdup_printf ("%d downloads", priv->download_count);
+	str = g_strdup_printf (_("%d downloads"), priv->download_count);
 	clutter_text_set_text (CLUTTER_TEXT (downloads), str);
 	g_free (str);
 
 	val = open_result_get (info, "fans");
 	priv->fan_count = atoi (val);
-	str = g_strdup_printf ("%d fans", priv->fan_count);
+	str = g_strdup_printf (_("%d fans"), priv->fan_count);
 	clutter_text_set_text (CLUTTER_TEXT (fans), str);
 	g_free (str);
 
-	str = g_strdup_printf ("%s comments", open_result_get (info, "comments"));
+	str = g_strdup_printf (_("%s comments"), open_result_get (info, "comments"));
 	clutter_text_set_text (CLUTTER_TEXT (comments), str);
 	g_free (str);
 

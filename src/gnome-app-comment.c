@@ -12,6 +12,8 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
+#include <config.h>
+#include <glib/gi18n.h>
 #include <clutter/clutter.h>
 
 #include "open-app-utils.h"
@@ -229,17 +231,17 @@ on_reply_button_press (ClutterActor *actor,
 
 	activatable = clutter_text_get_activatable (CLUTTER_TEXT (priv->reply_entry));
 	if (!activatable) {
-		clutter_text_set_text (CLUTTER_TEXT (priv->reply_button), "Cancel");
+		clutter_text_set_text (CLUTTER_TEXT (priv->reply_button), _("Cancel"));
 		clutter_actor_set_size (priv->reply_entry, 300, 100);
 		clutter_text_set_editable (CLUTTER_TEXT (priv->reply_entry), TRUE);
-		clutter_text_set_text (CLUTTER_TEXT (priv->submit_button), "Submit");
+		clutter_text_set_text (CLUTTER_TEXT (priv->submit_button), _("Submit"));
 	} else {
 		// why should I do this: becase when I hide reply_entry, the reply_button will be hide .
 		// no idea why this happen
 		clutter_actor_set_size (priv->reply_entry, 1, 1);
 		clutter_text_set_text (CLUTTER_TEXT (priv->reply_entry), NULL);
 		clutter_text_set_editable (CLUTTER_TEXT (priv->reply_entry), FALSE);
-		clutter_text_set_text (CLUTTER_TEXT (priv->reply_button), "Reply");
+		clutter_text_set_text (CLUTTER_TEXT (priv->reply_button), _("Reply"));
 		clutter_text_set_text (CLUTTER_TEXT (priv->submit_button), "");
 	}
 	clutter_text_set_activatable (CLUTTER_TEXT (priv->reply_entry), !activatable);
@@ -337,14 +339,14 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 
 	val = open_result_get (comment, "user");
 	if (val) {
-		str = g_strdup_printf ("by %s", val);
+		str = g_strdup_printf (_("by %s"), val);
 		clutter_text_set_text (CLUTTER_TEXT (user), str);
 		g_free (str);
 	}
 
 	val = open_result_get (comment, "date");
 	if (val) {
-		str = g_strdup_printf ("on: %10s", val);
+		str = g_strdup_printf (_("on: %10s"), val);
 		clutter_text_set_text (CLUTTER_TEXT (date), str);
 		g_free (str);
 	}
@@ -413,7 +415,7 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 
 	priv->reply_button = clutter_text_new ();
 	clutter_actor_set_reactive (priv->reply_button, TRUE);
-	clutter_text_set_text (CLUTTER_TEXT (priv->reply_button), "Reply");
+	clutter_text_set_text (CLUTTER_TEXT (priv->reply_button), _("Reply"));
 	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (child_layout),
 			priv->reply_button,
 			FALSE, /*expand*/

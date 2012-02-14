@@ -12,7 +12,8 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
-
+#include <config.h>
+#include <glib/gi18n.h>
 #include <string.h>
 #include <clutter/clutter.h>
 #include "open-app-utils.h"
@@ -331,9 +332,9 @@ gnome_app_login_run (GnomeAppLogin *login)
 	gnome_app_actor_add_background (stage, filename);
 	g_free (filename);
 	gnome_app_entry_binding (username_entry);
-	gnome_app_entry_add_hint (username_entry, "< user name >");
+	gnome_app_entry_add_hint (username_entry, _("< user name >"));
 	gnome_app_entry_binding (password_entry);
-	gnome_app_entry_add_hint (password_entry, "< password >");
+	gnome_app_entry_add_hint (password_entry, _("< password >"));
 	gnome_app_check_box_binding (auto_login_check_box);
 	gnome_app_check_box_add_connector (auto_login_check_box, auto_login_label);
 	gnome_app_button_binding (login_button);

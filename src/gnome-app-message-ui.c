@@ -12,6 +12,8 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
+#include <config.h>
+#include <glib/gi18n.h>
 #include <clutter/clutter.h>
 
 #include "open-app-utils.h"
@@ -323,7 +325,7 @@ message_folder_callback (gpointer userdata, gpointer func_result)
 	count = open_results_get_total_items (results);
 	if (count == 0) {
 		actor = clutter_text_new ();
-		clutter_text_set_text (CLUTTER_TEXT (actor), "(No message)");
+		clutter_text_set_text (CLUTTER_TEXT (actor), _("(No message)"));
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (ui->priv->message_list_layout), CLUTTER_ACTOR (actor), 1, 0);
 		return NULL;
 	}

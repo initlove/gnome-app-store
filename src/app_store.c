@@ -1,3 +1,4 @@
+#include <config.h>
 #include <stdlib.h>
 #include <math.h>
 #include <gmodule.h>
@@ -22,6 +23,13 @@ main (int argc, char *argv[])
 {
 	GnomeAppStore *store;
 	GMainLoop *loop;
+
+	bindtextdomain (GETTEXT_PACKAGE, GNOMELOCALEDIR);
+	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+	textdomain (GETTEXT_PACKAGE);
+
+	setlocale (LC_ALL, "");
+
   	g_type_init ();
 	g_thread_init (NULL);
 	if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)

@@ -1,39 +1,41 @@
-# Copyright (C) 2011
-# This file is distributed under the same license as the gnome-app-store package.
-# Liang chenye <liangchenye@gmail.com>, 2011
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: 0.1\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-14 17:30+0800\n"
-"PO-Revision-Date: 2011-10-04 10:36+0800\n"
-"Last-Translator: liangchenye@gmail.com\n"
-"Language-Team: Liangchenye <liangchenye@gmail.com>\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ../src/gnome-app-login.c:335
 msgid "< user name >"
-msgstr "< 用户名 >"
+msgstr ""
 
 #: ../src/gnome-app-login.c:337
 msgid "< password >"
-msgstr "< 密码 >"
+msgstr ""
 
 #: ../src/gnome-app-comment.c:234
 msgid "Cancel"
-msgstr "取消"
+msgstr ""
 
 #: ../src/gnome-app-comment.c:237
 msgid "Submit"
-msgstr "提交"
+msgstr ""
 
 #: ../src/gnome-app-comment.c:244 ../src/gnome-app-comment.c:418
 msgid "Reply"
-msgstr "回复"
+msgstr ""
 
 #: ../src/gnome-app-comment.c:342
 #, c-format
@@ -47,54 +49,45 @@ msgstr ""
 
 #: ../src/gnome-app-message-ui.c:328
 msgid "(No message)"
-msgstr "（无信息)"
+msgstr ""
 
 #: ../src/gnome-app-application.c:100
 msgid "AppStore"
-msgstr "应用超市"
+msgstr ""
 
 #: ../src/gnome-app-info-page.c:317
 msgid "- Remove Fan"
-msgstr "- 取消关注"
+msgstr ""
 
 #: ../src/gnome-app-info-page.c:320
 msgid "+ Add Fan"
-msgstr "+ 添加关注"
+msgstr ""
 
 #: ../src/gnome-app-info-page.c:467
 msgid "Download"
-msgstr "下载"
+msgstr ""
 
 #: ../src/gnome-app-info-page.c:618 ../src/gnome-app-info-page.c:762
 #, c-format
 msgid "%d fans"
-msgstr "%d 关注"
+msgstr ""
 
 #: ../src/gnome-app-info-page.c:625 ../src/gnome-app-info-page.c:756
 #, c-format
 msgid "%d downloads"
-msgstr "%d 下载"
+msgstr ""
 
 #: ../src/gnome-app-info-page.c:766
 #, c-format
 msgid "%s comments"
-msgstr "%s 评论"
+msgstr ""
 
 #: ../src/gnome-app-friends-ui.c:201
 #, c-format
 msgid "%d Friends"
-msgstr "%d 好友"
+msgstr ""
 
 #: ../src/gnome-app-frame-ui.c:95
 #, c-format
 msgid "%d apps"
-msgstr "%d 应用"
-
-#~ msgid "Autologin"
-#~ msgstr "自动登录"
-
-#~ msgid "Register"
-#~ msgstr "注册"
-
-#~ msgid "Login"
-#~ msgstr "登录"
+msgstr ""

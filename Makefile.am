@@ -8,4 +8,5 @@ CLEANFILES = \
 EXTRA_DIST =			\
 	AUTHORS			\
 	README			\
+	TODO			\
 	ChangeLog

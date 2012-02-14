@@ -12,7 +12,8 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
-
+#include <config.h>
+#include <glib/gi18n.h>
 #include <string.h>
 #include <clutter/clutter.h>
 #include "open-app-utils.h"

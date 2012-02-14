@@ -12,6 +12,8 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
+#include <config.h>
+#include <glib/gi18n.h>
 #include <clutter/clutter.h>
 
 #include "open-app-utils.h"
@@ -196,7 +198,7 @@ set_friends_callback (gpointer userdata, gpointer func_result)
 		layout_box = clutter_box_new (layout);
 
 		info = clutter_text_new ();
-		str = g_strdup_printf ("%d Friends", friends_ui->priv->friends_count);
+		str = g_strdup_printf (_("%d Friends"), friends_ui->priv->friends_count);
 		clutter_text_set_text (CLUTTER_TEXT (info), str);
 		g_free (str);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (info), col, row);
