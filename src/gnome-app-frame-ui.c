@@ -25,6 +25,7 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-application.h"
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-icon-view.h"
+#include "gnome-app-ui-utils.h"
 
 struct _GnomeAppFrameUIPrivate
 {
@@ -421,6 +422,7 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
         priv->script = clutter_script_new ();
 	error = NULL;
         clutter_script_load_from_file (priv->script, filename, &error);
+	gnome_app_script_po (priv->script);
         if (error) {
                 printf ("error in load script %s!\n", error->message);
                 g_error_free (error);

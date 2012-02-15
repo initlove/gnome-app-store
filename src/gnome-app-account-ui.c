@@ -24,6 +24,7 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-friends-ui.h"
 #include "gnome-app-message-ui.h"
 #include "gnome-app-account-ui.h"
+#include "gnome-app-ui-utils.h"
 
 struct _GnomeAppAccountUIPrivate
 {
@@ -216,6 +217,7 @@ gnome_app_account_ui_new (gchar *personid)
         filename = open_app_get_ui_uri ("app-account-ui");
         script = clutter_script_new ();
         clutter_script_load_from_file (script, filename, &error);
+	gnome_app_script_po (script);
         if (error) {
                 printf ("error in load script %s\n", error->message);
                 g_error_free (error);

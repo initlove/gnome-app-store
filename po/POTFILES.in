@@ -17,5 +17,16 @@ src/gnome-app-actions.c
 src/gnome-app-frame-ui.c
 src/gnome-app-ui-utils.c
 src/gnome-app-icon-view.c
-ui/app-login.json
 common/open-app-utils.c
+[type: gettext/script]ui/app-login.json
+[type: gettext/script]ui/app-info-icon.json
+[type: gettext/script]ui/app-comment.json
+[type: gettext/script]ui/message-info-page.json
+[type: gettext/script]ui/app-info-page-actions.json
+[type: gettext/script]ui/app-info-page-body.json
+[type: gettext/script]ui/app-info-page-panel.json
+[type: gettext/script]ui/frame-ui.json
+[type: gettext/script]ui/app-register.json
+[type: gettext/script]ui/app-login.json
+[type: gettext/script]ui/app-account-ui.json
+[type: gettext/script]ui/app-info-page.json

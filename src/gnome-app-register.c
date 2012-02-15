@@ -279,6 +279,7 @@ gnome_app_register_new (void)
 	priv->script = clutter_script_new ();
 	error = NULL;
 	clutter_script_load_from_file (priv->script, filename, &error);
+	gnome_app_script_po (priv->script);
 	g_free (filename);
 	if (error) {
 		g_error_free (error);

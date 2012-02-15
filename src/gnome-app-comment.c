@@ -20,6 +20,7 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
 #include "gnome-app-comment.h"
+#include "gnome-app-ui-utils.h"
 
 struct _GnomeAppCommentPrivate
 {
@@ -316,6 +317,7 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
         filename = open_app_get_ui_uri ("app-comment");
         priv->script = clutter_script_new ();
         clutter_script_load_from_file (priv->script, filename, &error);
+	gnome_app_script_po (priv->script);
 	g_free (filename);
         if (error) {
                 g_critical ("error in load script %s\n", error->message);

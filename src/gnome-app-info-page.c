@@ -24,6 +24,7 @@ Author: Lance Wang <lzwang@suse.com>
 #include "gnome-app-application.h"
 #include "gnome-app-score-ui.h"
 #include "gnome-app-info-page.h"
+#include "gnome-app-ui-utils.h"
 
 typedef enum {
 	FAN_NOT_DEFINED,
@@ -689,7 +690,8 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 		error = NULL;
 		filename = open_app_get_ui_uri ("app-info-page");
 		priv->script = clutter_script_new ();
-		clutter_script_load_from_file (page->priv->script, filename, &error);
+		clutter_script_load_from_file (priv->script, filename, &error);
+		gnome_app_script_po (priv->script);
 		g_free (filename);
 		if (error) {
 			g_critical ("Error in load script %s.", error->message);

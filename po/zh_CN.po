@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-15 11:36+0800\n"
+"POT-Creation-Date: 2012-02-15 17:46+0800\n"
 "PO-Revision-Date: 2011-10-04 10:36+0800\n"
 "Last-Translator: liangchenye@gmail.com\n"
 "Language-Team: Liangchenye <liangchenye@gmail.com>\n"
@@ -130,11 +130,146 @@ msgstr "通用访问"
 msgid "Other"
 msgstr "其他"
 
-#~ msgid "Autologin"
-#~ msgstr "自动登录"
+#: ../ui/app-login.json.h:1
+msgid "Autologin"
+msgstr "自动登录"
 
-#~ msgid "Register"
-#~ msgstr "注册"
+#: ../ui/app-login.json.h:2
+msgid "Login"
+msgstr "登录"
 
-#~ msgid "Login"
-#~ msgstr "登录"
+#: ../ui/app-login.json.h:3 ../ui/app-register.json.h:5
+msgid "Register"
+msgstr "注册"
+
+#: ../ui/app-info-icon.json.h:1 ../ui/app-info-page-body.json.h:3
+#: ../ui/app-info-page.json.h:7
+msgid "app name"
+msgstr "应用名"
+
+#: ../ui/app-comment.json.h:1
+#, fuzzy
+msgid "comment date"
+msgstr "%s 评论"
+
+#: ../ui/app-comment.json.h:2
+#, fuzzy
+msgid "comment subject"
+msgstr "%s 评论"
+
+#: ../ui/app-comment.json.h:3
+#, fuzzy
+msgid "comment text"
+msgstr "%s 评论"
+
+#: ../ui/app-comment.json.h:4
+msgid "type"
+msgstr "类型"
+
+#: ../ui/app-comment.json.h:5
+msgid "user"
+msgstr "用户"
+
+#: ../ui/message-info-page.json.h:1
+msgid "Date:"
+msgstr "日期:"
+
+#: ../ui/message-info-page.json.h:2
+msgid "Sender:"
+msgstr "发送者:"
+
+#: ../ui/message-info-page.json.h:3
+msgid "Subject:"
+msgstr "主题:"
+
+#: ../ui/app-info-page-actions.json.h:1 ../ui/app-info-page-panel.json.h:1
+#: ../ui/app-info-page.json.h:1
+msgid "ADD TO FAN"
+msgstr "关注"
+
+#: ../ui/app-info-page-actions.json.h:2 ../ui/app-info-page-panel.json.h:2
+msgid "COMMENT"
+msgstr "评论"
+
+#: ../ui/app-info-page-actions.json.h:3 ../ui/app-info-page-panel.json.h:3
+msgid "DOWNLOAD"
+msgstr "下载"
+
+#: ../ui/app-info-page-body.json.h:1 ../ui/app-info-page.json.h:2
+msgid "Author name"
+msgstr "作者"
+
+#: ../ui/app-info-page-body.json.h:2
+msgid "app descriptioin"
+msgstr "应用描述"
+
+#: ../ui/app-info-page-panel.json.h:4 ../ui/app-info-page.json.h:4
+#, fuzzy
+msgid "app comments"
+msgstr "%s 评论"
+
+#: ../ui/app-info-page-panel.json.h:5 ../ui/app-info-page.json.h:5
+#, fuzzy
+msgid "app downloads"
+msgstr "%d 下载"
+
+#: ../ui/app-info-page-panel.json.h:6 ../ui/app-info-page.json.h:6
+#, fuzzy
+msgid "app fans"
+msgstr "%d 关注"
+
+#: ../ui/app-info-page-panel.json.h:7 ../ui/app-info-page.json.h:9
+msgid "license"
+msgstr "许可证"
+
+#: ../ui/frame-ui.json.h:1
+msgid "Type to search..."
+msgstr "搜索.."
+
+#: ../ui/app-register.json.h:1
+msgid "Email:"
+msgstr "邮件:"
+
+#: ../ui/app-register.json.h:2
+msgid "First name:"
+msgstr "名:"
+
+#: ../ui/app-register.json.h:3
+msgid "Last name:"
+msgstr "姓:"
+
+#: ../ui/app-register.json.h:4
+msgid "Password:"
+msgstr "密码"
+
+#: ../ui/app-register.json.h:6
+msgid "Username:"
+msgstr "用户名"
+
+#: ../ui/app-account-ui.json.h:1
+msgid "Friends"
+msgstr "%d 好友"
+
+#: ../ui/app-account-ui.json.h:2
+msgid "Home Page"
+msgstr "主页"
+
+#: ../ui/app-account-ui.json.h:3
+msgid "Messages"
+msgstr "（无信息)"
+
+#: ../ui/app-account-ui.json.h:4
+msgid "company"
+msgstr "公司"
+
+#: ../ui/app-account-ui.json.h:5
+msgid "username"
+msgstr "< 用户名 >"
+
+#: ../ui/app-info-page.json.h:3
+msgid "Comment"
+msgstr "%s 评论"
+
+#: ../ui/app-info-page.json.h:8
+msgid "comment here"
+msgstr "%s 评论"

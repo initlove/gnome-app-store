@@ -22,6 +22,7 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
 #include "gnome-app-message-ui.h"
+#include "gnome-app-ui-utils.h"
 
 struct _GnomeAppMessageUIPrivate
 {
@@ -157,6 +158,7 @@ on_message_press (ClutterActor *actor,
         filename = open_app_get_ui_uri ("message-info-page");
         script = clutter_script_new ();
 	clutter_script_load_from_file (script, filename, &error);
+	gnome_app_script_po (script);
 	g_free (filename);
 	error = NULL;
 	if (error) {

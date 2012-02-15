@@ -309,6 +309,7 @@ gnome_app_login_run (GnomeAppLogin *login)
 		priv->script = clutter_script_new ();
 		error = NULL;
 		clutter_script_load_from_file (priv->script, filename, &error);
+		gnome_app_script_po (priv->script);
 		g_free (filename);
 		if (error) {
 			g_error ("fail to load app login script %s\n", error->message);
