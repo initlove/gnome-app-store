@@ -29,7 +29,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "config.h"
+#include <config.h>
+#include <glib/gi18n.h>
 #include "open-app-config.h"
 #include "open-app-utils.h"
 
@@ -237,9 +238,9 @@ open_app_get_default_categories ()
 {
 /*FIXME: 'Other' is the last and special one */
 	static const gchar *defaults[] = {
-		"Accessories", "Games", "Graphics", "Internet", "Office", 
-		"Programming", "Sound & Video", "System Tools", "Universal Access",
-		"Other", NULL
+		N_("Accessories"), N_("Games"), N_("Graphics"), N_("Internet"), N_("Office"),
+		N_("Programming"), N_("Sound & Video"), N_("System Tools"), N_("Universal Access"),
+		N_("Other"), NULL
 	};
 	return defaults;
 }

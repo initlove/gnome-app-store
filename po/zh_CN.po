@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-14 17:30+0800\n"
+"POT-Creation-Date: 2012-02-15 11:36+0800\n"
 "PO-Revision-Date: 2011-10-04 10:36+0800\n"
 "Last-Translator: liangchenye@gmail.com\n"
 "Language-Team: Liangchenye <liangchenye@gmail.com>\n"
@@ -89,6 +89,46 @@ msgstr "%d 好友"
 #, c-format
 msgid "%d apps"
 msgstr "%d 应用"
+
+#: ../common/open-app-utils.c:241
+msgid "Accessories"
+msgstr "辅助"
+
+#: ../common/open-app-utils.c:241
+msgid "Games"
+msgstr "游戏"
+
+#: ../common/open-app-utils.c:241
+msgid "Graphics"
+msgstr "图像"
+
+#: ../common/open-app-utils.c:241
+msgid "Internet"
+msgstr "网络"
+
+#: ../common/open-app-utils.c:241
+msgid "Office"
+msgstr "办公"
+
+#: ../common/open-app-utils.c:242
+msgid "Programming"
+msgstr "开发"
+
+#: ../common/open-app-utils.c:242
+msgid "Sound & Video"
+msgstr "声音 & 视频"
+
+#: ../common/open-app-utils.c:242
+msgid "System Tools"
+msgstr "系统工具"
+
+#: ../common/open-app-utils.c:242
+msgid "Universal Access"
+msgstr "通用访问"
+
+#: ../common/open-app-utils.c:243
+msgid "Other"
+msgstr "其他"
 
 #~ msgid "Autologin"
 #~ msgstr "自动登录"

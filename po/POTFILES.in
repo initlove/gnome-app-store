@@ -18,3 +18,4 @@ src/gnome-app-frame-ui.c
 src/gnome-app-ui-utils.c
 src/gnome-app-icon-view.c
 ui/app-login.json
+common/open-app-utils.c
