@@ -387,7 +387,7 @@ create_category_list (GnomeAppFrameUI *ui)
 
 	categories = open_app_get_default_categories ();
 	for (categories; *categories; categories ++) {
-		name = (gchar *)*categories;
+		name = _((gchar *)*categories);
 		actor = clutter_text_new ();
 		clutter_text_set_editable (CLUTTER_TEXT (actor), FALSE);
 		clutter_text_set_text (CLUTTER_TEXT (actor), name);
