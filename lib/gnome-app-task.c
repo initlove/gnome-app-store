@@ -481,6 +481,7 @@ PUSH_OUT:
 gchar *
 gnome_app_task_to_str (GnomeAppTask *task)
 {
+	GnomeAppTaskPrivate *priv;
 	GString *task_str;
 	gchar *str;
 	const gchar *name;
@@ -490,12 +491,13 @@ gnome_app_task_to_str (GnomeAppTask *task)
         RestParam *param;
 	gboolean first = TRUE;
 
+	priv = task->priv;
 	/*Download task */
-	if (task->priv->url)
-		return g_strdup (task->priv->url);
+	if (priv->url)
+		return g_strdup (priv->url);
 
-	task_str = g_string_new (rest_proxy_call_get_function (task->priv->call));
-	params = rest_proxy_call_get_params (task->priv->call);
+	task_str = g_string_new (priv->function);
+	params = rest_proxy_call_get_params (priv->call);
 	rest_params_iter_init (&iter, params);
 	while (rest_params_iter_next (&iter, &name, &param)) {
 		content = rest_param_get_content (param);
