@@ -72,6 +72,49 @@ on_back_button_press (ClutterActor *actor,
 static gpointer
 register_callback (gpointer userdata, gpointer func_result)
 {
+	OpenResults *results;
+	GnomeAppRegister *regist;
+	GnomeAppRegisterPrivate *priv;
+	ClutterActor *actor;
+	const gchar *val;
+	gint code;
+
+	results = OPEN_RESULTS (func_result);
+	regist = GNOME_APP_REGISTER (userdata);
+	priv = regist->priv;
+
+	if (open_results_get_status (results)) {
+//TODO: while the *info set, clean it if the related entry was changed.
+//	should done it by gnome_app_entry_add_connector 
+//TODO: 
+printf ("You should login you email to confirm the regist\n");
+	} else {
+		val = open_results_get_meta (results, "statuscode");
+		code = atoi (val);
+		switch (code) {
+			case 101:
+			case 102:
+			case 103:
+			case 106:
+				g_debug ("This should be handled by the client.\n");
+				g_debug ("TODO if have time .\n");
+				break;
+			case 104:
+/*TODO: check it while type it */
+				actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "username-info"));
+				val = open_results_get_meta (results, "message");
+				clutter_text_set_text (CLUTTER_TEXT (actor), val);
+				break;
+			case 105:
+				actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "email-info"));
+				val = open_results_get_meta (results, "message");
+				clutter_text_set_text (CLUTTER_TEXT (actor), val);
+				break;
+			default:
+				break;
+		}
+	}
+
 	return NULL;
 }
 
