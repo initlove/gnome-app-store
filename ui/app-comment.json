@@ -21,7 +21,6 @@
       {
         "id" : "subject",
         "type" : "ClutterText",
-        "text" : "comment subject",
 	"x" : 40,
 	"y" : 10,
         "font-name" : "Sans Bold 14px",
@@ -33,7 +32,6 @@
       {
         "id" : "user",
         "type" : "ClutterText",
-        "text" : "user",
 	"x" : 48,
 	"y" : 30,
         "font-name" : "Sans 12px",
@@ -45,7 +43,6 @@
       {
         "id" : "date",
         "type" : "ClutterText",
-        "text" : "comment date",
 	"x" : 140,
 	"y" : 30,
 	"width" : 120,
@@ -58,7 +55,6 @@
       {
         "id" : "text",
         "type" : "ClutterText",
-        "text" : "comment text",
 	"x" : 0,
 	"y" : 70,
 	"width" : 320,

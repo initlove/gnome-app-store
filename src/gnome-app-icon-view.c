@@ -14,6 +14,7 @@ Author: David Liang <dliang@novell.com>
 */
 #include <math.h>
 #include <clutter/clutter.h>
+#include "open-app-utils.h"
 #include "gnome-app-task.h"
 #include "gnome-app-application.h"
 #include "gnome-app-icon-view.h"

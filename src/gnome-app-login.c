@@ -104,25 +104,25 @@ on_login_press (ClutterActor *actor,
 static gpointer
 auth_valid_callback (gpointer userdata, gpointer func_result)
 {
-	GnomeAppLogin *login;
-	GnomeAppLoginPrivate *priv;
 	OpenResults *results;
 
 	results = OPEN_RESULTS (func_result);
-	login = GNOME_APP_LOGIN (userdata);
-	priv = login->priv;
 
 	if (results && open_results_get_status (results)) {
-		GnomeAppStore *store;
-		ClutterActor *stage;
-		ClutterActor *auto_login_check_box;
-		ClutterActor *username_entry;
-	        ClutterActor *password_entry;
-		const gchar *username;
-        	const gchar *password;
-		gboolean save;
+		if (userdata) {
+			GnomeAppLogin *login;
+			GnomeAppLoginPrivate *priv;
+			GnomeAppStore *store;
+			ClutterActor *stage;
+			ClutterActor *auto_login_check_box;
+			ClutterActor *username_entry;
+		        ClutterActor *password_entry;
+			const gchar *username;
+	        	const gchar *password;
+			gboolean save;
 
-		if (priv->script) {
+			login = GNOME_APP_LOGIN (userdata);
+			priv = login->priv;
 			clutter_script_get_objects (priv->script,
 				"app-login", &stage,
 				"auto-login-check-box", &auto_login_check_box,
@@ -138,13 +138,14 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 				NULL);
 
 			g_signal_emit (login, login_signals [AUTH], 0);
-		}
-
-		g_object_unref (login);
+			g_object_unref (login);
+		} 
 		gnome_app_application_new ();
+
 	} else {
 		g_debug ("error in auth %s\n", open_results_get_meta (results, "message"));
-		gnome_app_login_run (login);
+		/*TODO: display the error*/
+		gnome_app_login_run ();
 	}
 	return NULL;
 }
@@ -262,36 +263,26 @@ gnome_app_login_class_init (GnomeAppLoginClass *klass)
 	g_type_class_add_private (object_class, sizeof (GnomeAppLoginPrivate));
 }
 
-GnomeAppLogin *
-gnome_app_login_new (void)
+void
+gnome_app_auth_valid ()
 {
-	GnomeAppLogin *login;
-	GnomeAppLoginPrivate *priv;
 	GnomeAppStore *store;
-	GError *error;
-	gchar *filename;
 	gchar *username;
         gchar *password;
-
-	login = g_object_new (GNOME_APP_TYPE_LOGIN, NULL);
-	priv = login->priv;
 
 	store = gnome_app_store_get_default ();
 	g_object_get (store, "username", &username, "password", &password, NULL);
 	if (username && password) {
-		auth_valid (login, username, password);
+		auth_valid (NULL, username, password);
 	} else {
-		gnome_app_login_run (login);
+		gnome_app_login_run ();
 	}
-
-	return login;
 }
 
 void
-gnome_app_login_run (GnomeAppLogin *login)
+gnome_app_login_run (void)
 {
-	g_return_if_fail (login);
-
+	GnomeAppLogin *login;
 	GnomeAppLoginPrivate *priv;
 	GnomeAppStore *store;
 	ClutterActor *stage;
@@ -303,19 +294,19 @@ gnome_app_login_run (GnomeAppLogin *login)
 	GError *error;
 	gchar *default_username;
 
+	login = g_object_new (GNOME_APP_TYPE_LOGIN, NULL);
 	priv = login->priv;
-	if (!priv->script) {
-		filename = open_app_get_ui_uri ("app-login");
-		priv->script = clutter_script_new ();
-		error = NULL;
-		clutter_script_load_from_file (priv->script, filename, &error);
-		gnome_app_script_po (priv->script);
-		g_free (filename);
-		if (error) {
-			g_error ("fail to load app login script %s\n", error->message);
-			g_error_free (error);
-			return;
-		}
+		
+	filename = open_app_get_ui_uri ("app-login");
+	priv->script = clutter_script_new ();
+	error = NULL;
+	clutter_script_load_from_file (priv->script, filename, &error);
+	gnome_app_script_po (priv->script);
+	g_free (filename);
+	if (error) {
+		g_error ("fail to load app login script %s\n", error->message);
+		g_error_free (error);
+		return;
 	}
 
 	clutter_script_get_objects (priv->script, "app-login", &stage,

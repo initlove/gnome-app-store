@@ -222,10 +222,23 @@
         "ellipsize" : "end"
       },
       {
+        "id" : "back",
+        "type" : "ClutterText",
+        "text" : "Back",
+	"x" : 150,
+	"y" : 330,
+        "font-name" : "Sans 20px",
+        "color" : "blue",
+        "line-alignment" : "start",
+        "line-wrap" : false,
+    	"reactive" : true,
+        "ellipsize" : "end"
+      }
+      {
         "id" : "register",
         "type" : "ClutterText",
         "text" : "Register",
-	"x" : 200,
+	"x" : 220,
 	"y" : 330,
         "font-name" : "Sans 20px",
         "color" : "blue",

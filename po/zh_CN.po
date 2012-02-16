@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-15 17:46+0800\n"
+"POT-Creation-Date: 2012-02-16 09:41+0800\n"
 "PO-Revision-Date: 2011-10-04 10:36+0800\n"
 "Last-Translator: liangchenye@gmail.com\n"
 "Language-Team: Liangchenye <liangchenye@gmail.com>\n"
@@ -15,37 +15,37 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/gnome-app-login.c:335
+#: ../src/gnome-app-login.c:336
 msgid "< user name >"
 msgstr "< 用户名 >"
 
-#: ../src/gnome-app-login.c:337
+#: ../src/gnome-app-login.c:338
 msgid "< password >"
 msgstr "< 密码 >"
 
-#: ../src/gnome-app-comment.c:234
+#: ../src/gnome-app-comment.c:235
 msgid "Cancel"
 msgstr "取消"
 
-#: ../src/gnome-app-comment.c:237
+#: ../src/gnome-app-comment.c:238
 msgid "Submit"
 msgstr "提交"
 
-#: ../src/gnome-app-comment.c:244 ../src/gnome-app-comment.c:418
+#: ../src/gnome-app-comment.c:245 ../src/gnome-app-comment.c:420
 msgid "Reply"
 msgstr "回复"
 
-#: ../src/gnome-app-comment.c:342
+#: ../src/gnome-app-comment.c:344
 #, c-format
 msgid "by %s"
 msgstr ""
 
-#: ../src/gnome-app-comment.c:349
+#: ../src/gnome-app-comment.c:351
 #, c-format
 msgid "on: %10s"
 msgstr ""
 
-#: ../src/gnome-app-message-ui.c:328
+#: ../src/gnome-app-message-ui.c:330
 msgid "(No message)"
 msgstr "（无信息)"
 
@@ -53,29 +53,29 @@ msgstr "（无信息)"
 msgid "AppStore"
 msgstr "应用超市"
 
-#: ../src/gnome-app-info-page.c:317
+#: ../src/gnome-app-info-page.c:318
 msgid "- Remove Fan"
 msgstr "- 取消关注"
 
-#: ../src/gnome-app-info-page.c:320
+#: ../src/gnome-app-info-page.c:321
 msgid "+ Add Fan"
 msgstr "+ 添加关注"
 
-#: ../src/gnome-app-info-page.c:467
+#: ../src/gnome-app-info-page.c:468
 msgid "Download"
 msgstr "下载"
 
-#: ../src/gnome-app-info-page.c:618 ../src/gnome-app-info-page.c:762
+#: ../src/gnome-app-info-page.c:619 ../src/gnome-app-info-page.c:764
 #, c-format
 msgid "%d fans"
 msgstr "%d 关注"
 
-#: ../src/gnome-app-info-page.c:625 ../src/gnome-app-info-page.c:756
+#: ../src/gnome-app-info-page.c:626 ../src/gnome-app-info-page.c:758
 #, c-format
 msgid "%d downloads"
 msgstr "%d 下载"
 
-#: ../src/gnome-app-info-page.c:766
+#: ../src/gnome-app-info-page.c:768
 #, c-format
 msgid "%s comments"
 msgstr "%s 评论"
@@ -85,7 +85,7 @@ msgstr "%s 评论"
 msgid "%d Friends"
 msgstr "%d 好友"
 
-#: ../src/gnome-app-frame-ui.c:95
+#: ../src/gnome-app-frame-ui.c:96
 #, c-format
 msgid "%d apps"
 msgstr "%d 应用"
@@ -138,37 +138,17 @@ msgstr "自动登录"
 msgid "Login"
 msgstr "登录"
 
-#: ../ui/app-login.json.h:3 ../ui/app-register.json.h:5
+#: ../ui/app-login.json.h:3 ../ui/app-register.json.h:6
 msgid "Register"
 msgstr "注册"
 
 #: ../ui/app-info-icon.json.h:1 ../ui/app-info-page-body.json.h:3
-#: ../ui/app-info-page.json.h:7
 msgid "app name"
 msgstr "应用名"
 
 #: ../ui/app-comment.json.h:1
-#, fuzzy
-msgid "comment date"
-msgstr "%s 评论"
-
-#: ../ui/app-comment.json.h:2
-#, fuzzy
-msgid "comment subject"
-msgstr "%s 评论"
-
-#: ../ui/app-comment.json.h:3
-#, fuzzy
-msgid "comment text"
-msgstr "%s 评论"
-
-#: ../ui/app-comment.json.h:4
 msgid "type"
 msgstr "类型"
-
-#: ../ui/app-comment.json.h:5
-msgid "user"
-msgstr "用户"
 
 #: ../ui/message-info-page.json.h:1
 msgid "Date:"
@@ -182,16 +162,15 @@ msgstr "发送者:"
 msgid "Subject:"
 msgstr "主题:"
 
-#: ../ui/app-info-page-actions.json.h:1 ../ui/app-info-page-panel.json.h:1
-#: ../ui/app-info-page.json.h:1
+#: ../ui/app-info-page-actions.json.h:1
 msgid "ADD TO FAN"
 msgstr "关注"
 
-#: ../ui/app-info-page-actions.json.h:2 ../ui/app-info-page-panel.json.h:2
+#: ../ui/app-info-page-actions.json.h:2
 msgid "COMMENT"
 msgstr "评论"
 
-#: ../ui/app-info-page-actions.json.h:3 ../ui/app-info-page-panel.json.h:3
+#: ../ui/app-info-page-actions.json.h:3
 msgid "DOWNLOAD"
 msgstr "下载"
 
@@ -203,46 +182,31 @@ msgstr "作者"
 msgid "app descriptioin"
 msgstr "应用描述"
 
-#: ../ui/app-info-page-panel.json.h:4 ../ui/app-info-page.json.h:4
-#, fuzzy
-msgid "app comments"
-msgstr "%s 评论"
-
-#: ../ui/app-info-page-panel.json.h:5 ../ui/app-info-page.json.h:5
-#, fuzzy
-msgid "app downloads"
-msgstr "%d 下载"
-
-#: ../ui/app-info-page-panel.json.h:6 ../ui/app-info-page.json.h:6
-#, fuzzy
-msgid "app fans"
-msgstr "%d 关注"
-
-#: ../ui/app-info-page-panel.json.h:7 ../ui/app-info-page.json.h:9
-msgid "license"
-msgstr "许可证"
-
 #: ../ui/frame-ui.json.h:1
 msgid "Type to search..."
 msgstr "搜索.."
 
 #: ../ui/app-register.json.h:1
+msgid "Back"
+msgstr "后退"
+
+#: ../ui/app-register.json.h:2
 msgid "Email:"
 msgstr "邮件:"
 
-#: ../ui/app-register.json.h:2
+#: ../ui/app-register.json.h:3
 msgid "First name:"
 msgstr "名:"
 
-#: ../ui/app-register.json.h:3
+#: ../ui/app-register.json.h:4
 msgid "Last name:"
 msgstr "姓:"
 
-#: ../ui/app-register.json.h:4
+#: ../ui/app-register.json.h:5
 msgid "Password:"
 msgstr "密码"
 
-#: ../ui/app-register.json.h:6
+#: ../ui/app-register.json.h:7
 msgid "Username:"
 msgstr "用户名"
 
@@ -266,10 +230,18 @@ msgstr "公司"
 msgid "username"
 msgstr "< 用户名 >"
 
+#: ../ui/app-info-page.json.h:1
+msgid "Add to fan"
+msgstr "添加关注"
+
 #: ../ui/app-info-page.json.h:3
 msgid "Comment"
-msgstr "%s 评论"
+msgstr "评论"
 
-#: ../ui/app-info-page.json.h:8
+#: ../ui/app-info-page.json.h:4
 msgid "comment here"
-msgstr "%s 评论"
+msgstr "在这里评论"
+
+#: ../ui/app-info-page.json.h:5
+msgid "license"
+msgstr "许可证"

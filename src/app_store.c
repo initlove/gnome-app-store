@@ -41,7 +41,7 @@ main (int argc, char *argv[])
 	gnome_app_store_set_lock_function (store, clutter_threads_enter);
 	gnome_app_store_set_unlock_function (store, clutter_threads_leave);
 
-	gnome_app_login_new ();
+	gnome_app_auth_valid ();
 
 	g_main_loop_run (loop);
   	g_main_loop_unref (loop);

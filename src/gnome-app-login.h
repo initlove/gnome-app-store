@@ -52,7 +52,8 @@ struct _GnomeAppLoginClass
 
 GType			gnome_app_login_get_type              	(void);
 GnomeAppLogin *		gnome_app_login_new			(void);
-void			gnome_app_login_run	               	(GnomeAppLogin *login);
+void			gnome_app_auth_valid			(void);
+void			gnome_app_login_run	               	(void);
 
 G_END_DECLS
 

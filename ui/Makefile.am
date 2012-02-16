@@ -8,7 +8,6 @@ ui_DATA =	\
 	app-comment.json	\
 	app-info-icon.json	\
 	app-info-page.json	\
-	app-info-page-panel.json \
 	app-info-page-body.json \
 	frame-ui.json	\
 	$(NULL)

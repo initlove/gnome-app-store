@@ -89,7 +89,7 @@ gnome_app_comments_init (GnomeAppComments *comments)
 	comments->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (comments,
 	                                                 GNOME_APP_TYPE_COMMENTS,
 	                                                 GnomeAppCommentsPrivate);
-	clutter_actor_set_clip_to_allocation (comments, TRUE);
+	clutter_actor_set_clip_to_allocation (CLUTTER_ACTOR (comments), TRUE);
 	priv->layout = clutter_box_layout_new ();
 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (priv->layout), TRUE);
 	priv->layout_box = clutter_box_new (priv->layout);

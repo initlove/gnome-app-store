@@ -19,6 +19,7 @@ Author: David Liang <dliang@novell.com>
 #include "open-app-utils.h"
 #include "gnome-app-task.h"
 #include "gnome-app-ui-utils.h"
+#include "gnome-app-login.h"
 #include "gnome-app-register.h"
 
 struct _GnomeAppRegisterPrivate
@@ -52,6 +53,20 @@ email_valid (const gchar *email)
 		return TRUE;
 	else
 		return FALSE;
+}
+
+static gboolean
+on_back_button_press (ClutterActor *actor,
+		ClutterEvent *event,
+		gpointer      data)
+{
+	GnomeAppRegister *regist;
+
+	gnome_app_login_run ();
+	regist = GNOME_APP_REGISTER (data);
+	g_object_unref (regist);
+
+	return FALSE;
 }
 
 static gpointer
@@ -300,6 +315,7 @@ gnome_app_register_run (GnomeAppRegister *regist)
 	ClutterActor *firstname, *firstname_entry;
 	ClutterActor *lastname, *lastname_entry;
 	ClutterActor *email, *email_entry;
+	ClutterActor *back_button;
 	ClutterActor *register_button;
 	GError *error;
 	gchar *filename;
@@ -317,6 +333,7 @@ gnome_app_register_run (GnomeAppRegister *regist)
 			"lastname-entry", &lastname_entry,
 			"email", &email,
 			"email-entry", &email_entry,
+			"back", &back_button,
 			"register", &register_button,
 			NULL);
 
@@ -325,6 +342,7 @@ gnome_app_register_run (GnomeAppRegister *regist)
 	gnome_app_entry_binding (firstname_entry);
 	gnome_app_entry_binding (lastname_entry);
 	gnome_app_entry_binding (email_entry);
+	gnome_app_button_binding (back_button);
 	gnome_app_button_binding (register_button);
 
 	gnome_app_stage_remove_decorate (stage);
@@ -337,4 +355,5 @@ gnome_app_register_run (GnomeAppRegister *regist)
 	clutter_actor_show (stage);
 
 	g_signal_connect (register_button, "button-press-event", G_CALLBACK (on_register_button_press), regist);
+	g_signal_connect (back_button, "button-press-event", G_CALLBACK (on_back_button_press), regist);
 }
