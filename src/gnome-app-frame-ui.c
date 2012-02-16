@@ -156,7 +156,7 @@ on_search_entry_text_changed (ClutterActor *actor,
 	const gchar *search;
 
 	search = clutter_text_get_text (CLUTTER_TEXT (actor));
-	if (is_blank_text (search)) {
+	if (open_app_pattern_match ("blank", search, NULL)) {
 		if (clutter_actor_get_reactive (ui->priv->search_icon) == TRUE) {
 			clutter_actor_set_opacity (ui->priv->search_icon, 100);
 			clutter_actor_set_reactive (ui->priv->search_icon, FALSE);
@@ -181,7 +181,7 @@ on_search_entry_activate (ClutterActor *actor,
 	const gchar *search;
 
 	search = clutter_text_get_text (CLUTTER_TEXT (actor));
-	if (is_blank_text (search))
+	if (open_app_pattern_match ("blank", search, NULL))
 		return;
 
 	GnomeAppFrameUIPrivate *priv;

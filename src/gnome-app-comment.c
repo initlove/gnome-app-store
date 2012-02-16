@@ -195,8 +195,10 @@ on_submit_button_press (ClutterActor *actor,
 	comment = GNOME_APP_COMMENT (data);
 	priv = comment->priv;
 	str = clutter_text_get_text (CLUTTER_TEXT (priv->reply_entry));
-	if (is_blank_text (str))
+	if (open_app_pattern_match ("blank", str, NULL)) {
+		//TODO: doing sth
 		return FALSE;
+	}
 
 	GnomeAppTask *task;
 	const gchar *parent;

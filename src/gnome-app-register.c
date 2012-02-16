@@ -91,6 +91,7 @@ on_register_button_press (ClutterActor *actor,
 	ClutterActor *register_button;
 	ClutterScript *script;
 
+	GError *error;
 	gboolean validation;
 	const gchar *username;
 	const gchar *password;
@@ -128,44 +129,54 @@ on_register_button_press (ClutterActor *actor,
 	gnome_app_button_binding (register_button);
 
 	username = clutter_text_get_text (CLUTTER_TEXT (username_entry));
-	if (is_blank_text (username)) {
-		clutter_text_set_text (CLUTTER_TEXT (username_info), "should not blank");
-		validation = FALSE;
-	} else
+	error = NULL;
+	if (open_app_pattern_match ("notblank", username, &error)) {
 		clutter_text_set_text (CLUTTER_TEXT (username_info), "");
-
-//password should have 8 longer
-	password = clutter_text_get_text (CLUTTER_TEXT (password_entry));
-	if (is_blank_text (password)) {
-		clutter_text_set_text (CLUTTER_TEXT (password_info), "should not blank");
+	} else {
+		clutter_text_set_text (CLUTTER_TEXT (username_info), error->message);
+		g_error_free (error);
 		validation = FALSE;
-	} else
+	}
+
+	password = clutter_text_get_text (CLUTTER_TEXT (password_entry));
+	error = NULL;
+	if (open_app_pattern_match ("password", password, &error)) {
 		clutter_text_set_text (CLUTTER_TEXT (password_info), "");
+	} else {
+		clutter_text_set_text (CLUTTER_TEXT (password_info), error->message);
+		g_error_free (error);
+		validation = FALSE;
+	}
 
 	firstname = clutter_text_get_text (CLUTTER_TEXT (firstname_entry));
-	if (is_blank_text (firstname)) {
-		clutter_text_set_text (CLUTTER_TEXT (firstname_info), "should not blank");
-		validation = FALSE;
-	} else
+	error = NULL;
+	if (open_app_pattern_match ("notblank", firstname, &error)) {
 		clutter_text_set_text (CLUTTER_TEXT (firstname_info), "");
+	} else {
+		clutter_text_set_text (CLUTTER_TEXT (firstname_info), error->message);
+		g_error_free (error);
+		validation = FALSE;
+	}
 
 	lastname = clutter_text_get_text (CLUTTER_TEXT (lastname_entry));
-	if (is_blank_text (lastname)) {
-		clutter_text_set_text (CLUTTER_TEXT (lastname_info), "should not blank");
-		validation = FALSE;
-	} else
+	error = NULL;
+	if (open_app_pattern_match ("notblank", lastname, &error)) {
 		clutter_text_set_text (CLUTTER_TEXT (lastname_info), "");
+	} else {
+		clutter_text_set_text (CLUTTER_TEXT (lastname_info), error->message);
+		g_error_free (error);
+		validation = FALSE;
+	}
 
 	email = clutter_text_get_text (CLUTTER_TEXT (email_entry));
-	if (is_blank_text (email)) {
-		clutter_text_set_text (CLUTTER_TEXT (email_info), "should not blank");
-		validation = FALSE;
-	} else if (!email_valid (email)) {
-		clutter_text_set_text (CLUTTER_TEXT (email_info), "please enter the valid email");
-		validation = FALSE;
-	} else
+	error = NULL;
+	if (open_app_pattern_match ("email", email, &error)) {
 		clutter_text_set_text (CLUTTER_TEXT (email_info), "");
-
+	} else {
+		clutter_text_set_text (CLUTTER_TEXT (email_info), error->message);
+		g_error_free (error);
+		validation = FALSE;
+	}
 
 	if (validation) {
 		GnomeAppTask *task;

@@ -31,8 +31,16 @@
 
 #include <config.h>
 #include <glib/gi18n.h>
+#include <glib/gregex.h>
 #include "open-app-config.h"
 #include "open-app-utils.h"
+
+typedef struct _OpenAppRegex {
+	gchar *name;
+	gchar *pattern;
+	GRegexMatchFlags flags;
+	gchar *message;
+} OpenAppRegex;
 
 #if 0
 #define SERVER_DEBUG
@@ -371,4 +379,40 @@ is_blank_text (const gchar *text)
 	}
 		
 	return TRUE;
+}
+
+gboolean
+open_app_pattern_match (const gchar *pattern_name, const gchar *content, GError **error)
+{
+
+	OpenAppRegex data [] = {
+		{"blank", "[\\s]+", G_REGEX_MATCH_ANCHORED, N_("It is not blank")},
+		{"notblank", "[^\\s]+", G_REGEX_MATCH_PARTIAL, N_("Should not be blank")},
+		{"email", "[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}", G_REGEX_MATCH_ANCHORED, N_("Enter the valid email address")},
+		{"password", "[a-zA-Z0-9]{8,}$", G_REGEX_MATCH_ANCHORED, N_("The password should be >=8 alphanumeric chars")},
+		{NULL, NULL, 0, NULL},
+	};
+	gint i;
+
+	if (!content || !content [0]) {
+		g_set_error (error, G_REGEX_ERROR, G_REGEX_ERROR_MATCH,
+			  _("The text should not be NULL"));
+		return FALSE;
+	}
+
+	for (i = 0; data [i].name; i++) {
+		if (strcasecmp (pattern_name, data [i].name) == 0) {
+			if (g_regex_match_simple (data [i].pattern, content, G_REGEX_OPTIMIZE, data [i].flags)) {
+				return TRUE;
+			} else {
+				g_set_error (error, G_REGEX_ERROR, G_REGEX_ERROR_MATCH,
+					  _(data [i].message));
+				return FALSE;
+			}
+		}
+	}
+			
+	g_set_error (error, G_REGEX_ERROR, G_REGEX_ERROR_MATCH,
+			  _("Cannot find the <%s> pattern\n"), pattern_name);
+	return FALSE;
 }

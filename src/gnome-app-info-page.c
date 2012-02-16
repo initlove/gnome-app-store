@@ -258,8 +258,10 @@ on_comment_button_press (ClutterActor *actor,
 	comment_entry = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "comment-entry"));
 	subject = "thanks!";
 	message = clutter_text_get_text (CLUTTER_TEXT (comment_entry));
-	if (is_blank_text (message))
+	if (open_app_pattern_match ("blank", message, NULL)) {
+		//TODO: doing sth
 		return FALSE;
+	}
 
 	GnomeAppTask *task;
 	gchar *function;
