@@ -59,8 +59,6 @@ AC_SUBST(LT_VERSION)
 LT_PREREQ([2.2.6])
 LT_INIT([dlopen win32-dll disable-static])
 
-IT_PROG_INTLTOOL([0.40.6])
-
 AC_PROG_CC
 PKG_PROG_PKG_CONFIG
 
@@ -91,8 +89,10 @@ dnl gnome-doc-utils stuff
 
 GNOME_DOC_INIT
 
-dnl Language Support
+# i18n stuff
+IT_PROG_INTLTOOL([0.41.0])
 
+dnl Language Support
 GETTEXT_PACKAGE=gnome-app-store
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",

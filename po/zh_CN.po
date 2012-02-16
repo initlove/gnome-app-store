@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-16 09:41+0800\n"
+"POT-Creation-Date: 2012-02-16 12:17+0800\n"
 "PO-Revision-Date: 2011-10-04 10:36+0800\n"
 "Last-Translator: liangchenye@gmail.com\n"
 "Language-Team: Liangchenye <liangchenye@gmail.com>\n"
@@ -15,11 +15,11 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/gnome-app-login.c:336
+#: ../src/gnome-app-login.c:327
 msgid "< user name >"
 msgstr "< 用户名 >"
 
-#: ../src/gnome-app-login.c:338
+#: ../src/gnome-app-login.c:329
 msgid "< password >"
 msgstr "< 密码 >"
 
@@ -142,7 +142,7 @@ msgstr "登录"
 msgid "Register"
 msgstr "注册"
 
-#: ../ui/app-info-icon.json.h:1 ../ui/app-info-page-body.json.h:3
+#: ../ui/app-info-icon.json.h:1
 msgid "app name"
 msgstr "应用名"
 
@@ -173,14 +173,6 @@ msgstr "评论"
 #: ../ui/app-info-page-actions.json.h:3
 msgid "DOWNLOAD"
 msgstr "下载"
-
-#: ../ui/app-info-page-body.json.h:1 ../ui/app-info-page.json.h:2
-msgid "Author name"
-msgstr "作者"
-
-#: ../ui/app-info-page-body.json.h:2
-msgid "app descriptioin"
-msgstr "应用描述"
 
 #: ../ui/frame-ui.json.h:1
 msgid "Type to search..."
@@ -228,11 +220,15 @@ msgstr "公司"
 
 #: ../ui/app-account-ui.json.h:5
 msgid "username"
-msgstr "< 用户名 >"
+msgstr "用户名"
 
 #: ../ui/app-info-page.json.h:1
 msgid "Add to fan"
 msgstr "添加关注"
+
+#: ../ui/app-info-page.json.h:2
+msgid "Author name"
+msgstr "作者"
 
 #: ../ui/app-info-page.json.h:3
 msgid "Comment"
@@ -245,3 +241,4 @@ msgstr "在这里评论"
 #: ../ui/app-info-page.json.h:5
 msgid "license"
 msgstr "许可证"
+

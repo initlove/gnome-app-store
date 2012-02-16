@@ -33,6 +33,7 @@ BuildRequires:  libxml2-devel
 BuildRequires:  libsoup-devel
 BuildRequires:  librest-devel
 BuildRequires:  clutter-devel
+BuildRequires:  intltool
 Requires:       %{name}-lang = %{version}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
