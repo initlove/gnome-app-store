@@ -33,6 +33,7 @@ Author: David Liang <dliang@novell.com>
 struct _GnomeAppTaskPrivate
 {
 	gchar *url;
+	gchar *function;
         RestProxyCall *call;
 	OAsyncWorkerTask *async;
 	gint type;	//TODO: download, sync, async ..
@@ -58,6 +59,7 @@ gnome_app_task_init (GnomeAppTask *task)
                                                    GnomeAppTaskPrivate);
 	priv->url = NULL;
 	priv->call = NULL;
+	priv->function = NULL;
 	priv->async = NULL;
 	priv->callback = NULL;
 	priv->userdata = NULL;
@@ -75,6 +77,8 @@ gnome_app_task_finalize (GObject *object)
 	GnomeAppTask *task = GNOME_APP_TASK (object);
 	GnomeAppTaskPrivate *priv = task->priv;
 /*TODO: final all */
+	if (priv->function)
+		g_free (priv->function);
 	if (priv->url)
 		g_free (priv->url);
 	if (priv->async)
@@ -107,6 +111,7 @@ gnome_app_sync_task_new (const char *method, const char *function)
 	store = gnome_app_store_get_default ();
         proxy = gnome_app_store_get_rest_proxy (store);
         priv->call = rest_proxy_new_call ((RestProxy *)proxy);
+	priv->function = g_strdup (function);
 	rest_proxy_call_set_method (priv->call, method);
         rest_proxy_call_set_function (priv->call, function);
 
@@ -288,18 +293,21 @@ gnome_app_task_new (gpointer userdata, const gchar *method, const gchar *functio
 
 	GnomeAppStore *store;
         GnomeAppTask *task;
+	GnomeAppTaskPrivate *priv;
 	RestProxy *proxy;
 
 	task = g_object_new (GNOME_APP_TYPE_TASK, NULL);
+	priv = task->priv;
 	store = gnome_app_store_get_default ();
         proxy = gnome_app_store_get_rest_proxy (store);
-        task->priv->call = rest_proxy_new_call ((RestProxy *)proxy);
-        rest_proxy_call_set_function (task->priv->call, function);
-	rest_proxy_call_set_method (task->priv->call, method);
-	task->priv->userdata = userdata;
-	task->priv->async = o_async_worker_task_new ();
-        o_async_worker_task_set_func (task->priv->async, async_func);
-        o_async_worker_task_set_priority (task->priv->async, TASK_PRIORITY_NORMAL);
+        priv->call = rest_proxy_new_call ((RestProxy *)proxy);
+	priv->function = g_strdup (function);
+        rest_proxy_call_set_function (priv->call, function);
+	rest_proxy_call_set_method (priv->call, method);
+	priv->userdata = userdata;
+	priv->async = o_async_worker_task_new ();
+        o_async_worker_task_set_func (priv->async, async_func);
+        o_async_worker_task_set_priority (priv->async, TASK_PRIORITY_NORMAL);
 
 	return task;
 }
@@ -516,8 +524,12 @@ const gchar *
 gnome_app_task_get_function (GnomeAppTask *task)
 {
 	g_return_val_if_fail (task && task->priv->call, NULL);
-
+#if 0
+	/* rest did not support this .. */
 	return rest_proxy_call_get_function (task->priv->call);
+#else
+	return task->priv->function;
+#endif
 }
 
 TaskPriority
