@@ -11,3 +11,5 @@ ui_DATA =	\
 	app-info-page-body.json \
 	frame-ui.json	\
 	$(NULL)
+
+EXTRA_DIST = $(ui_DATA)

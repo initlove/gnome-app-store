@@ -90,9 +90,9 @@ main (int argc, gchar **argv)
   printf ("str is %s\n", str);
   text = clutter_text_new ();
   clutter_actor_set_width (text, 400);
-  clutter_text_set_line_wrap (text, TRUE);
+  clutter_text_set_line_wrap (CLUTTER_TEXT (text), TRUE);
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), text);
-  clutter_text_set_text (text, str);
+  clutter_text_set_text (CLUTTER_TEXT (text), str);
 
   clutter_actor_show (stage);
 

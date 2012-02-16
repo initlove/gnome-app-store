@@ -30,3 +30,5 @@ pixmaps_DATA =	\
 	weather-clear-night.png \
 	weather-clear.png \
 	$(NULL)
+
+EXTRA_DIST = $(pixmaps_DATA)

@@ -6,6 +6,8 @@ CLEANFILES = \
         $(version_DATA)
 
 EXTRA_DIST =			\
+	gnome-app-store.spec    \
+	autogen.sh		\
 	AUTHORS			\
 	README			\
 	TODO			\

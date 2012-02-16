@@ -1,11 +1,3 @@
-BUILT_SOURCES =
-CLEANFILES =
-EXTRA_DIST =
-bin_SCRIPTS =
-libexec_PROGRAMS =
-noinst_LTLIBRARIES =
-noinst_PROGRAMS =
-
 AM_CPPFLAGS =                                                   \
 	-I$(top_srcdir)                                         \
 	-I$(top_srcdir)/common					\
@@ -18,8 +10,9 @@ AM_CPPFLAGS =                                                   \
 	$(DEBUG_CFLAGS) 					\
 	$(DISABLE_DEPRECATED_CFLAGS)
 
-noinst_PROGRAMS +=      \
-	app_store	\
+bin_PROGRAMS = gnome-app-store
+
+noinst_PROGRAMS =      \
 	test_comments	\
 	test_account	\
 	test_friends	\
@@ -27,7 +20,7 @@ noinst_PROGRAMS +=      \
 	test_scroll	\
 	$(NULL)
 
-app_store_SOURCES =        \
+gnome_app_store_SOURCES =        \
 	gnome-app-login.c gnome-app-login.h \
 	gnome-app-register.c gnome-app-register.h \
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
@@ -43,7 +36,7 @@ app_store_SOURCES =        \
 	gnome-app-account-ui.c gnome-app-account-ui.h  \
 	app_store.c
 
-app_store_LDADD =          \
+gnome_app_store_LDADD =          \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
 	$(LIBREST_LIBS)	\
