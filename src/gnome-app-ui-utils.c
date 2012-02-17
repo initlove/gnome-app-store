@@ -18,6 +18,7 @@ Author: David Liang <dliang@novell.com>
 #include <clutter/x11/clutter-x11.h>
 #include <X11/Xatom.h>
 #include <string.h>
+#include "open-app-utils.h"
 #include "gnome-app-task.h"
 #include "gnome-app-ui-utils.h"
 
@@ -55,6 +56,8 @@ set_pic_callback (gpointer userdata, gpointer func_re)
 void
 gnome_app_set_icon (ClutterActor *actor, const gchar *uri)
 {
+	g_return_if_fail (actor && uri);
+
 	GnomeAppTask *task;
 		
 	task = gnome_download_task_new (actor, uri);
@@ -599,9 +602,42 @@ gnome_app_actor_add_scale_state (ClutterActor *actor)
 	g_signal_connect (actor, "destroy", G_CALLBACK (on_scale_state_destroy), state);
 }
 
+ClutterScript *
+gnome_app_script_new_from_file (const gchar *script_name)
+{
+	ClutterScript *script;
+	GError *error;
+	gchar *filename;
+	gint i, len;
+	const gchar *path [] = {
+		"/home/dliang/gnome-app-store/pixmaps/", 
+		NULL};
+
+	filename = open_app_get_ui_uri (script_name);
+	if (!filename)
+		return NULL;
+
+	script = clutter_script_new ();
+	for (len = 0; path [len]; len++) {
+	}
+        clutter_script_add_search_paths (script, path, len);
+	error = NULL;
+	clutter_script_load_from_file (script, filename, &error);
+	if (error) {
+		g_error ("fail to load app login script %s\n", error->message);
+		g_error_free (error);
+		g_object_unref (script);
+		script = NULL;
+	}
+	gnome_app_script_preload (script);
+	g_free (filename);
+
+	return script;
+}
+
 /*I have to do it, because implement po in script load need lots of time, for me. */
 void
-gnome_app_script_po (ClutterScript *script)
+gnome_app_script_preload (ClutterScript *script)
 {
 	GList *l;
 	ClutterActor *actor;

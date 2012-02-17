@@ -413,21 +413,11 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	priv->is_search_hint_enabled = TRUE;
 	priv->app = NULL;
 
-        gchar *filename;
-	GError *error;
-        gint i;
-
-        filename = open_app_get_ui_uri ("frame-ui");
-
-        priv->script = clutter_script_new ();
-	error = NULL;
-        clutter_script_load_from_file (priv->script, filename, &error);
-	gnome_app_script_po (priv->script);
-        if (error) {
-                printf ("error in load script %s!\n", error->message);
-                g_error_free (error);
+        priv->script = gnome_app_script_new_from_file ("frame-ui");
+        if (!priv->script) {
+		return;
         }
-	g_free (filename);
+
 	clutter_script_get_objects (priv->script, "frame-ui", &priv->ui_group,
 					"account-group", &priv->account_group,
 					"search-icon", &priv->search_icon,
@@ -451,19 +441,6 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	priv->icon_view = NULL;
 	priv->pagesize = -1;
 	priv->task = NULL;
-
-//TODO can we define icon name in script? or other configure place ? 
-	filename = open_app_get_pixmap_uri ("search");
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->search_icon), filename, NULL);
-	g_free (filename);
-
-	filename = open_app_get_pixmap_uri ("go-previous");
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->prev), filename, NULL);
-	g_free (filename);
-
-	filename = open_app_get_pixmap_uri ("go-next");
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->next), filename, NULL);
-	g_free (filename);
 
 //TODO script connect did not work?
 //

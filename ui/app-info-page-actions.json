@@ -1,0 +1,52 @@
+{
+  "Info preview" : {
+    "id" : "info-page-actions", 
+    "type" : "ClutterGroup",
+    "reactive" : true,
+    "children" : [
+      {
+        "id" : "fan-button",
+        "type" : "ClutterText",
+        "text" : "ADD TO FAN",
+        "font-name" : "Sans 17px",
+        "color" : "green",
+        "reactive" : true,
+        "x" : 0,
+        "y" : 0
+      }, 
+      {
+        "id" : "download-button",
+        "type" : "ClutterText",
+        "text" : "DOWNLOAD",
+        "font-name" : "Sans 17px",
+        "color" : "green",
+        "reactive" : true,
+        "x" : 0,
+        "y" : 30
+      },
+      {
+        "id" : "comment-button",
+        "type" : "ClutterText",
+        "text" : "COMMENT",
+        "reactive" : true,
+        "font-name" : "Sans 17px",
+        "color" : "green",
+        "x" : 0,
+        "y" : 60
+      },
+      {
+        "id" : "return-button",
+        "type" : "ClutterTexture",
+        "x" : 0,
+        "y" : 120,
+        "width" : 64,
+        "height" : 64,
+        "keep-aspect-ratio" : true,
+        "anchor-x" : "5 em",
+        "anchor-y" : "5 pt",
+        "opacity" : 100,
+        "reactive" : true
+      },
+    ]
+  }
+}

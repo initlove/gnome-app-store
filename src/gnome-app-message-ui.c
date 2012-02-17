@@ -136,11 +136,7 @@ on_message_press (ClutterActor *actor,
 {
 	OpenResult *result;
 	GnomeAppMessageUI *ui;
-	const gchar *first;
-	const gchar *last;
 	gchar *name;
-	gchar *filename;
-	GError *error;
 	ClutterScript *script;
 	ClutterActor *message_info_page;
         ClutterActor *sender_label, *sender_info;
@@ -155,15 +151,8 @@ on_message_press (ClutterActor *actor,
 
 	message_clean (ui);
 
-        filename = open_app_get_ui_uri ("message-info-page");
-        script = clutter_script_new ();
-	clutter_script_load_from_file (script, filename, &error);
-	gnome_app_script_po (script);
-	g_free (filename);
-	error = NULL;
-	if (error) {
-		printf ("error in load script %s!\n", error->message);
-		g_error_free (error);
+        script = gnome_app_script_new_from_file ("message-info-page");
+	if (!script) {
 		return FALSE;
 	}
 		
@@ -178,14 +167,9 @@ on_message_press (ClutterActor *actor,
 					"body_info", &body_info,
 					NULL);
 
-	first = open_result_get (result, "firstname");
-	last = open_result_get (result, "lastname");
-	name = g_strdup_printf ("%s %s", first, last);
+	name = g_strdup_printf ("%s %s", open_result_get (result, "firstname"), open_result_get (result, "lastname"));
 	clutter_text_set_text (CLUTTER_TEXT (sender_info), name);
 	g_free (name);
-	filename = open_app_get_pixmap_uri ("reply");
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (reply_info), filename, NULL);
-	g_free (filename);
 	clutter_text_set_text (CLUTTER_TEXT (subject_info), open_result_get (result, "subject"));
 	clutter_text_set_text (CLUTTER_TEXT (date_info), open_result_get (result, "senddate"));
 	clutter_text_set_text (CLUTTER_TEXT (body_info), open_result_get (result, "body"));

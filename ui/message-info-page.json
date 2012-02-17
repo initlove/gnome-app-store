@@ -41,6 +41,7 @@
 	  "type" : "ClutterTexture",
           "width" : 24,
           "height" : 24,
+	  "filename" : "reply.png",
           "reactive" : true,
 	  "layout::column": "2",
 	  "layout::row" : "1"

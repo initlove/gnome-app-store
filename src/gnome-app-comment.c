@@ -87,6 +87,8 @@ _set_user_icon_1 (gpointer userdata, gpointer func_result)
 static void
 set_user_icon (ClutterActor *actor, const gchar *user)
 {
+	g_return_if_fail (actor && user);
+
 	GnomeAppTask *task;
 	gchar *function;
 
@@ -298,11 +300,6 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 {
 	GnomeAppComment *app_comment;
 	GnomeAppCommentPrivate *priv;
-
-	app_comment = g_object_new (GNOME_APP_TYPE_COMMENT, NULL);
-	priv = app_comment->priv;
-	priv->comment = g_object_ref (comment);
-
 	ClutterLayoutManager *layout, *child_layout;
 	ClutterActor *box, *child_box;
 	ClutterActor *subject;
@@ -310,21 +307,14 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 	ClutterActor *date;
 	ClutterActor *text;
 	ClutterActor *usericon;
-        gchar *filename;
-        GError *error;
         const gchar *val;
 	gchar *str;
 
-        error = NULL;
-        filename = open_app_get_ui_uri ("app-comment");
-        priv->script = clutter_script_new ();
-        clutter_script_load_from_file (priv->script, filename, &error);
-	gnome_app_script_po (priv->script);
-	g_free (filename);
-        if (error) {
-                g_critical ("error in load script %s\n", error->message);
-                g_error_free (error);
-		g_object_unref (priv->script);
+	app_comment = g_object_new (GNOME_APP_TYPE_COMMENT, NULL);
+	priv = app_comment->priv;
+	priv->comment = g_object_ref (comment);
+        priv->script = gnome_app_script_new_from_file ("app-comment");
+        if (!priv->script) {
 		return app_comment;
         }
 
@@ -338,8 +328,7 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 			       	NULL);
                 
 	val = open_result_get (comment, "subject");
-	if (val)	
-		clutter_text_set_text (CLUTTER_TEXT (subject), val);
+	clutter_text_set_text (CLUTTER_TEXT (subject), val);
 
 	val = open_result_get (comment, "user");
 	if (val) {
@@ -356,18 +345,10 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 	}
 
 	val = open_result_get (comment, "text");
-	if (val)	
-		clutter_text_set_text (CLUTTER_TEXT (text), val);
-
-	str = open_app_get_pixmap_uri ("person");
-	if (str) {
-		clutter_texture_set_from_file (CLUTTER_TEXTURE (usericon), str, NULL);
-		g_free (str);
-	}
+	clutter_text_set_text (CLUTTER_TEXT (text), val);
 
 	val = open_result_get (comment, "user");
-	if (val)
-		set_user_icon (usericon, val);
+	set_user_icon (usericon, val);
 
         layout = clutter_box_layout_new ();
 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (layout), TRUE);

@@ -43,7 +43,8 @@ void		gnome_app_check_box_binding		(ClutterActor *actor);
 void		gnome_app_check_box_add_connector 	(ClutterActor *actor, ClutterActor *connector);
 gboolean	gnome_app_check_box_get_selected 	(ClutterActor *actor);
 
-void		gnome_app_script_po			(ClutterScript *script);
+ClutterScript * gnome_app_script_new_from_file		(const gchar *script_name);
+void		gnome_app_script_preload		(ClutterScript *script);
 
 G_END_DECLS
 

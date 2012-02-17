@@ -28,14 +28,8 @@ Author: David Liang <dliang@novell.com>
 
 struct _GnomeAppAccountUIPrivate
 {
+	ClutterScript	*script;
 	ClutterGroup    *ui_group;
-	ClutterActor	*avatar;
-	ClutterActor	*username;
-	ClutterActor	*company;
-	ClutterActor	*homepage;
-	ClutterActor	*friends;
-	ClutterActor	*messages;
-
 	gchar 		*person_id;
 };
 
@@ -50,6 +44,7 @@ gnome_app_account_ui_init (GnomeAppAccountUI *account_ui)
 	                                                 GNOME_APP_TYPE_ACCOUNT_UI,
 	                                                 GnomeAppAccountUIPrivate);
 			
+	priv->script = NULL;
 	priv->person_id = NULL;
 }
 
@@ -65,6 +60,8 @@ gnome_app_account_ui_finalize (GObject *object)
 	GnomeAppAccountUI *account_ui = GNOME_APP_ACCOUNT_UI (object);
 	GnomeAppAccountUIPrivate *priv = account_ui->priv;
 
+	if (priv->script)
+		g_object_unref (priv->script);
 	if (priv->person_id)
 		g_free (priv->person_id);
 
@@ -86,60 +83,60 @@ static gpointer
 set_account_callback (gpointer userdata, gpointer func_result)
 {
 	GnomeAppAccountUI *account_ui;
-        OpenResult *result;
+	GnomeAppAccountUIPrivate *priv;
 	OpenResults *results;
-        GList *list;
-	const gchar *val;
-	const gchar *pic;
 
-	account_ui = GNOME_APP_ACCOUNT_UI (userdata);
  	results = OPEN_RESULTS (func_result);
-
+	account_ui = GNOME_APP_ACCOUNT_UI (userdata);
+	priv = account_ui->priv;
 	if (!open_results_get_status (results)) {
 		/*TODO: fill the account with default val */
 		g_debug ("Fail to get the user info: %s\n", open_results_get_meta (results, "message"));
 		return NULL;
+	} 
+
+        OpenResult *result;
+	ClutterActor *avatar;
+	ClutterActor *company;
+	ClutterActor *homepage;
+	ClutterActor *username;
+        GList *list;
+	const gchar *val;
+	gchar *name;
+
+	list = open_results_get_data (results);
+	result = list->data;
+       	clutter_script_get_objects (priv->script, 
+			"avatar", &avatar,
+			"company", &company,
+			"homepage", &homepage,
+			"username", &username,
+			NULL);
+	val = open_result_get (result, "avatarpicfound");
+	if (val && (strcmp (val, "1") == 0)) {
+		val = open_result_get (result, "avatarpic");
+		gnome_app_set_icon (avatar, val);
 	} else {
-		list = open_results_get_data (results);
-		result = list->data;
-		val = open_result_get (result, "avatarpicfound");
+		val = open_result_get (result, "bigavatarpicfound");
 		if (val && (strcmp (val, "1") == 0)) {
-			pic = open_result_get (result, "avatarpic");
-			if (pic) {
-				gnome_app_set_icon (account_ui->priv->avatar, pic);
-			}
-		} else {
-			val = open_result_get (result, "bigavatarpicfound");
-			if (val && (strcmp (val, "1") == 0)) {
-				pic = open_result_get (result, "bigavatarpic");
-				if (pic) {
-					gnome_app_set_icon (account_ui->priv->avatar, pic);
-				}
-			}
+			val = open_result_get (result, "bigavatarpic");
+			gnome_app_set_icon (avatar, val);
 		}
-
-		val = open_result_get (result, "company");
-		if (val)
-			clutter_text_set_text (CLUTTER_TEXT (account_ui->priv->company), val);
-
-		/*TODO: should add result to priv, when click on homepage, open this homepage */
-		val = open_result_get (result, "homepage");
-			/*This set_text is just the current effect */
-		if (val)
-			clutter_text_set_text (CLUTTER_TEXT (account_ui->priv->homepage), val);
-
-		const gchar *first;
-		const gchar *last;
-	        gchar *name;
-
-		first = open_result_get (result, "firstname");
-		last = open_result_get (result, "lastname");
-		/*TODO there should have 'space' between name, this is to make my login name looks better */
-		name = g_strdup_printf ("%s%s", first, last);
-
-		clutter_text_set_text (CLUTTER_TEXT (account_ui->priv->username), name);
-		g_free (name);
 	}
+
+	val = open_result_get (result, "company");
+	clutter_text_set_text (CLUTTER_TEXT (company), val);
+
+	/*TODO: should add result to priv, when click on homepage, open this homepage */
+	val = open_result_get (result, "homepage");
+	clutter_text_set_text (CLUTTER_TEXT (homepage), val);
+
+	/*TODO there should have 'space' between name, this is to make my login name looks better */
+	name = g_strdup_printf ("%s%s", 
+				open_result_get (result, "firstname"), 
+				open_result_get (result, "lastname"));
+	clutter_text_set_text (CLUTTER_TEXT (username), name);
+	g_free (name);
 
 	return NULL;
 }
@@ -189,6 +186,9 @@ gnome_app_account_ui_new (gchar *personid)
 {
 	GnomeAppAccountUI *app_account_ui;
 	GnomeAppAccountUIPrivate *priv;
+        ClutterActor *ui_group;
+	ClutterActor *friends;
+        ClutterActor *messages;
 
 	app_account_ui = g_object_new (GNOME_APP_TYPE_ACCOUNT_UI, NULL);
 	priv = app_account_ui->priv;
@@ -208,68 +208,20 @@ gnome_app_account_ui_new (gchar *personid)
 			priv->person_id = NULL;
 	}
 
-        gchar *filename;
-        GError *error;
-        ClutterScript *script;
-        ClutterActor *actor;
-
-        error = NULL;
-        filename = open_app_get_ui_uri ("app-account-ui");
-        script = clutter_script_new ();
-        clutter_script_load_from_file (script, filename, &error);
-	gnome_app_script_po (script);
-        if (error) {
-                printf ("error in load script %s\n", error->message);
-                g_error_free (error);
-        }
-
-        clutter_script_get_objects (script, "app-account-ui", &priv->ui_group, NULL);
-	if (!priv->ui_group) {
-		g_critical ("Cannot find 'app-account-ui' in %s!\n", filename);
-		g_free (filename);
+        priv->script = gnome_app_script_new_from_file ("app-account-ui");
+        if (!priv->script)
 		return app_account_ui;
-	}
-	clutter_container_add_actor (CLUTTER_CONTAINER (app_account_ui), CLUTTER_ACTOR (priv->ui_group));
 
-	clutter_script_get_objects (script, "avatar", &priv->avatar, NULL);
-	if (!priv->avatar) {
-		g_critical ("Cannot find 'avatar' in %s!\n", filename);
-	}
- 	gchar *user_icon;
-	user_icon = open_app_get_pixmap_uri ("person");
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->avatar), user_icon, NULL);
-	g_free (user_icon);
+        clutter_script_get_objects (priv->script, 
+			"app-account-ui", &ui_group,
+			"friends", &friends,
+			"messages", &messages,
+			NULL);
 
-	clutter_script_get_objects (script, "username", &priv->username, NULL);
-	if (!priv->username) {
-		g_critical ("Cannot find 'username' in %s!\n", filename);
-	}
+	clutter_container_add_actor (CLUTTER_CONTAINER (app_account_ui), CLUTTER_ACTOR (ui_group));
 
-	clutter_script_get_objects (script, "company", &priv->company, NULL);
-	if (!priv->company) {
-		g_critical ("Cannot find 'company' in %s!\n", filename);
-	}
-
-	clutter_script_get_objects (script, "homepage", &priv->homepage, NULL);
-	if (!priv->homepage) {
-		g_critical ("Cannot find 'homepage' in %s!\n", filename);
-	}
-
-	clutter_script_get_objects (script, "friends", &priv->friends, NULL);
-	if (!priv->friends) {
-		g_critical ("Cannot find 'friends' in %s!\n", filename);
-	} else {
-		g_signal_connect (priv->friends, "button-press-event", G_CALLBACK (on_friend_press), app_account_ui);
-	}
-
-	clutter_script_get_objects (script, "messages", &priv->messages, NULL);
-	if (!priv->messages) {
-		g_critical ("Cannot find 'messages' in %s!\n", filename);
-	} else {
-		g_signal_connect (priv->messages, "button-press-event", G_CALLBACK (on_message_press), app_account_ui);
-	}
-
-	g_free (filename);
+	g_signal_connect (friends, "button-press-event", G_CALLBACK (on_friend_press), app_account_ui);
+	g_signal_connect (messages, "button-press-event", G_CALLBACK (on_message_press), app_account_ui);
 
 	if (priv->person_id) {
 		GnomeAppTask *task;

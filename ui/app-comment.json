@@ -9,6 +9,7 @@
         "type" : "ClutterTexture",
         "width" : 36,
         "height" : 36,
+	"filename" : "person.png",
 	"x" : 2,
 	"y" : 10,
         "keep-aspect-ratio" : true,

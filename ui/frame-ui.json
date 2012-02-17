@@ -61,6 +61,7 @@
         "id" : "search-icon",
         "type" : "ClutterTexture",
 	"opacity" : 100,
+	"filename" : "search.png",
         "x" : 600,
 	"y" : 10,
 	"width" : 32,
@@ -92,6 +93,7 @@
 	"y" : 300,
 	"width" : 32,
 	"height" : 32,
+	"filename" : "go-previous.png",
 	"reactive" : true
       },
       {
@@ -101,6 +103,7 @@
 	"y" : 300,
 	"width" : 32,
 	"height" : 32,
+	"filename" : "go-next.png",
 	"reactive" : true
       }
     ]

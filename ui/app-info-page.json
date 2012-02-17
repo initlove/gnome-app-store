@@ -22,6 +22,7 @@
         "y" : 150,
         "width" : 32,
         "height" : 32,
+	"filename" : "go-previous.png",
         "opacity" : 255
       },
       {
@@ -31,6 +32,7 @@
         "y" : 150,
         "width" : 32,
         "height" : 32,
+	"filename" : "go-next.png",
         "opacity" : 255
       },
       {
@@ -172,6 +174,7 @@
         "y" : 550,
         "width" : 64,
         "height" : 64,
+	"filename" : "back.png",
         "keep-aspect-ratio" : true,
         "anchor-x" : "5 em",
         "anchor-y" : "5 pt",

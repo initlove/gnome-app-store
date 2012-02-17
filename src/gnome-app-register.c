@@ -337,21 +337,11 @@ gnome_app_register_new (void)
 	GnomeAppRegister *regist;
 	GnomeAppRegisterPrivate *priv;
 	GnomeAppStore *store;
-	GError *error;
-	gchar *filename;
-	gchar *username;
-        gchar *password;
 
 	regist = g_object_new (GNOME_APP_TYPE_REGISTER, NULL);
 	priv = regist->priv;
-	filename = open_app_get_ui_uri ("app-register");
-	priv->script = clutter_script_new ();
-	error = NULL;
-	clutter_script_load_from_file (priv->script, filename, &error);
-	gnome_app_script_po (priv->script);
-	g_free (filename);
-	if (error) {
-		g_error_free (error);
+	priv->script = gnome_app_script_new_from_file ("app-register");
+	if (!priv->script) {
 		g_object_unref (regist);
 		return NULL;
 	}

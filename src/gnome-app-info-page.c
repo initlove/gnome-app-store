@@ -659,10 +659,8 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	g_return_if_fail (info != NULL);
 
 	GnomeAppInfoPagePrivate *priv;
-	gchar *filename;
 	const gchar *val;
 	gchar *str;
-	GError *error;
 	gint i;
 
 	ClutterActor *info_page;
@@ -689,15 +687,8 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	priv->fan_status = FAN_NOT_DEFINED;
 
 	if (!priv->script) {
-		error = NULL;
-		filename = open_app_get_ui_uri ("app-info-page");
-		priv->script = clutter_script_new ();
-		clutter_script_load_from_file (priv->script, filename, &error);
-		gnome_app_script_po (priv->script);
-		g_free (filename);
-		if (error) {
-			g_critical ("Error in load script %s.", error->message);
-			g_error_free (error);
+		priv->script = gnome_app_script_new_from_file ("app-info-page");
+		if (!priv->script) {
 			return ;
 		}
 		info_page = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "info-page"));
@@ -741,12 +732,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	/* assume we should at least one pic, if only one pic, donnot add to small pics */
 	priv->pic_count = count;
 	priv->current_pic = 1;
-	filename = open_app_get_pixmap_uri ("go-previous");
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (prev), filename, NULL);
-	g_free (filename);
-	filename = open_app_get_pixmap_uri ("go-next");
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (next), filename, NULL);
-	g_free (filename);
+
 	draw_pic (page);
 
 	score_actor = CLUTTER_ACTOR (gnome_app_score_ui_new_with_score (open_result_get (info, "score")));
@@ -804,11 +790,9 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 
 	draw_download_buttons (page);
 
-	filename = open_app_get_pixmap_uri ("back");
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (return_button), filename, NULL);
-	g_free (filename);
 	g_signal_connect (return_button, "button-press-event", G_CALLBACK (on_return_button_press), page);
 
 	load_details_info (page);
+
 	return ;
 }

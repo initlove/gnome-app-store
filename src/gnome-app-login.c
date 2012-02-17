@@ -291,21 +291,13 @@ gnome_app_login_run (void)
 	ClutterActor *auto_login_check_box, *auto_login_label;
 	ClutterActor *register_button, *login_button;
 	gchar *filename;
-	GError *error;
 	gchar *default_username;
 
 	login = g_object_new (GNOME_APP_TYPE_LOGIN, NULL);
 	priv = login->priv;
 		
-	filename = open_app_get_ui_uri ("app-login");
-	priv->script = clutter_script_new ();
-	error = NULL;
-	clutter_script_load_from_file (priv->script, filename, &error);
-	gnome_app_script_po (priv->script);
-	g_free (filename);
-	if (error) {
-		g_error ("fail to load app login script %s\n", error->message);
-		g_error_free (error);
+	priv->script = gnome_app_script_new_from_file ("app-login");
+	if (!priv->script) {
 		return;
 	}
 

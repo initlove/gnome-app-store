@@ -276,24 +276,14 @@ on_info_icon_event (ClutterActor *actor,
 static ClutterActor *
 info_icon_new_with_app (OpenResult *info, GnomeAppApplication *app)
 {
-	gchar *filename;
-	GError *error;
 	ClutterScript *script;
 	ClutterActor *actor, *info_icon;
 	gint i;
 
-	error = NULL;
-		
-	filename = open_app_get_ui_uri ("app-info-icon");
+	script = gnome_app_script_new_from_file ("app-info-icon");
+	if (!script)
+		return NULL;
 
-	script = clutter_script_new ();
-	clutter_script_load_from_file (script, filename, &error);
-	gnome_app_script_po (script);
-	if (error) {
-		printf ("error in load script %s!\n", error->message);
-		g_error_free (error);
-	}
-	g_free (filename);
 	clutter_script_get_objects (script, "info-icon", &info_icon, NULL);
 	gchar *prop [] = {
 		"name", "personid", "description",
@@ -308,16 +298,14 @@ info_icon_new_with_app (OpenResult *info, GnomeAppApplication *app)
 	clutter_text_set_text (CLUTTER_TEXT (actor), val);
 	clutter_script_get_objects (script, "smallpreviewpic1", &actor, NULL);
 	val = open_result_get (info, "smallpreviewpic1");
-
-	if (val) {
-		gnome_app_set_icon (actor, val);
-	} else {
-	}
+	gnome_app_set_icon (actor, val);
 
 	g_object_set_data (G_OBJECT (actor), "info", info);
         g_object_set_data (G_OBJECT (actor), "application", app);
 	gnome_app_button_binding (actor);
 	g_signal_connect (actor, "event", G_CALLBACK (on_info_icon_event), info_icon);
+
+	g_object_unref (script);
 
 	return info_icon;
 }
