@@ -602,6 +602,25 @@ gnome_app_actor_add_scale_state (ClutterActor *actor)
 	g_signal_connect (actor, "destroy", G_CALLBACK (on_scale_state_destroy), state);
 }
 
+/*I have to do it, because implement po in script load need lots of time, for me. */
+static void
+gnome_app_script_preload (ClutterScript *script)
+{
+	GList *l;
+	ClutterActor *actor;
+	const gchar *raw;
+
+	for (l = clutter_script_list_objects (script); l; l = l->next) {
+		actor = CLUTTER_ACTOR (l->data);
+		if (CLUTTER_IS_TEXT (actor)) {
+			raw = clutter_text_get_text (CLUTTER_TEXT (actor));
+			if (raw && raw [0]) {
+				clutter_text_set_text (CLUTTER_TEXT (actor), _(raw));
+			}
+		}
+	}
+}
+
 ClutterScript *
 gnome_app_script_new_from_file (const gchar *script_name)
 {
@@ -634,23 +653,3 @@ gnome_app_script_new_from_file (const gchar *script_name)
 
 	return script;
 }
-
-/*I have to do it, because implement po in script load need lots of time, for me. */
-void
-gnome_app_script_preload (ClutterScript *script)
-{
-	GList *l;
-	ClutterActor *actor;
-	const gchar *raw;
-
-	for (l = clutter_script_list_objects (script); l; l = l->next) {
-		actor = CLUTTER_ACTOR (l->data);
-		if (CLUTTER_IS_TEXT (actor)) {
-			raw = clutter_text_get_text (CLUTTER_TEXT (actor));
-			if (raw && raw [0]) {
-				clutter_text_set_text (CLUTTER_TEXT (actor), _(raw));
-			}
-		}
-	}
-}
-
