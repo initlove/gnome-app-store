@@ -121,104 +121,60 @@ printf ("You should login you email to confirm the regist\n");
 static gboolean
 on_register_button_press (ClutterActor *actor,
 		ClutterEvent *event,
-		gpointer      data)
+		gpointer      userdata)
 {
+	enum data_enum {
+		USERNAME = 0,
+		PASSWORD,
+		FIRSTNAME,
+		LASTNAME,
+		EMAIL,
+	};
+	struct actor_pattern {
+		const gchar *an;
+		const gchar *info;
+		const gchar *pn;
+		const gchar *val;
+	};
+	struct actor_pattern data [] = { 
+		{"username-entry", "username-info", "notblank", NULL},
+		{"password-entry", "password-info", "password", NULL},
+		{"firstname-entry", "firstname-info", "notblank", NULL},
+		{"lastname-entry", "lastname-info", "notblank", NULL},
+		{"email-entry", "email-info", "email", NULL},
+	};
 	GnomeAppRegister *regist;
 	GnomeAppRegisterPrivate *priv;
-	ClutterActor *stage;
-	ClutterActor *username_label, *username_entry, *username_info;
-	ClutterActor *password_label, *password_entry, *password_info;
-	ClutterActor *firstname_label, *firstname_entry, *firstname_info;
-	ClutterActor *lastname_label, *lastname_entry, *lastname_info;
-	ClutterActor *email_label, *email_entry, *email_info;
+	ClutterActor *entry_actor, *info_actor;
 	ClutterActor *register_button;
-	ClutterScript *script;
-
 	GError *error;
+	gint i;
 	gboolean validation;
-	const gchar *username;
-	const gchar *password;
-	const gchar *firstname;
-	const gchar *lastname;
-	const gchar *email;
 
-	regist = GNOME_APP_REGISTER (data);
+	regist = GNOME_APP_REGISTER (userdata);
 	priv = regist->priv;
-	clutter_script_get_objects (priv->script, "app-register", &stage,
-			"username", &username_label,
-			"username-entry", &username_entry,
-			"username-info", &username_info,
-			"password", &password_label,
-			"password-entry", &password_entry,
-			"password-info", &password_info,
-			"firstname", &firstname_label,
-			"firstname-entry", &firstname_entry,
-			"firstname-info", &firstname_info,
-			"lastname", &lastname_label,
-			"lastname-entry", &lastname_entry,
-			"lastname-info", &lastname_info,
-			"email", &email_label,
-			"email-entry", &email_entry,
-			"email-info", &email_info,
+	clutter_script_get_objects (priv->script,
 			"regist-button", &register_button,
 			NULL);
-	validation = TRUE;
 
-	gnome_app_entry_binding (username_entry);
-	gnome_app_entry_binding (password_entry);
-	gnome_app_entry_binding (firstname_entry);
-	gnome_app_entry_binding (lastname_entry);
-	gnome_app_entry_binding (email_entry);
 	gnome_app_button_binding (register_button);
-
-	username = clutter_text_get_text (CLUTTER_TEXT (username_entry));
-	error = NULL;
-	if (open_app_pattern_match ("notblank", username, &error)) {
-		clutter_text_set_text (CLUTTER_TEXT (username_info), "");
-	} else {
-		clutter_text_set_text (CLUTTER_TEXT (username_info), error->message);
-		g_error_free (error);
-		validation = FALSE;
-	}
-
-	password = clutter_text_get_text (CLUTTER_TEXT (password_entry));
-	error = NULL;
-	if (open_app_pattern_match ("password", password, &error)) {
-		clutter_text_set_text (CLUTTER_TEXT (password_info), "");
-	} else {
-		clutter_text_set_text (CLUTTER_TEXT (password_info), error->message);
-		g_error_free (error);
-		validation = FALSE;
-	}
-
-	firstname = clutter_text_get_text (CLUTTER_TEXT (firstname_entry));
-	error = NULL;
-	if (open_app_pattern_match ("notblank", firstname, &error)) {
-		clutter_text_set_text (CLUTTER_TEXT (firstname_info), "");
-	} else {
-		clutter_text_set_text (CLUTTER_TEXT (firstname_info), error->message);
-		g_error_free (error);
-		validation = FALSE;
-	}
-
-	lastname = clutter_text_get_text (CLUTTER_TEXT (lastname_entry));
-	error = NULL;
-	if (open_app_pattern_match ("notblank", lastname, &error)) {
-		clutter_text_set_text (CLUTTER_TEXT (lastname_info), "");
-	} else {
-		clutter_text_set_text (CLUTTER_TEXT (lastname_info), error->message);
-		g_error_free (error);
-		validation = FALSE;
-	}
-
-	email = clutter_text_get_text (CLUTTER_TEXT (email_entry));
-	error = NULL;
-	if (open_app_pattern_match ("email", email, &error)) {
-		clutter_text_set_text (CLUTTER_TEXT (email_info), "");
-	} else {
-		clutter_text_set_text (CLUTTER_TEXT (email_info), error->message);
-		g_error_free (error);
-		validation = FALSE;
+	validation = TRUE;
+	for (i = 0; i < G_N_ELEMENTS (data); i++) {
+		clutter_script_get_objects (priv->script,
+			       	data [i].an, &entry_actor,
+				data [i].info, &info_actor,
+				NULL);
+		gnome_app_entry_binding (entry_actor);
+		data [i].val = clutter_text_get_text (CLUTTER_TEXT (entry_actor));
+		error = NULL;
+		if (open_app_pattern_match (data [i].pn, data [i].val, &error)) {
+			clutter_text_set_text (CLUTTER_TEXT (info_actor), "");
+		} else {
+			clutter_text_set_text (CLUTTER_TEXT (info_actor), error->message);
+			g_error_free (error);
+			if (validation)
+				validation = FALSE;
+		}
 	}
 
 	if (validation) {
@@ -227,11 +183,11 @@ on_register_button_press (ClutterActor *actor,
 		task = gnome_app_task_new (regist, "POST", "/v1/person/add");
 		gnome_app_task_set_callback (task, register_callback);
 		gnome_app_task_add_params (task, 
-			"register", username,
-			"password", password,
-			"firstname", firstname,
-			"lastname", lastname,
-			"email", email,
+			"login", data [USERNAME].val,
+			"password", data [PASSWORD].val,
+			"firstname", data [FIRSTNAME].val,
+			"lastname", data [LASTNAME].val,
+			"email", data [EMAIL].val,
 			NULL);
 		gnome_app_task_push (task);
 	}
