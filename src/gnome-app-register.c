@@ -12,6 +12,7 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
+#include <gmodule.h>
 #include <config.h>
 #include <glib/gi18n.h>
 #include <string.h>
@@ -44,18 +45,7 @@ static guint register_signals[LAST_SIGNAL] = { 0, };
 
 G_DEFINE_TYPE (GnomeAppRegister, gnome_app_register, G_TYPE_OBJECT)
 
-static gboolean
-email_valid (const gchar *email)
-{
-	g_return_val_if_fail (email, FALSE);
-/*TODO: more strict */
-	if (strchr (email, '@'))
-		return TRUE;
-	else
-		return FALSE;
-}
-
-static gboolean
+G_MODULE_EXPORT gboolean
 on_back_button_press (ClutterActor *actor,
 		ClutterEvent *event,
 		gpointer      data)
@@ -118,11 +108,12 @@ printf ("You should login you email to confirm the regist\n");
 	return NULL;
 }
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_register_button_press (ClutterActor *actor,
 		ClutterEvent *event,
 		gpointer      userdata)
 {
+
 	enum data_enum {
 		USERNAME = 0,
 		PASSWORD,
@@ -157,14 +148,12 @@ on_register_button_press (ClutterActor *actor,
 			"regist-button", &register_button,
 			NULL);
 
-	gnome_app_button_binding (register_button);
 	validation = TRUE;
 	for (i = 0; i < G_N_ELEMENTS (data); i++) {
 		clutter_script_get_objects (priv->script,
 			       	data [i].an, &entry_actor,
 				data [i].info, &info_actor,
 				NULL);
-		gnome_app_entry_binding (entry_actor);
 		data [i].val = clutter_text_get_text (CLUTTER_TEXT (entry_actor));
 		error = NULL;
 		if (open_app_pattern_match (data [i].pn, data [i].val, &error)) {
@@ -191,6 +180,7 @@ on_register_button_press (ClutterActor *actor,
 			NULL);
 		gnome_app_task_push (task);
 	}
+	return TRUE;
 }
 
 static void
@@ -302,6 +292,7 @@ gnome_app_register_new (void)
 		return NULL;
 	}
 
+	clutter_script_connect_signals (priv->script, regist);
 	return regist;
 }
 
@@ -310,11 +301,11 @@ gnome_app_register_run (GnomeAppRegister *regist)
 {
 	GnomeAppRegisterPrivate *priv;
 	ClutterActor *stage;
-	ClutterActor *username, *username_entry;
-	ClutterActor *password, *password_entry;
-	ClutterActor *firstname, *firstname_entry;
-	ClutterActor *lastname, *lastname_entry;
-	ClutterActor *email, *email_entry;
+	ClutterActor *username_entry;
+	ClutterActor *password_entry;
+	ClutterActor *firstname_entry;
+	ClutterActor *lastname_entry;
+	ClutterActor *email_entry;
 	ClutterActor *back_button;
 	ClutterActor *register_button;
 	GError *error;
@@ -323,15 +314,10 @@ gnome_app_register_run (GnomeAppRegister *regist)
 	priv = regist->priv;
 	
 	clutter_script_get_objects (priv->script, "app-register", &stage,
-			"username", &username,
 			"username-entry", &username_entry,
-			"password", &password,
 			"password-entry", &password_entry,
-			"firstname", &firstname,
 			"firstname-entry", &firstname_entry,
-			"lastname", &lastname,
 			"lastname-entry", &lastname_entry,
-			"email", &email,
 			"email-entry", &email_entry,
 			"back", &back_button,
 			"register", &register_button,
@@ -353,7 +339,4 @@ gnome_app_register_run (GnomeAppRegister *regist)
 	g_free (filename);
 
 	clutter_actor_show (stage);
-
-	g_signal_connect (register_button, "button-press-event", G_CALLBACK (on_register_button_press), regist);
-	g_signal_connect (back_button, "button-press-event", G_CALLBACK (on_back_button_press), regist);
 }

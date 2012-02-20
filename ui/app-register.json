@@ -232,7 +232,10 @@
         "line-alignment" : "start",
         "line-wrap" : false,
     	"reactive" : true,
-        "ellipsize" : "end"
+        "ellipsize" : "end",
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_back_button_press" }
+	]
       }
       {
         "id" : "register",
@@ -245,7 +248,10 @@
         "line-alignment" : "start",
         "line-wrap" : false,
     	"reactive" : true,
-        "ellipsize" : "end"
+        "ellipsize" : "end",
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_register_button_press" }
+	]
       }
     ]
   }
