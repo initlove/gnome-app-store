@@ -46,7 +46,7 @@ G_DEFINE_TYPE (GnomeAppLogin, gnome_app_login, G_TYPE_OBJECT)
 
 static void auth_valid (GnomeAppLogin *login, const gchar *username, const gchar *password);
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_register_press (ClutterActor *actor,
 		ClutterEvent *event,
 		gpointer      data)
@@ -62,7 +62,7 @@ on_register_press (ClutterActor *actor,
 	return TRUE;
 }
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_login_press (ClutterActor *actor,
 		ClutterEvent *event,
 		gpointer      data)
@@ -145,7 +145,9 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 	} else {
 		g_debug ("error in auth %s\n", open_results_get_meta (results, "message"));
 		/*TODO: display the error*/
-		gnome_app_login_run ();
+		GnomeAppLogin *login;
+		login = gnome_app_login_new ();
+		gnome_app_login_run (login);
 	}
 	return NULL;
 }
@@ -267,6 +269,7 @@ void
 gnome_app_auth_valid ()
 {
 	GnomeAppStore *store;
+	GnomeAppLogin *login;
 	gchar *username;
         gchar *password;
 
@@ -275,12 +278,13 @@ gnome_app_auth_valid ()
 	if (username && password) {
 		auth_valid (NULL, username, password);
 	} else {
-		gnome_app_login_run ();
+		login = gnome_app_login_new ();
+		gnome_app_login_run (login);
 	}
 }
 
-void
-gnome_app_login_run (void)
+GnomeAppLogin *
+gnome_app_login_new ()
 {
 	GnomeAppLogin *login;
 	GnomeAppLoginPrivate *priv;
@@ -298,10 +302,12 @@ gnome_app_login_run (void)
 		
 	priv->script = gnome_app_script_new_from_file ("app-login");
 	if (!priv->script) {
-		return;
+		g_object_unref (login);
+		return NULL;
 	}
 
-	clutter_script_get_objects (priv->script, "app-login", &stage,
+	clutter_script_connect_signals (priv->script, login);
+	clutter_script_get_objects (priv->script,
 			"username-entry", &username_entry,
 			"password-entry", &password_entry,
 			"auto-login-check-box", &auto_login_check_box,
@@ -310,11 +316,6 @@ gnome_app_login_run (void)
 			"login", &login_button,
 			NULL);
 
-	gnome_app_stage_remove_decorate (stage);
-	gnome_app_stage_set_position (stage, GNOME_APP_POSITION_CENTER);
-	filename = open_app_get_pixmap_uri ("login");
-	gnome_app_actor_add_background (stage, filename);
-	g_free (filename);
 	gnome_app_entry_binding (username_entry);
 	gnome_app_entry_add_hint (username_entry, _("< user name >"));
 	gnome_app_entry_binding (password_entry);
@@ -324,13 +325,37 @@ gnome_app_login_run (void)
 	gnome_app_button_binding (login_button);
 	gnome_app_button_binding (register_button);
 
+	return login;
+}
+
+void
+gnome_app_login_run (GnomeAppLogin *login)
+{
+	g_return_if_fail (login);
+
+	GnomeAppLoginPrivate *priv;
+	GnomeAppStore *store;
+	ClutterActor *stage;
+	ClutterActor *username_entry;
+	gchar *filename;
+	gchar *default_username;
+
+	priv = login->priv;
+		
+	clutter_script_get_objects (priv->script, "app-login", &stage,
+			"username-entry", &username_entry,
+			NULL);
+
+	gnome_app_stage_remove_decorate (stage);
+	gnome_app_stage_set_position (stage, GNOME_APP_POSITION_CENTER);
+	filename = open_app_get_pixmap_uri ("login");
+	gnome_app_actor_add_background (stage, filename);
+	g_free (filename);
+
 	store = gnome_app_store_get_default ();
 	g_object_get (store, "username", &default_username, NULL);
 	if (default_username)
 		clutter_text_set_text (CLUTTER_TEXT (username_entry), default_username);
 
 	clutter_actor_show (stage);
-
-	g_signal_connect (register_button, "button-press-event", G_CALLBACK (on_register_press), login);
-	g_signal_connect (login_button, "button-press-event", G_CALLBACK (on_login_press), login);
 }

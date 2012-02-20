@@ -19,15 +19,16 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-application.h"
 #include "gnome-app-icon-view.h"
 #include "gnome-app-ui-utils.h"
+#include "gnome-app-info-icon.h"
 
 struct _GnomeAppIconViewPrivate
 {
+	ClutterScript *script;
 	ClutterActor *viewport;
 	ClutterAction *action;
 	ClutterLayoutManager *layout;
 	ClutterActor *layout_box;
 
-	GnomeAppApplication *app;
 	GnomeAppTask *task;
 	GList *app_actors;
 	gint count;
@@ -42,10 +43,13 @@ struct _GnomeAppIconViewPrivate
 enum
 {
 	PROP_0,
+	PROP_RESULTS,
 	PROP_LAST
 };
 
 G_DEFINE_TYPE (GnomeAppIconView, gnome_app_icon_view, CLUTTER_TYPE_GROUP)
+
+static void	gnome_app_icon_view_set_with_data (GnomeAppIconView *icon_view, OpenResults *results);
 
 static void
 on_drag_end (ClutterDragAction   *action,
@@ -104,7 +108,7 @@ gnome_app_icon_view_init (GnomeAppIconView *icon_view)
 	                                                 GNOME_APP_TYPE_ICON_VIEW,
 	                                                 GnomeAppIconViewPrivate);
 
-	priv->app = NULL;
+	priv->script = NULL;
 	priv->task = NULL;
 	priv->app_actors = NULL;
 	priv->count = 0;
@@ -134,7 +138,7 @@ gnome_app_icon_view_init (GnomeAppIconView *icon_view)
 }
 
 static void
-icon_view_set_property (GObject      *object,
+gnome_app_icon_view_set_property (GObject      *object,
 		guint         prop_id,
 		const GValue *value,
 		GParamSpec   *pspec)
@@ -142,14 +146,19 @@ icon_view_set_property (GObject      *object,
 	GnomeAppIconView *icon_view;
 
 	icon_view = GNOME_APP_ICON_VIEW (object);
-
 	switch (prop_id)
 	{
+		case PROP_RESULTS:
+			gnome_app_icon_view_set_with_data (icon_view, g_value_get_object (value));
+			break;
+		default:
+                        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
 	}
 }
 
 static void
-icon_view_get_property (GObject      *object,
+gnome_app_icon_view_get_property (GObject      *object,
 		guint         prop_id,
 		GValue       *value,
 		GParamSpec   *pspec)
@@ -164,21 +173,19 @@ icon_view_get_property (GObject      *object,
 }
 
 static void
-icon_view_dispose (GObject *object)
+gnome_app_icon_view_dispose (GObject *object)
 {
 	G_OBJECT_CLASS (gnome_app_icon_view_parent_class)->dispose (object);
 }
 
 static void
-icon_view_finalize (GObject *object)
+gnome_app_icon_view_finalize (GObject *object)
 {
 	GnomeAppIconView *icon_view = GNOME_APP_ICON_VIEW (object);
 	GnomeAppIconViewPrivate *priv = icon_view->priv;
 
-//TODO: any other thing to finalize ?
-
-	if (priv->app)
-		g_object_unref (priv->app);
+	if (priv->script)
+		g_object_unref (priv->script);
 	if (priv->task)
 		g_object_unref (priv->task);
 
@@ -190,21 +197,29 @@ gnome_app_icon_view_class_init (GnomeAppIconViewClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-        object_class->set_property = icon_view_set_property;
-	object_class->get_property = icon_view_get_property;
-	object_class->dispose = icon_view_dispose;
-	object_class->finalize = icon_view_finalize;
+        object_class->set_property = gnome_app_icon_view_set_property;
+	object_class->get_property = gnome_app_icon_view_get_property;
+	object_class->dispose = gnome_app_icon_view_dispose;
+	object_class->finalize = gnome_app_icon_view_finalize;
+
+	g_object_class_install_property (object_class,
+			PROP_RESULTS,
+			g_param_spec_object ("results",
+				"results of return data",
+				"results of return data",
+				G_TYPE_OBJECT,
+				G_PARAM_WRITABLE));
 
 	g_type_class_add_private (object_class, sizeof (GnomeAppIconViewPrivate));
 }
 
 GnomeAppIconView *
-gnome_app_icon_view_new_with_app (GnomeAppApplication *app)
+gnome_app_icon_view_new (void)
 {
 	GnomeAppIconView *icon_view;
 
 	icon_view = g_object_new (GNOME_APP_TYPE_ICON_VIEW, NULL);
-	icon_view->priv->app = g_object_ref (app);
+//	clutter_actor_hide (CLUTTER_ACTOR (icon_view));
 
 	return icon_view;
 }
@@ -235,9 +250,10 @@ gnome_app_icon_view_get_pagesize (GnomeAppIconView *icon_view)
 static void
 gnome_app_icon_view_add_actor (GnomeAppIconView *icon_view, ClutterActor *actor)
 {
-	GnomeAppIconViewPrivate *priv = icon_view->priv;
+	GnomeAppIconViewPrivate *priv;
 	int col, row;
 
+       	priv = icon_view->priv;
 	priv->app_actors = g_list_prepend (priv->app_actors, actor);
 	col = priv->count / priv->rows;
 	row = priv->count % priv->rows;
@@ -246,82 +262,25 @@ gnome_app_icon_view_add_actor (GnomeAppIconView *icon_view, ClutterActor *actor)
 	clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->layout), actor, col, row);
 }
 
-static gboolean
-on_info_icon_event (ClutterActor *actor,
-		ClutterEvent *event,
-		gpointer      data)
+static void
+gnome_app_icon_view_set_with_data (GnomeAppIconView *icon_view, OpenResults *results)
 {
 	OpenResult *info;
-	GnomeAppApplication *app;
-
-	info = g_object_get_data (G_OBJECT (actor), "info");
-	app = g_object_get_data (G_OBJECT (actor), "application");
-
-	switch (event->type)
-	{
-		case CLUTTER_BUTTON_PRESS:
-			gnome_app_application_load (app, UI_TYPE_INFO_PAGE, info);  
-			break;
-		case CLUTTER_ENTER:
-			clutter_actor_set_scale (actor, 1.5, 1.5);
-			break;
-		case CLUTTER_LEAVE:
-			clutter_actor_set_scale (actor, 1, 1);
-			break;
-	}
-
-	return TRUE;
-}
-
-static ClutterActor *
-info_icon_new_with_app (OpenResult *info, GnomeAppApplication *app)
-{
-	ClutterScript *script;
-	ClutterActor *actor, *info_icon;
-	gint i;
-
-	script = gnome_app_script_new_from_file ("app-info-icon");
-	if (!script)
-		return NULL;
-
-	clutter_script_get_objects (script, "info-icon", &info_icon, NULL);
-	gchar *prop [] = {
-		"name", "personid", "description",
-		"score", "downloads", "comments",
-		"smallpreviewpic1", "previewpic1",
-		"license", NULL};
-			
-	const gchar *val;
-
-	clutter_script_get_objects (script, "name", &actor, NULL);
-	val = open_result_get (info, "name");
-	clutter_text_set_text (CLUTTER_TEXT (actor), val);
-	clutter_script_get_objects (script, "smallpreviewpic1", &actor, NULL);
-	val = open_result_get (info, "smallpreviewpic1");
-	gnome_app_set_icon (actor, val);
-
-	g_object_set_data (G_OBJECT (actor), "info", info);
-        g_object_set_data (G_OBJECT (actor), "application", app);
-	gnome_app_button_binding (actor);
-	g_signal_connect (actor, "event", G_CALLBACK (on_info_icon_event), info_icon);
-
-	g_object_unref (script);
-
-	return info_icon;
-}
-
-void
-gnome_app_icon_view_set_with_data (GnomeAppIconView *icon_view, const GList *data)
-{
-	OpenResult *info;
-	ClutterActor *info_icon;
-	ClutterAction *action;
+	GnomeAppInfoIcon *info_icon;
+	const GList *data;
 	GList *l;
 
+	data = open_results_get_data (results);
 	gnome_app_icon_view_clean (icon_view);
 	for (l = (GList *)data; l; l = l->next) {
 		info = OPEN_RESULT (l->data);
-		info_icon = info_icon_new_with_app (info, icon_view->priv->app);
+		info_icon = gnome_app_info_icon_new_with_info (info);
 		gnome_app_icon_view_add_actor (icon_view, CLUTTER_ACTOR (info_icon));
 	}
+}
+
+void
+gnome_app_icon_view_run (GnomeAppIconView *icon_view)
+{
+	clutter_actor_show (CLUTTER_ACTOR (icon_view));
 }

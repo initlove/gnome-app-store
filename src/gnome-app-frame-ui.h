@@ -24,8 +24,6 @@
 #define __GNOME_APP_FRAME_UI_H__
 
 #include <clutter/clutter.h>
-#include "open-results.h"
-#include "gnome-app-application.h"
 
 G_BEGIN_DECLS
 
@@ -53,8 +51,7 @@ struct _GnomeAppFrameUIClass
 };
 
 GType  		        gnome_app_frame_ui_get_type		(void);
-GnomeAppFrameUI *      	gnome_app_frame_ui_new_with_app		(GnomeAppApplication *app);
-ClutterActor *		gnome_app_frame_ui_get_actions		(GnomeAppFrameUI *ui);
+GnomeAppFrameUI *      	gnome_app_frame_ui_new			(void);
 
 G_END_DECLS
 

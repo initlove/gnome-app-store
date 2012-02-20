@@ -14,7 +14,10 @@
         "anchor-y" : "5 pt",
         "opacity" : 200,
     	"reactive" : true,
-        "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
+        "behaviours" : [ "rotate-behaviour", "fade-behaviour" ],
+        "signals" : [
+          { "name" : "event", "handler" : "on_info_icon_event" }
+        ]
       },
       {
         "id" : "name",

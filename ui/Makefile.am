@@ -8,7 +8,7 @@ ui_DATA =	\
 	app-comment.json	\
 	app-info-icon.json	\
 	app-info-page.json	\
-	frame-ui.json	\
+	app-frame-ui.json	\
 	$(NULL)
 
 EXTRA_DIST = $(ui_DATA)

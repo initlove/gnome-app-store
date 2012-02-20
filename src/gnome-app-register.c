@@ -51,8 +51,10 @@ on_back_button_press (ClutterActor *actor,
 		gpointer      data)
 {
 	GnomeAppRegister *regist;
+	GnomeAppLogin *login;
 
-	gnome_app_login_run ();
+	login = gnome_app_login_new ();
+	gnome_app_login_run (login);
 	regist = GNOME_APP_REGISTER (data);
 	g_object_unref (regist);
 
@@ -113,7 +115,6 @@ on_register_button_press (ClutterActor *actor,
 		ClutterEvent *event,
 		gpointer      userdata)
 {
-
 	enum data_enum {
 		USERNAME = 0,
 		PASSWORD,
@@ -127,13 +128,7 @@ on_register_button_press (ClutterActor *actor,
 		const gchar *pn;
 		const gchar *val;
 	};
-	struct actor_pattern data [] = { 
-		{"username-entry", "username-info", "notblank", NULL},
-		{"password-entry", "password-info", "password", NULL},
-		{"firstname-entry", "firstname-info", "notblank", NULL},
-		{"lastname-entry", "lastname-info", "notblank", NULL},
-		{"email-entry", "email-info", "email", NULL},
-	};
+
 	GnomeAppRegister *regist;
 	GnomeAppRegisterPrivate *priv;
 	ClutterActor *entry_actor, *info_actor;
@@ -141,6 +136,13 @@ on_register_button_press (ClutterActor *actor,
 	GError *error;
 	gint i;
 	gboolean validation;
+	struct actor_pattern data [] = { 
+		{"username-entry", "username-info", "notblank", NULL},
+		{"password-entry", "password-info", "password", NULL},
+		{"firstname-entry", "firstname-info", "notblank", NULL},
+		{"lastname-entry", "lastname-info", "notblank", NULL},
+		{"email-entry", "email-info", "email", NULL},
+	};
 
 	regist = GNOME_APP_REGISTER (userdata);
 	priv = regist->priv;
@@ -283,6 +285,13 @@ gnome_app_register_new (void)
 	GnomeAppRegister *regist;
 	GnomeAppRegisterPrivate *priv;
 	GnomeAppStore *store;
+	ClutterActor *username_entry;
+	ClutterActor *password_entry;
+	ClutterActor *firstname_entry;
+	ClutterActor *lastname_entry;
+	ClutterActor *email_entry;
+	ClutterActor *back_button;
+	ClutterActor *register_button;
 
 	regist = g_object_new (GNOME_APP_TYPE_REGISTER, NULL);
 	priv = regist->priv;
@@ -293,27 +302,8 @@ gnome_app_register_new (void)
 	}
 
 	clutter_script_connect_signals (priv->script, regist);
-	return regist;
-}
 
-void
-gnome_app_register_run (GnomeAppRegister *regist)
-{
-	GnomeAppRegisterPrivate *priv;
-	ClutterActor *stage;
-	ClutterActor *username_entry;
-	ClutterActor *password_entry;
-	ClutterActor *firstname_entry;
-	ClutterActor *lastname_entry;
-	ClutterActor *email_entry;
-	ClutterActor *back_button;
-	ClutterActor *register_button;
-	GError *error;
-	gchar *filename;
-
-	priv = regist->priv;
-	
-	clutter_script_get_objects (priv->script, "app-register", &stage,
+	clutter_script_get_objects (priv->script,
 			"username-entry", &username_entry,
 			"password-entry", &password_entry,
 			"firstname-entry", &firstname_entry,
@@ -330,6 +320,20 @@ gnome_app_register_run (GnomeAppRegister *regist)
 	gnome_app_entry_binding (email_entry);
 	gnome_app_button_binding (back_button);
 	gnome_app_button_binding (register_button);
+
+	return regist;
+}
+
+void
+gnome_app_register_run (GnomeAppRegister *regist)
+{
+	GnomeAppRegisterPrivate *priv;
+	ClutterActor *stage;
+	gchar *filename;
+
+	priv = regist->priv;
+	
+	stage = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "app-register"));
 
 	gnome_app_stage_remove_decorate (stage);
 	gnome_app_stage_set_position (stage, GNOME_APP_POSITION_CENTER);

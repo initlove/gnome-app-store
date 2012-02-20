@@ -1,5 +1,4 @@
-/* libgnome-app-icon_view.h - 
-
+/*
    Copyright 2011, Novell, Inc.
 
    The Gnome appicon_view lib is free software; you can redistribute it and/or
@@ -24,7 +23,6 @@
 #define __GNOME_APP_ICON_VIEW_H__
 
 #include <clutter/clutter.h>
-#include "gnome-app-application.h"
 
 G_BEGIN_DECLS
 
@@ -51,8 +49,8 @@ struct _GnomeAppIconViewClass
 };
 
 GType			gnome_app_icon_view_get_type              	(void);
-GnomeAppIconView *	gnome_app_icon_view_new_with_app               	(GnomeAppApplication *app);
-void			gnome_app_icon_view_set_with_data		(GnomeAppIconView *icon_view, const GList *data);
+GnomeAppIconView *	gnome_app_icon_view_new		               	(void);
+void			gnome_app_icon_view_run				(GnomeAppIconView *icon_view);
 gint			gnome_app_icon_view_get_pagesize		(GnomeAppIconView *icon_view);
 
 G_END_DECLS

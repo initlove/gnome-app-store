@@ -9,7 +9,7 @@ License along with this program; if not, write to the
 Free Software Foundation, Inc., 59 Temple Place - Spagete 330,
 Boston, MA 02111-1307, USA.
 
-Author: Lance Wang <lzwang@suse.com>
+Author: David Liang <lzwang@suse.com>
 
 */
 #include <config.h>
@@ -35,7 +35,6 @@ typedef enum {
 
 struct _GnomeAppInfoPagePrivate
 {
-	GnomeAppApplication *app;
 	OpenResult *info;
 	ClutterScript *script;
 
@@ -50,11 +49,13 @@ struct _GnomeAppInfoPagePrivate
 enum
 {
 	PROP_0,
+	PROP_APP_INFO,
 	PROP_LAST
 };
 
 G_DEFINE_TYPE (GnomeAppInfoPage, gnome_app_info_page, CLUTTER_TYPE_GROUP)
 
+static void	gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info);
 static void	draw_pic (GnomeAppInfoPage *page);
 
 static void
@@ -65,56 +66,69 @@ gnome_app_info_page_init (GnomeAppInfoPage *page)
 	page->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (page,
 							 GNOME_APP_TYPE_INFO_PAGE,
 							 GnomeAppInfoPagePrivate);
-	priv->app = NULL;
 	priv->info = NULL;
 	priv->script = NULL;
 	priv->fan_status = FAN_NOT_DEFINED;
 }
 
 static void
-info_page_set_property (GObject      *object,
+gnome_app_info_page_set_property (GObject      *object,
 		guint         prop_id,
 		const GValue *value,
 		GParamSpec   *pspec)
 {
 	GnomeAppInfoPage *info_page;
+	GnomeAppInfoPagePrivate *priv;
 
 	info_page = GNOME_APP_INFO_PAGE (object);
+	priv = info_page->priv;
 
 	switch (prop_id)
 	{
+		case PROP_APP_INFO:
+			gnome_app_info_page_set_with_data (info_page, g_value_get_object (value));
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
 	}
 }
 
 static void
-info_page_get_property (GObject      *object,
+gnome_app_info_page_get_property (GObject      *object,
 		guint         prop_id,
 		GValue       *value,
 		GParamSpec   *pspec)
 {
 	GnomeAppInfoPage *info_page;
+	GnomeAppInfoPagePrivate *priv;
 
 	info_page = GNOME_APP_INFO_PAGE (object);
+	priv = info_page->priv;
 
 	switch (prop_id)
 	{
+		case PROP_APP_INFO:
+			g_value_set_object (value, priv->info);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
 	}
 }
 
 static void
-info_page_dispose (GObject *object)
+gnome_app_info_page_dispose (GObject *object)
 {
 	G_OBJECT_CLASS (gnome_app_info_page_parent_class)->dispose (object);
 }
 
 static void
-info_page_finalize (GObject *object)
+gnome_app_info_page_finalize (GObject *object)
 {
 	GnomeAppInfoPage *page = GNOME_APP_INFO_PAGE (object);
 	GnomeAppInfoPagePrivate *priv = page->priv;
 
-	if (priv->app)
-		g_object_unref (priv->app);
 	if (priv->info)
 		g_object_unref (priv->info);
 	if (priv->script)
@@ -128,10 +142,18 @@ gnome_app_info_page_class_init (GnomeAppInfoPageClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->set_property = info_page_set_property;
-	object_class->get_property = info_page_get_property;
-	object_class->dispose = info_page_dispose;
-	object_class->finalize = info_page_finalize;
+	object_class->set_property = gnome_app_info_page_set_property;
+	object_class->get_property = gnome_app_info_page_get_property;
+	object_class->dispose = gnome_app_info_page_dispose;
+	object_class->finalize = gnome_app_info_page_finalize;
+
+	g_object_class_install_property (object_class,
+  			PROP_APP_INFO,
+			g_param_spec_object ("info",
+				"app info",
+				"app info",
+				G_TYPE_OBJECT,
+				G_PARAM_READWRITE));
 
 	g_type_class_add_private (object_class, sizeof (GnomeAppInfoPagePrivate));
 }
@@ -182,7 +204,7 @@ open_result_debug (result);
 	return NULL;
 }
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_next_button_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
@@ -198,7 +220,7 @@ on_next_button_press (ClutterActor *actor,
 	return TRUE;
 }
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_prev_button_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
@@ -242,7 +264,7 @@ comment_callback (gpointer userdata, gpointer func_result)
 	}
 }
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_comment_button_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
@@ -278,7 +300,7 @@ on_comment_button_press (ClutterActor *actor,
 	gnome_app_task_push (task);
 }
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_download_button_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
@@ -365,7 +387,7 @@ add_remove_fan_callback (gpointer userdata, gpointer func_result)
 	}
 }
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_fan_button_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
@@ -487,7 +509,7 @@ draw_download_buttons (GnomeAppInfoPage *page)
 	clutter_container_add_actor (CLUTTER_CONTAINER (download_group), CLUTTER_ACTOR (layout_box));
 }
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_return_button_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
@@ -496,10 +518,8 @@ on_return_button_press (ClutterActor *actor,
         GnomeAppApplication *app;
 
 	page = GNOME_APP_INFO_PAGE (data);
-	if (page->priv->app)
-		gnome_app_application_load (page->priv->app, UI_TYPE_FRAME_UI, NULL);
-	else
-		g_error ("Set the application to the info-page!\n");
+	//TODO:
+//		gnome_app_application_load (page->priv->app, UI_TYPE_FRAME_UI, NULL);
 
         return TRUE;
 }
@@ -565,29 +585,52 @@ draw_pic (GnomeAppInfoPage *page)
 }
 
 GnomeAppInfoPage *
-gnome_app_info_page_new_with_app (GnomeAppApplication *app)
+gnome_app_info_page_new (void)
 {
 	GnomeAppInfoPage *info_page;
+	GnomeAppInfoPagePrivate *priv;
+	ClutterActor *info_page_actor;
+	ClutterActor *next_button, *prev_button;
+	ClutterActor *fan_button;
+	ClutterActor *comment_entry, *comment_button;
+	ClutterActor *return_button;
+	ClutterAction *action;
+	GList *list;
 
 	info_page = g_object_new (GNOME_APP_TYPE_INFO_PAGE, NULL);
+	priv = info_page->priv;
+	priv->script = gnome_app_script_new_from_file ("app-info-page");
+	if (!priv->script) {
+		g_object_unref (info_page);
+		return NULL;
+	}
 
-	info_page->priv->app = g_object_ref (app);
+	clutter_script_connect_signals (priv->script, info_page);
+	clutter_script_get_objects (priv->script,
+			"info-page", &info_page_actor,
+			"fan-button", &fan_button,
+			"next", &next_button,
+			"prev", &prev_button,
+			"comment-entry", &comment_entry,
+			"comment-button", &comment_button,
+			"return-button", &return_button,
+			NULL);
+
+	clutter_container_add_actor (CLUTTER_CONTAINER (info_page), info_page_actor);
+	clutter_actor_set_reactive (CLUTTER_ACTOR (info_page), TRUE);
+	action = clutter_drag_action_new ();
+	clutter_actor_add_action (CLUTTER_ACTOR (info_page), action);
+	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
+		CLUTTER_DRAG_Y_AXIS);
+
+	gnome_app_entry_binding (comment_entry);
+	gnome_app_button_binding (fan_button);
+	gnome_app_button_binding (next_button);
+	gnome_app_button_binding (prev_button);
+	gnome_app_button_binding (comment_button);
+	gnome_app_button_binding (return_button);
 
 	return info_page;
-}
-
-static void
-on_comment_entry_paint (ClutterActor *actor,
-		gpointer      data)
-{
-	ClutterActorBox allocation = { 0, };
-     	gfloat width, height;
-   	clutter_actor_get_allocation_box (actor, &allocation);
- 	clutter_actor_box_clamp_to_pixel (&allocation);
-      	clutter_actor_box_get_size (&allocation, &width, &height);
-    	cogl_set_source_color4ub (0, 0, 0, 255);
-	cogl_path_rectangle (0, 0, width, height);
-	cogl_path_stroke ();
 }
 
 static gpointer
@@ -653,8 +696,8 @@ load_details_info (GnomeAppInfoPage *page)
 	g_free (function);
 }
 
-void
-gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
+static void
+gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info)
 {
 	g_return_if_fail (info != NULL);
 
@@ -663,7 +706,6 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	gchar *str;
 	gint i;
 
-	ClutterActor *info_page;
 	ClutterActor *next, *prev;
 	ClutterActor *score, *score_actor;
 	ClutterActor *license;
@@ -679,27 +721,13 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	ClutterAction *action;
 	GList *list;
 
-	priv = page->priv;
+	priv = info_page->priv;
 
 	if (priv->info)
 		g_object_unref (priv->info);
 	priv->info = g_object_ref (info);
 	priv->fan_status = FAN_NOT_DEFINED;
 
-	if (!priv->script) {
-		priv->script = gnome_app_script_new_from_file ("app-info-page");
-		if (!priv->script) {
-			return ;
-		}
-		info_page = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "info-page"));
-		clutter_container_add_actor (CLUTTER_CONTAINER (page), info_page);
-		clutter_actor_set_reactive (CLUTTER_ACTOR (page), TRUE);
-		action = clutter_drag_action_new ();
-		clutter_actor_add_action (CLUTTER_ACTOR (page), action);
-		clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
-			CLUTTER_DRAG_Y_AXIS);
-
-	} 
 	clutter_script_get_objects (priv->script,
 			"score", &score,
 			"license", &license,
@@ -733,7 +761,6 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	priv->pic_count = count;
 	priv->current_pic = 1;
 
-	draw_pic (page);
 
 	score_actor = CLUTTER_ACTOR (gnome_app_score_ui_new_with_score (open_result_get (info, "score")));
 	for (list = clutter_container_get_children (CLUTTER_CONTAINER (score)); list; list = list->next)
@@ -757,19 +784,6 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	clutter_text_set_text (CLUTTER_TEXT (comments), str);
 	g_free (str);
 
-	g_signal_connect (comment_button, "button-press-event", G_CALLBACK (on_comment_button_press), page);
-
-	ClutterColor  cursor_color     = { 0xff, 0x33, 0x33, 0xff };
-      	ClutterColor  selected_text_color = { 0x00, 0x00, 0xff, 0xff };
-
-	clutter_text_set_line_wrap (CLUTTER_TEXT (comment_entry), TRUE);
-    	clutter_text_set_cursor_color (CLUTTER_TEXT (comment_entry), &cursor_color);
-  	clutter_text_set_selected_text_color (CLUTTER_TEXT (comment_entry), &selected_text_color);
-	  
-	g_signal_connect (comment_entry, "paint",
-			G_CALLBACK (on_comment_entry_paint),
-			NULL);
-
 	clutter_text_set_text (CLUTTER_TEXT (name), open_result_get (info, "name"));
 	clutter_text_set_text (CLUTTER_TEXT (personid), open_result_get (info, "personid"));
 	description_actor = get_description_actor (open_result_get (info, "description"));
@@ -781,18 +795,21 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *page, OpenResult *info)
 	for (list = clutter_container_get_children (CLUTTER_CONTAINER (comments_details)); list; list = list->next)
 		clutter_container_remove_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (list->data));
 
-	g_signal_connect (prev, "button-press-event", G_CALLBACK (on_prev_button_press), page);
-	g_signal_connect (next, "button-press-event", G_CALLBACK (on_next_button_press), page);
-
-	draw_fan_status (page);
-	set_fan_status (page);
-	g_signal_connect (fan_button, "button-press-event", G_CALLBACK (on_fan_button_press), page);
-
-	draw_download_buttons (page);
-
-	g_signal_connect (return_button, "button-press-event", G_CALLBACK (on_return_button_press), page);
-
-	load_details_info (page);
-
 	return ;
+}
+
+void
+gnome_app_info_page_run (GnomeAppInfoPage *info_page)
+{
+	g_return_if_fail (info_page);
+
+	GnomeAppInfoPagePrivate *priv;
+
+	priv = info_page->priv;
+
+	draw_pic (info_page);
+	draw_fan_status (info_page);
+	set_fan_status (info_page);
+	draw_download_buttons (info_page);
+	load_details_info (info_page);
 }

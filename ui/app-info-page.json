@@ -23,7 +23,10 @@
         "width" : 32,
         "height" : 32,
 	"filename" : "go-previous.png",
-        "opacity" : 255
+        "opacity" : 255,
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_prev_button_press" }
+        ]
       },
       {
         "id" : "next",
@@ -33,7 +36,10 @@
         "width" : 32,
         "height" : 32,
 	"filename" : "go-next.png",
-        "opacity" : 255
+        "opacity" : 255,
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_next_button_press" }
+        ]
       },
       {
         "id" : "name",
@@ -106,7 +112,10 @@
         "reactive" : true,
         "color" : "green",
         "x" : 750,
-        "y" : 180
+        "y" : 180,
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_fan_button_press" }
+        ]
       },
 
       {
@@ -157,7 +166,10 @@
         "font-name" : "Sans 16px",
         "reactive" : true,
         "x" : 760,
-        "y" : 410
+        "y" : 410,
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_comment_button_press" }
+        ]
       },
       {
         "id" : "comments-details",
@@ -179,7 +191,10 @@
         "anchor-x" : "5 em",
         "anchor-y" : "5 pt",
         "opacity" : 100,
-        "reactive" : true
+        "reactive" : true,
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_return_button_press" }
+        ]
       },
       {
         "id" : "description",

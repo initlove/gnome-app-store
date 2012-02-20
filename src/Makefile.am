@@ -21,6 +21,7 @@ noinst_PROGRAMS =      \
 	$(NULL)
 
 gnome_app_store_SOURCES =        \
+	gnome-app-info-icon.c gnome-app-info-icon.h  \
 	gnome-app-login.c gnome-app-login.h \
 	gnome-app-register.c gnome-app-register.h \
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\

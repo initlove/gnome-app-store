@@ -53,9 +53,8 @@ struct _GnomeAppInfoPageClass
 };
 
 GType				gnome_app_info_page_get_type		(void);
-GnomeAppInfoPage *		gnome_app_info_page_new_with_app	(GnomeAppApplication *app);
-void				gnome_app_info_page_set_with_data	(GnomeAppInfoPage *info_page, OpenResult *info);
-ClutterActor *			gnome_app_info_page_get_actions		(GnomeAppInfoPage *info_page);
+GnomeAppInfoPage *		gnome_app_info_page_new			(void);
+void				gnome_app_info_page_run			(GnomeAppInfoPage *info_page);
 
 G_END_DECLS
 

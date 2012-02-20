@@ -46,11 +46,10 @@ application_load_app_info (GnomeAppApplication *app, OpenResult *info)
 	ClutterActor *actions;
 
         priv = app->priv;
-	gnome_app_info_page_set_with_data (priv->info_page, info);
-#if 0
-	actions = gnome_app_info_page_get_actions (priv->info_page);
-	gnome_app_actions_set_with_data (app->actions, actions);
-#endif
+//TODO
+//	gnome_app_info_page_set_with_data (priv->info_page, info);
+	g_object_set (priv->info_page, "info", info, NULL);
+	gnome_app_info_page_run (priv->info_page);
 	clutter_actor_hide (CLUTTER_ACTOR (priv->frame_ui));
 	clutter_actor_show (CLUTTER_ACTOR (priv->info_page));
 }
@@ -67,8 +66,8 @@ application_load_frame_ui (GnomeAppApplication *app)
 	actions = gnome_app_frame_ui_get_actions (priv->frame_ui);
 	gnome_app_actions_set_with_data (app->actions, actions);
 #endif
+	gnome_app_frame_ui_run (priv->frame_ui);
 	clutter_actor_hide (CLUTTER_ACTOR (priv->info_page));
-	clutter_actor_show (CLUTTER_ACTOR (priv->frame_ui));
 }
 
 void
@@ -108,8 +107,8 @@ gnome_app_application_init (GnomeAppApplication *app)
 	gnome_app_actor_add_background (priv->stage, filename);
 	g_free (filename);
 #endif
-	priv->info_page = gnome_app_info_page_new_with_app (app);
-	priv->frame_ui = gnome_app_frame_ui_new_with_app (app);
+	priv->info_page = gnome_app_info_page_new ();
+	priv->frame_ui = gnome_app_frame_ui_new ();
 	  
 	clutter_container_add (CLUTTER_CONTAINER (priv->stage), CLUTTER_ACTOR (priv->info_page), NULL);
 	clutter_container_add (CLUTTER_CONTAINER (priv->stage), CLUTTER_ACTOR (priv->frame_ui), NULL);
@@ -143,7 +142,7 @@ gnome_app_application_finalize (GObject *object)
 }
 
 static void
-application_get_property (GObject    *object,
+gnome_app_application_get_property (GObject    *object,
 		guint       prop_id,
 		GValue     *value,
 		GParamSpec *pspec)
@@ -154,9 +153,6 @@ application_get_property (GObject    *object,
 	self = GNOME_APP_APPLICATION (object);
 
 	switch (prop_id) {
-		case PROP_APP_STORE:
-			g_value_set_object (value, self->priv->store);
-			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -171,7 +167,7 @@ gnome_app_application_class_init (GnomeAppApplicationClass *klass)
 	object_class->dispose = gnome_app_application_dispose;
 	object_class->finalize = gnome_app_application_finalize;
 	
-	object_class->get_property = application_get_property;
+	object_class->get_property = gnome_app_application_get_property;
 
 	g_object_class_install_property (object_class,
 			PROP_APP_STORE,

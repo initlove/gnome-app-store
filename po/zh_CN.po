@@ -204,7 +204,7 @@ msgstr "用户名"
 
 #: ../ui/app-account-ui.json.h:1
 msgid "Friends"
-msgstr "%d 好友"
+msgstr "好友"
 
 #: ../ui/app-account-ui.json.h:2
 msgid "Home Page"
@@ -212,7 +212,7 @@ msgstr "主页"
 
 #: ../ui/app-account-ui.json.h:3
 msgid "Messages"
-msgstr "（无信息)"
+msgstr "信息"
 
 #: ../ui/app-account-ui.json.h:4
 msgid "company"

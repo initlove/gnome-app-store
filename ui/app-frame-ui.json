@@ -43,7 +43,12 @@
 	"activatable" : true,
 	"single_line_mode" : true,
 	"selectable" : true,
-	"reactive" : true
+	"reactive" : true,
+        "signals" : [
+          { "name" : "event", "handler" : "on_search_entry_event" },
+          { "name" : "activate", "handler" : "on_search_entry_activate" },
+          { "name" : "text_changed", "handler" : "on_search_entry_text_changed" }
+        ]
       },
       {
         "id" : "search-hint",
@@ -66,7 +71,12 @@
 	"y" : 10,
 	"width" : 32,
 	"height" : 32,
-	"reactive" : false
+	"reactive" : true,
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_icon_press" },
+          { "name" : "enter-event", "handler" : "on_icon_enter" },
+          { "name" : "leave-event", "handler" : "on_icon_leave" }
+        ]
       },
       {
         "id" : "account-group",
@@ -94,7 +104,12 @@
 	"width" : 32,
 	"height" : 32,
 	"filename" : "go-previous.png",
-	"reactive" : true
+	"reactive" : true,
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_icon_press" },
+          { "name" : "enter-event", "handler" : "on_icon_enter" },
+          { "name" : "leave-event", "handler" : "on_icon_leave" }
+        ]
       },
       {
         "id" : "next-icon",
@@ -104,7 +119,12 @@
 	"width" : 32,
 	"height" : 32,
 	"filename" : "go-next.png",
-	"reactive" : true
+	"reactive" : true,
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_icon_press" },
+          { "name" : "enter-event", "handler" : "on_icon_enter" },
+          { "name" : "leave-event", "handler" : "on_icon_leave" }
+        ]
       }
     ]
   }
