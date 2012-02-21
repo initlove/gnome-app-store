@@ -114,7 +114,7 @@ frame_ui_load_results (GnomeAppFrameUI *ui, OpenResults *results)
 		}
 
 		g_object_set (G_OBJECT (priv->icon_view), "results", results, NULL);
-		gnome_app_icon_view_run (priv->icon_view);
+		clutter_actor_show (CLUTTER_ACTOR (priv->icon_view));
 	} else {
 		clutter_actor_hide (prev);
 		clutter_actor_hide (next);

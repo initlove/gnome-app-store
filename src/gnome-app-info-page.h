@@ -24,8 +24,6 @@
 
 #include <glib.h>
 #include <clutter/clutter.h>
-#include "open-result.h"
-#include "gnome-app-application.h"
 
 G_BEGIN_DECLS
 

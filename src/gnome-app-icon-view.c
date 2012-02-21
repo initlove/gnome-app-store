@@ -16,7 +16,6 @@ Author: David Liang <dliang@novell.com>
 #include <clutter/clutter.h>
 #include "open-app-utils.h"
 #include "gnome-app-task.h"
-#include "gnome-app-application.h"
 #include "gnome-app-icon-view.h"
 #include "gnome-app-ui-utils.h"
 #include "gnome-app-info-icon.h"
@@ -277,10 +276,4 @@ gnome_app_icon_view_set_with_data (GnomeAppIconView *icon_view, OpenResults *res
 		info_icon = gnome_app_info_icon_new_with_info (info);
 		gnome_app_icon_view_add_actor (icon_view, CLUTTER_ACTOR (info_icon));
 	}
-}
-
-void
-gnome_app_icon_view_run (GnomeAppIconView *icon_view)
-{
-	clutter_actor_show (CLUTTER_ACTOR (icon_view));
 }
