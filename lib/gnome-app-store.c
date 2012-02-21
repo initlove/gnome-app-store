@@ -385,7 +385,7 @@ gnome_app_store_get_username (GnomeAppStore *store)
 }
 
 const gchar *
-gnome_app_store_get_cids_by_name (const GnomeAppStore *store, const gchar *category_name)
+gnome_app_store_get_cids_by_name (GnomeAppStore *store, const gchar *category_name)
 {
         g_return_val_if_fail (category_name, "-1");
 
