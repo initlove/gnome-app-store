@@ -2,7 +2,7 @@
   "Frame UI" : {
     "id" : "frame-ui",
     "type" : "ClutterGroup",
-    "width" : 1200,
+    "width" : 1000,
     "height" : 800,
     "children" : [
       {

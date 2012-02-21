@@ -22,7 +22,6 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-store.h"
 #include "gnome-app-task.h"
 #include "gnome-app-account-ui.h"
-#include "gnome-app-application.h"
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-icon-view.h"
 #include "gnome-app-ui-utils.h"
@@ -30,10 +29,10 @@ Author: David Liang <dliang@novell.com>
 struct _GnomeAppFrameUIPrivate
 {
         ClutterScript	*script;
-	ClutterGroup	*ui_group;
 	ClutterActor	*account;
 	ClutterActor	*categories;
         GnomeAppIconView *icon_view;
+	GnomeAppStore *store;
 
 	gboolean	is_search_enabled;
 	gboolean	is_search_hint_enabled;
@@ -133,6 +132,29 @@ task_callback (gpointer userdata, gpointer func_result)
 	frame_ui_load_results (ui, results);
 
 	return NULL;
+}
+
+static void
+frame_ui_set_default_data (GnomeAppFrameUI *ui)
+{
+	GnomeAppFrameUIPrivate *priv;
+	GnomeAppTask *task;
+	gchar *pagesize;
+
+	priv = ui->priv;
+	pagesize = g_strdup_printf ("%d", priv->pagesize);
+
+        task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+	priv->task = g_object_ref (task);
+	gnome_app_task_add_params (task,
+				"sortmode", "new",
+				"pagesize", pagesize,
+				"page", "0",
+				NULL);
+	gnome_app_task_set_callback (task, task_callback);
+	gnome_app_task_push (task);
+
+	g_free (pagesize);
 }
 
 G_MODULE_EXPORT void
@@ -237,7 +259,6 @@ on_category_event (ClutterActor *actor,
 {
 	GnomeAppFrameUI *ui;
 	GnomeAppFrameUIPrivate *priv;
-	GnomeAppStore *store;
 	GnomeAppTask *task;
 	const gchar *name;
 	const gchar *cids;
@@ -250,10 +271,9 @@ on_category_event (ClutterActor *actor,
         {
         case CLUTTER_BUTTON_PRESS:
 		pagesize = g_strdup_printf ("%d", priv->pagesize);
-	        name = clutter_text_get_text (CLUTTER_TEXT (actor));
-printf ("click on %s\n", name);
-		store = gnome_app_store_get_default ();
-		cids = gnome_app_store_get_cids_by_name (store, name);
+		name = (gchar *) g_object_get_data (G_OBJECT (actor), "category_name");
+		cids = gnome_app_store_get_cids_by_name (priv->store, name);
+printf ("click on %s cids %s\n", name, cids);
 /*TODO where to final the task */
 		if (priv->task)
 			g_object_unref (priv->task);
@@ -377,9 +397,10 @@ create_category_list (GnomeAppFrameUI *ui)
 
 	categories = open_app_get_default_categories ();
 	for (categories; *categories; categories ++) {
-		name = _((gchar *)*categories);
 		actor = clutter_text_new ();
+		g_object_set_data (G_OBJECT (actor), "category_name", (gpointer) *categories);
 		clutter_text_set_editable (CLUTTER_TEXT (actor), FALSE);
+		name = _((gchar *)*categories);
 		clutter_text_set_text (CLUTTER_TEXT (actor), name);
 		clutter_actor_set_reactive (actor, TRUE);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), col, row);
@@ -394,14 +415,45 @@ static void
 gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 {
 	GnomeAppFrameUIPrivate *priv;
+	ClutterActor *main_ui;
+	ClutterActor *account_group;
+	ClutterActor *icon_view_group;
+	ClutterActor *categories_group;
 
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
 	                                                 GNOME_APP_TYPE_FRAME_UI,
 	                                                 GnomeAppFrameUIPrivate);
 	priv->is_search_enabled = FALSE;
 	priv->is_search_hint_enabled = TRUE;
-	priv->script = NULL;
 	priv->task = NULL;
+
+        priv->script = gnome_app_script_new_from_file ("app-frame-ui");
+        if (!priv->script) {
+		return ;
+        }
+        clutter_script_connect_signals (priv->script, ui);
+	clutter_script_get_objects (priv->script, 
+			"frame-ui", &main_ui,
+			"account-group", &account_group,
+			"categories", &categories_group,
+			"icon-view", &icon_view_group,
+			NULL);
+	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (main_ui));
+
+	priv->store = gnome_app_store_get_default ();
+	gnome_app_store_init_category (GNOME_APP_STORE (priv->store));
+
+	priv->account = CLUTTER_ACTOR (gnome_app_account_ui_new (NULL));
+	clutter_container_add_actor (CLUTTER_CONTAINER (account_group), priv->account);
+
+	priv->categories = create_category_list (ui);
+	clutter_container_add_actor (CLUTTER_CONTAINER (categories_group), priv->categories);
+
+	priv->icon_view = gnome_app_icon_view_new ();
+	priv->pagesize = gnome_app_icon_view_get_pagesize (priv->icon_view);
+	clutter_container_add_actor (CLUTTER_CONTAINER (icon_view_group), CLUTTER_ACTOR (priv->icon_view));
+
+	frame_ui_set_default_data (ui);
 }
 
 static void
@@ -467,80 +519,12 @@ gnome_app_frame_ui_class_init (GnomeAppFrameUIClass *klass)
 	g_type_class_add_private (object_class, sizeof (GnomeAppFrameUIPrivate));
 }
 
-static void
-frame_ui_set_default_data (GnomeAppFrameUI *ui)
-{
-	GnomeAppFrameUIPrivate *priv;
-	GnomeAppTask *task;
-	gchar *pagesize;
-
-	priv = ui->priv;
-	pagesize = g_strdup_printf ("%d", priv->pagesize);
-
-        task = gnome_app_task_new (ui, "GET", "/v1/content/data");
-	priv->task = g_object_ref (task);
-	gnome_app_task_add_params (task,
-				"sortmode", "new",
-				"pagesize", pagesize,
-				"page", "0",
-				NULL);
-	gnome_app_task_set_callback (task, task_callback);
-	gnome_app_task_push (task);
-
-	g_free (pagesize);
-}
-
 GnomeAppFrameUI *
 gnome_app_frame_ui_new (void)
 {
 	GnomeAppFrameUI *ui;
-	GnomeAppFrameUIPrivate *priv;
 
 	ui = g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
-	priv = ui->priv;
-
-        priv->script = gnome_app_script_new_from_file ("app-frame-ui");
-        if (!priv->script) {
-		g_object_unref (ui);
-		return NULL;
-        }
-        clutter_script_connect_signals (priv->script, ui);
-	clutter_script_get_objects (priv->script, 
-			"frame-ui", &priv->ui_group,
-			NULL);
-	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (priv->ui_group));
 
 	return ui;
 }
-
-void
-gnome_app_frame_ui_run (GnomeAppFrameUI *ui)
-{
-	g_return_if_fail (ui);
-
-	GnomeAppFrameUIPrivate *priv;
-	ClutterActor *account_group;
-	ClutterActor *icon_view_group;
-	ClutterActor *categories_group;
-
-	priv = ui->priv;
-	clutter_script_get_objects (priv->script,
-					"account-group", &account_group,
-					"icon-view", &icon_view_group,
-					"categories", &categories_group,
-					NULL);
-	priv->account = CLUTTER_ACTOR (gnome_app_account_ui_new (NULL));
-	clutter_container_add_actor (CLUTTER_CONTAINER (account_group), priv->account);
-
-	priv->categories = create_category_list (ui);
-	clutter_container_add_actor (CLUTTER_CONTAINER (categories_group), priv->categories);
-
-	priv->icon_view = gnome_app_icon_view_new ();
-	priv->pagesize = gnome_app_icon_view_get_pagesize (priv->icon_view);
-	clutter_container_add_actor (CLUTTER_CONTAINER (icon_view_group), CLUTTER_ACTOR (priv->icon_view));
-
-	frame_ui_set_default_data (ui);
-
-	clutter_actor_show (CLUTTER_ACTOR (ui));
-}
-

@@ -1,27 +1,25 @@
 #include <config.h>
 #include <stdlib.h>
-#include <math.h>
-#include <gmodule.h>
-#include <clutter/clutter.h>
 #include <glib/gi18n.h>
+#include <clutter/clutter.h>
 
 #include "gnome-app-store.h"
-#include "gnome-app-application.h"
-#include "gnome-app-info-page.h"
-#include "gnome-app-frame-ui.h"
+#include "gnome-app-stage.h"
 
 static void
-on_info_icon_clicked (ClutterActor *info_icon,
-		OpenResult *info,
-		gpointer userdata)
+gnome_app_type_regist_all ()
 {
-	printf ("1\n");
+	gnome_app_login_get_type ();
+	gnome_app_register_get_type ();
+	gnome_app_frame_ui_get_type ();
+	gnome_app_info_page_get_type ();
 }
 
 int
 main (int argc, char *argv[])
 {
 	GnomeAppStore *store;
+	ClutterActor *stage;
 	GMainLoop *loop;
 
 	bindtextdomain (GETTEXT_PACKAGE, GNOMELOCALEDIR);
@@ -41,7 +39,10 @@ main (int argc, char *argv[])
 	gnome_app_store_set_lock_function (store, clutter_threads_enter);
 	gnome_app_store_set_unlock_function (store, clutter_threads_leave);
 
-	gnome_app_auth_valid ();
+	gnome_app_type_regist_all ();
+
+	stage = CLUTTER_ACTOR (gnome_app_stage_get_default ());
+	clutter_actor_show (stage);
 
 	g_main_loop_run (loop);
   	g_main_loop_unref (loop);

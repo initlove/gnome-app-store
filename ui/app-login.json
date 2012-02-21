@@ -1,7 +1,7 @@
 {
   "Login Info" : {
     "id" : "app-login",
-    "type" : "ClutterStage",
+    "type" : "ClutterGroup",
     "width" : 300,
     "height" : 300,
     "reactive" : true,

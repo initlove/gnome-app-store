@@ -385,13 +385,15 @@ gnome_app_store_get_username (GnomeAppStore *store)
 }
 
 const gchar *
-gnome_app_store_get_cids_by_name (GnomeAppStore *store, const gchar *category_name)
+gnome_app_store_get_cids_by_name (const GnomeAppStore *store, const gchar *category_name)
 {
         g_return_val_if_fail (category_name, "-1");
 
+	GnomeAppStorePrivate *priv;
         const gchar *val;
 
-        val = (const gchar *) g_hash_table_lookup (store->priv->categories, category_name);
+	priv = store->priv;
+        val = (const gchar *) g_hash_table_lookup (priv->categories, category_name);
 /*TODO: if the category group is empty, we set the ids  to -1,
         in this case, the return value will be empty!
 */

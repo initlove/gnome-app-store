@@ -54,7 +54,6 @@ struct _GnomeAppInfoPageClass
 
 GType				gnome_app_info_page_get_type		(void);
 GnomeAppInfoPage *		gnome_app_info_page_new			(void);
-void				gnome_app_info_page_run			(GnomeAppInfoPage *info_page);
 
 G_END_DECLS
 

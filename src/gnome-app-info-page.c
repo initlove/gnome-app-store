@@ -21,7 +21,7 @@ Author: David Liang <lzwang@suse.com>
 #include "gnome-app-task.h"
 #include "gnome-app-comment.h"
 #include "gnome-app-comments.h"
-#include "gnome-app-application.h"
+#include "gnome-app-stage.h"
 #include "gnome-app-score-ui.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-ui-utils.h"
@@ -56,19 +56,54 @@ enum
 G_DEFINE_TYPE (GnomeAppInfoPage, gnome_app_info_page, CLUTTER_TYPE_GROUP)
 
 static void	gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info);
-static void	draw_pic (GnomeAppInfoPage *page);
+static void	draw_pic (GnomeAppInfoPage *info_page);
 
 static void
-gnome_app_info_page_init (GnomeAppInfoPage *page)
+gnome_app_info_page_init (GnomeAppInfoPage *info_page)
 {
 	GnomeAppInfoPagePrivate *priv;
+	ClutterActor *main_ui;
+	ClutterActor *next_button, *prev_button;
+	ClutterActor *fan_button;
+	ClutterActor *comment_entry, *comment_button;
+	ClutterActor *return_button;
+	ClutterAction *action;
 
-	page->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (page,
+	info_page->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (info_page,
 							 GNOME_APP_TYPE_INFO_PAGE,
 							 GnomeAppInfoPagePrivate);
+	priv->script = gnome_app_script_new_from_file ("app-info-page");
+	if (!priv->script) {
+		return ;
+	}
 	priv->info = NULL;
-	priv->script = NULL;
 	priv->fan_status = FAN_NOT_DEFINED;
+
+	clutter_script_connect_signals (priv->script, info_page);
+	clutter_script_get_objects (priv->script,
+			"info-page", &main_ui,
+			"fan-button", &fan_button,
+			"next", &next_button,
+			"prev", &prev_button,
+			"comment-entry", &comment_entry,
+			"comment-button", &comment_button,
+			"return-button", &return_button,
+			NULL);
+
+	clutter_container_add_actor (CLUTTER_CONTAINER (info_page), main_ui);
+	action = clutter_drag_action_new ();
+	clutter_actor_add_action (CLUTTER_ACTOR (info_page), action);
+	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
+		CLUTTER_DRAG_Y_AXIS);
+
+	gnome_app_entry_binding (comment_entry);
+	gnome_app_button_binding (fan_button);
+	gnome_app_button_binding (next_button);
+	gnome_app_button_binding (prev_button);
+	gnome_app_button_binding (comment_button);
+	gnome_app_button_binding (return_button);
+
+	return ;
 }
 
 static void
@@ -443,13 +478,18 @@ fan_status_callback (gpointer userdata, gpointer func_result)
 }
 
 static void
-set_fan_status (GnomeAppInfoPage *page)
+set_fan_status (GnomeAppInfoPage *info_page)
 {
+	GnomeAppInfoPagePrivate *priv;
 	GnomeAppTask *task;
 	gchar *function;
 
-	function = g_strdup_printf ("/v1/fan/status/%s", open_result_get (page->priv->info, "id"));
-	task = gnome_app_task_new (page, "GET", function);
+	priv = info_page->priv;
+
+	g_return_if_fail (priv->info);
+
+	function = g_strdup_printf ("/v1/fan/status/%s", open_result_get (priv->info, "id"));
+	task = gnome_app_task_new (info_page, "GET", function);
 	gnome_app_task_set_callback (task, fan_status_callback);
 	gnome_app_task_push (task);
 
@@ -457,7 +497,7 @@ set_fan_status (GnomeAppInfoPage *page)
 }
 
 static void
-draw_download_buttons (GnomeAppInfoPage *page)
+draw_download_buttons (GnomeAppInfoPage *info_page)
 {
 	GnomeAppInfoPagePrivate *priv;
 	ClutterActor *download_group;
@@ -469,7 +509,10 @@ draw_download_buttons (GnomeAppInfoPage *page)
 	const gchar *val;
 	gchar *str;
 
-	priv = page->priv;
+	priv = info_page->priv;
+
+	g_return_if_fail (priv->info);
+
 	download_group = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "download-group"));
 
 	layout = clutter_box_layout_new ();
@@ -499,7 +542,7 @@ draw_download_buttons (GnomeAppInfoPage *page)
 				CLUTTER_BOX_ALIGNMENT_START,
 				CLUTTER_BOX_ALIGNMENT_START);
 			g_object_set_data (G_OBJECT (button), "itemid", (gpointer) i);
-			g_signal_connect (button, "button-press-event", G_CALLBACK (on_download_button_press), page);
+			g_signal_connect (button, "button-press-event", G_CALLBACK (on_download_button_press), info_page);
 		} else {
 			break;
 		}
@@ -514,12 +557,10 @@ on_return_button_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
-	GnomeAppInfoPage *page;
-        GnomeAppApplication *app;
+	GnomeAppStage *stage;
 
-	page = GNOME_APP_INFO_PAGE (data);
-	//TODO:
-//		gnome_app_application_load (page->priv->app, UI_TYPE_FRAME_UI, NULL);
+	stage = gnome_app_stage_get_default ();
+	gnome_app_stage_load (stage, "GnomeAppFrameUI", NULL);
 
         return TRUE;
 }
@@ -556,6 +597,9 @@ draw_pic (GnomeAppInfoPage *page)
 	gchar *str;
 
 	priv = page->priv;
+
+	g_return_if_fail (priv->info);
+
 	clutter_script_get_objects (priv->script,
 			"big-pic", &big_pic,
 			"next", &next,
@@ -588,47 +632,8 @@ GnomeAppInfoPage *
 gnome_app_info_page_new (void)
 {
 	GnomeAppInfoPage *info_page;
-	GnomeAppInfoPagePrivate *priv;
-	ClutterActor *info_page_actor;
-	ClutterActor *next_button, *prev_button;
-	ClutterActor *fan_button;
-	ClutterActor *comment_entry, *comment_button;
-	ClutterActor *return_button;
-	ClutterAction *action;
-	GList *list;
 
 	info_page = g_object_new (GNOME_APP_TYPE_INFO_PAGE, NULL);
-	priv = info_page->priv;
-	priv->script = gnome_app_script_new_from_file ("app-info-page");
-	if (!priv->script) {
-		g_object_unref (info_page);
-		return NULL;
-	}
-
-	clutter_script_connect_signals (priv->script, info_page);
-	clutter_script_get_objects (priv->script,
-			"info-page", &info_page_actor,
-			"fan-button", &fan_button,
-			"next", &next_button,
-			"prev", &prev_button,
-			"comment-entry", &comment_entry,
-			"comment-button", &comment_button,
-			"return-button", &return_button,
-			NULL);
-
-	clutter_container_add_actor (CLUTTER_CONTAINER (info_page), info_page_actor);
-	clutter_actor_set_reactive (CLUTTER_ACTOR (info_page), TRUE);
-	action = clutter_drag_action_new ();
-	clutter_actor_add_action (CLUTTER_ACTOR (info_page), action);
-	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
-		CLUTTER_DRAG_Y_AXIS);
-
-	gnome_app_entry_binding (comment_entry);
-	gnome_app_button_binding (fan_button);
-	gnome_app_button_binding (next_button);
-	gnome_app_button_binding (prev_button);
-	gnome_app_button_binding (comment_button);
-	gnome_app_button_binding (return_button);
 
 	return info_page;
 }
@@ -681,15 +686,18 @@ load_details_info_callback (gpointer userdata, gpointer func_result)
 }
 
 static void
-load_details_info (GnomeAppInfoPage *page)
+load_details_info (GnomeAppInfoPage *info_page)
 {
 	GnomeAppInfoPagePrivate *priv;
 	GnomeAppTask *task;
 	gchar *function;
 
-	priv = page->priv;
+	priv = info_page->priv;
+
+	g_return_if_fail (priv->info);
+
 	function = g_strdup_printf ("/v1/content/data/%s", open_result_get (priv->info, "id"));
-	task = gnome_app_task_new (page, "GET", function);
+	task = gnome_app_task_new (info_page, "GET", function);
 	gnome_app_task_set_callback (task, load_details_info_callback);
 	gnome_app_task_push (task);
 
@@ -774,6 +782,8 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 	clutter_text_set_text (CLUTTER_TEXT (downloads), str);
 	g_free (str);
 
+	set_fan_status (info_page);
+
 	val = open_result_get (info, "fans");
 	priv->fan_count = atoi (val);
 	str = g_strdup_printf (_("%d fans"), priv->fan_count);
@@ -794,18 +804,6 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 	/*clean the comments_details .. */
 	for (list = clutter_container_get_children (CLUTTER_CONTAINER (comments_details)); list; list = list->next)
 		clutter_container_remove_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (list->data));
-
-	return ;
-}
-
-void
-gnome_app_info_page_run (GnomeAppInfoPage *info_page)
-{
-	g_return_if_fail (info_page);
-
-	GnomeAppInfoPagePrivate *priv;
-
-	priv = info_page->priv;
 
 	draw_pic (info_page);
 	draw_fan_status (info_page);

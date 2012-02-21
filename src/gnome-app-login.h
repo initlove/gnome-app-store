@@ -39,22 +39,19 @@ typedef struct _GnomeAppLoginPrivate GnomeAppLoginPrivate;
 
 struct _GnomeAppLogin
 {
-	GObject parent_instance;
+	ClutterGroup parent_instance;
 	GnomeAppLoginPrivate	*priv;
 };
 
 struct _GnomeAppLoginClass
 {
-        GObjectClass parent_class;
+        ClutterGroupClass parent_class;
 	/* signal */
 	void (*auth) (GnomeAppLogin *self);
 };
 
 GType			gnome_app_login_get_type              	(void);
 GnomeAppLogin *		gnome_app_login_new			(void);
-void			gnome_app_login_run	               	(GnomeAppLogin *login);
-
-void			gnome_app_auth_valid			(void);
 
 G_END_DECLS
 

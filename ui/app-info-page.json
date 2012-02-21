@@ -2,7 +2,7 @@
   "Details Page" : {
     "id" : "info-page",
     "type" : "ClutterGroup",
-    "width" : 850,
+    "width" : 1000,
     "height" : 700,
     "reactive" : true,
     "children" : [
@@ -107,7 +107,7 @@
       {
         "id" : "fan-button",
         "type" : "ClutterText",
-        "text" : "Add to fan",
+        "text" : "",
         "font-name" : "Sans 17px",
         "reactive" : true,
         "color" : "green",

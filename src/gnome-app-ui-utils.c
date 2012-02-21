@@ -15,22 +15,10 @@ Author: David Liang <dliang@novell.com>
 #include <config.h>
 #include <glib/gi18n.h>
 #include <clutter/clutter.h>
-#include <clutter/x11/clutter-x11.h>
-#include <X11/Xatom.h>
 #include <string.h>
 #include "open-app-utils.h"
 #include "gnome-app-task.h"
 #include "gnome-app-ui-utils.h"
-
-typedef struct {
-        unsigned long flags;
-        unsigned long functions;
-        unsigned long decorations;
-        long input_mode;
-        unsigned long status;
-} MotifWmHints, MwmHints;
-
-#define MWM_HINTS_DECORATIONS   (1L << 1)
 
 enum {
 	MOUSE_NONE,
@@ -63,116 +51,6 @@ gnome_app_set_icon (ClutterActor *actor, const gchar *uri)
 	task = gnome_download_task_new (actor, uri);
 	gnome_app_task_set_callback (task, set_pic_callback);
 	gnome_app_task_push (task);
-}
-
-static void
-remove_decorate_on_show (ClutterActor *stage,
-		gpointer userdata)
-{
-	Window window;
-	Display *display;
-	MotifWmHints *old_hints;
-	MotifWmHints hints;
-	Atom hints_atom = None;
-	Atom type;
-	int format;
-	unsigned long nitems;
-	unsigned long bytes_after;
-	unsigned char *data;
-
-	window = clutter_x11_get_stage_window (CLUTTER_STAGE (stage));
-	display = clutter_x11_get_default_display ();
-	/* initialize to zero to avoid writing uninitialized data to socket */
-	memset(&hints, 0, sizeof(hints));
-	hints.flags = MWM_HINTS_DECORATIONS;
-	hints.decorations = MWM_HINTS_DECORATIONS;
-	hints_atom = XInternAtom (display, "_MOTIF_WM_HINTS", TRUE);
-	XGetWindowProperty (display, window,
-	                    hints_atom, 0, sizeof (MotifWmHints)/sizeof (long),
-		            False, AnyPropertyType, &type, &format, &nitems,
-		            &bytes_after, &data);
-	if (type == None) {
-	     	old_hints = &hints;
-	} else {
-	    	old_hints = (MotifWmHints *)data;
-		old_hints->flags |= MWM_HINTS_DECORATIONS;
-		old_hints->decorations = hints.decorations;
-	}
-	XChangeProperty (display, window,
-		hints_atom, hints_atom, 32, PropModeReplace,
-		(unsigned char *)old_hints, sizeof (MotifWmHints)/sizeof (long));
-
-	if (old_hints != &hints)
-    		  XFree (old_hints);
-}
-
-/* remove decorate or set position should be used after the actor was show
- * but if we
- * 		clutter_actor_show -> remove_decorate_on_show 
- * 			->set_position_on_show
- * 	the stage will move (the height of title bar) very obviously
- *
- * so, I add the connect here, now
- * 		remove -> set_position -> actor_show
- *
- * TODO: maybe a bug or may have better way, it is very tricky currently.
- * Still we have problem in the first gui ...
- */
-void
-gnome_app_stage_remove_decorate (ClutterActor *stage)
-{
-	g_signal_connect (stage, "show", G_CALLBACK (remove_decorate_on_show), NULL);
-}
-
-void
-gnome_app_stage_move (ClutterActor *stage, gint x, gint y)
-{
-	Window xwindow;
-	Display *display;
-		
-	xwindow = clutter_x11_get_stage_window (CLUTTER_STAGE (stage));
-	display = clutter_x11_get_default_display ();
-	
-	XMoveWindow (display, xwindow, x, y);
-}
-
-static void
-set_position_on_show (ClutterActor *stage, gint position)
-{
-	Window xwindow;
-	Display *display;
-	gint screen;
-	gint width, height;
-	gfloat stage_width, stage_height;
-	gint x, y;
-
-	xwindow = clutter_x11_get_stage_window (CLUTTER_STAGE (stage));
-	display = clutter_x11_get_default_display ();
-	screen = clutter_x11_get_default_screen ();
-	switch (position) {
-		case GNOME_APP_POSITION_CENTER:
-			width = XDisplayWidth (display, screen);
-			height = XDisplayHeight (display, screen);
-			clutter_actor_get_size (stage, &stage_width, &stage_height);
-			x = (width - stage_width) / 2;
-			y = (height - stage_height) / 2;
-			if (x < 0)
-				x = 0;
-			if (y < 0)
-				y = 0;
-			XMoveWindow (display, xwindow, x, y);
-			break;
-		case GNOME_APP_POSITION_MOUSE:
-			break;
-		default:
-			break;
-	}
-}
-
-void
-gnome_app_stage_set_position (ClutterActor *stage, gint position)
-{
-	g_signal_connect (stage, "show", G_CALLBACK (set_position_on_show), (gpointer) position);
 }
 
 static gboolean

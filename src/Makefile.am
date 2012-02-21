@@ -21,11 +21,11 @@ noinst_PROGRAMS =      \
 	$(NULL)
 
 gnome_app_store_SOURCES =        \
+	gnome-app-stage.c gnome-app-stage.h \
 	gnome-app-info-icon.c gnome-app-info-icon.h  \
 	gnome-app-login.c gnome-app-login.h \
 	gnome-app-register.c gnome-app-register.h \
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
-	gnome-app-application.c gnome-app-application.h \
 	gnome-app-frame-ui.c gnome-app-frame-ui.h \
 	gnome-app-score-ui.c gnome-app-score-ui.h \
 	gnome-app-icon-view.c gnome-app-icon-view.h \

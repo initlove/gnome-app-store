@@ -64,6 +64,7 @@ category_name_match (const gchar *name, const gchar *category)
 static void
 setup_category (OcsBackend *ocs_backend, GList *results_data)
 {
+	OcsBackendPrivate *priv;
 	const gchar **default_categories;
 	GString *ids [100];	/*FIXME: */
 	gchar *categories [100];
@@ -75,6 +76,7 @@ setup_category (OcsBackend *ocs_backend, GList *results_data)
 	gboolean match;
 	gint other;
 
+	priv = ocs_backend->priv;
 	default_categories = open_app_get_default_categories ();
 	for (i = 0; default_categories [i]; i++) {
 		ids [i] = NULL;
@@ -118,7 +120,7 @@ setup_category (OcsBackend *ocs_backend, GList *results_data)
 
 	for (i = 0; default_categories [i]; i++) {
 		if (ids [i]) {
-			g_hash_table_insert (ocs_backend->priv->categories, g_strdup (default_categories [i]), ids [i]->str);
+			g_hash_table_insert (priv->categories, g_strdup (default_categories [i]), ids [i]->str);
 			g_string_free (ids [i], FALSE);
 		}
 	}
@@ -159,9 +161,11 @@ ocs_get_categories_by_name (OcsBackend *backend, const gchar *category_name)
 {
 	g_return_val_if_fail (category_name, NULL);
 
+	OcsBackendPrivate *priv;
 	const gchar *val;
 
-	val = (const gchar *) g_hash_table_lookup (backend->priv->categories, category_name);
+	priv = backend->priv;
+	val = (const gchar *) g_hash_table_lookup (priv->categories, category_name);
 /*TODO: if the category group is empty, we set the ids  to -1,
 	in this case, the return value will be empty!
 */
@@ -307,29 +311,49 @@ ocs_backend_class_init (OcsBackendClass *klass)
 const gchar *
 ocs_backend_get_server_uri (OcsBackend *backend)
 {
-	return (const gchar *) backend->priv->server_uri;
+	OcsBackendPrivate *priv;
+
+	priv = backend->priv;
+
+	return (const gchar *) priv->server_uri;
 }
 
 const gchar *
 ocs_backend_get_username (OcsBackend *backend)
 {
-	return (const gchar *) backend->priv->username;
+	OcsBackendPrivate *priv;
+
+	priv = backend->priv;
+
+	return (const gchar *) priv->username;
 }
 
 const gchar *
 ocs_backend_get_password (OcsBackend *backend)
 {
-	return (const gchar *) backend->priv->password;
+	OcsBackendPrivate *priv;
+
+	priv = backend->priv;
+
+	return (const gchar *) priv->password;
 }
 
 const SoupSession *
 ocs_backend_get_session (OcsBackend *backend)
 {
-	return (const SoupSession *) backend->priv->session;
+	OcsBackendPrivate *priv;
+
+	priv = backend->priv;
+
+	return (const SoupSession *) priv->session;
 }
 
 const gchar *
 ocs_backend_get_cache_dir (OcsBackend *backend)
 {
-	return (const gchar *) backend->priv->cache_dir;
+	OcsBackendPrivate *priv;
+
+	priv = backend->priv;
+
+	return (const gchar *) priv->cache_dir;
 }

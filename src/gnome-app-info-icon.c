@@ -15,7 +15,7 @@ Author: David Liang <dliang@novell.com>
 #include <clutter/clutter.h>
 #include "open-app-utils.h"
 #include "gnome-app-task.h"
-#include "gnome-app-application.h"
+#include "gnome-app-stage.h"
 #include "gnome-app-ui-utils.h"
 #include "gnome-app-info-icon.h"
 
@@ -78,6 +78,7 @@ on_info_icon_event (ClutterActor *actor,
 {
 	GnomeAppInfoIcon *info_icon;
 	GnomeAppInfoIconPrivate *priv;
+	GnomeAppStage *app_stage;
 	OpenResult *info;
 
 	info_icon = GNOME_APP_INFO_ICON (userdata);
@@ -85,8 +86,8 @@ on_info_icon_event (ClutterActor *actor,
 	switch (event->type)
 	{
 		case CLUTTER_BUTTON_PRESS:
-			//TODO
-//			gnome_app_application_load (app, UI_TYPE_INFO_PAGE, priv->info);  
+			app_stage = gnome_app_stage_get_default ();
+			gnome_app_stage_load (app_stage, "GnomeAppInfoPage", "info", priv->info, NULL);
 			break;
 		case CLUTTER_ENTER:
 			clutter_actor_set_scale (actor, 1.5, 1.5);

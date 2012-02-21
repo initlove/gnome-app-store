@@ -39,20 +39,19 @@ typedef struct _GnomeAppRegisterPrivate GnomeAppRegisterPrivate;
 
 struct _GnomeAppRegister
 {
-	GObject parent_instance;
+	ClutterGroup parent_instance;
 	GnomeAppRegisterPrivate	*priv;
 };
 
 struct _GnomeAppRegisterClass
 {
-        GObjectClass parent_class;
+        ClutterGroupClass parent_class;
 	/* signal */
 	void (*regist) (GnomeAppRegister *self);
 };
 
 GType			gnome_app_register_get_type              (void);
 GnomeAppRegister *	gnome_app_register_new			(void);
-void			gnome_app_register_run	               	(GnomeAppRegister *regist);
 
 G_END_DECLS
 

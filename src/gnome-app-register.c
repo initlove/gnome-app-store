@@ -20,7 +20,7 @@ Author: David Liang <dliang@novell.com>
 #include "open-app-utils.h"
 #include "gnome-app-task.h"
 #include "gnome-app-ui-utils.h"
-#include "gnome-app-login.h"
+#include "gnome-app-stage.h"
 #include "gnome-app-register.h"
 
 struct _GnomeAppRegisterPrivate
@@ -43,20 +43,17 @@ enum
 
 static guint register_signals[LAST_SIGNAL] = { 0, };
 
-G_DEFINE_TYPE (GnomeAppRegister, gnome_app_register, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GnomeAppRegister, gnome_app_register, CLUTTER_TYPE_GROUP)
 
 G_MODULE_EXPORT gboolean
 on_back_button_press (ClutterActor *actor,
 		ClutterEvent *event,
 		gpointer      data)
 {
-	GnomeAppRegister *regist;
-	GnomeAppLogin *login;
+	GnomeAppStage *app_stage;
 
-	login = gnome_app_login_new ();
-	gnome_app_login_run (login);
-	regist = GNOME_APP_REGISTER (data);
-	g_object_unref (regist);
+	app_stage = gnome_app_stage_get_default ();
+	gnome_app_stage_load (app_stage, "GnomeAppLogin", NULL);
 
 	return FALSE;
 }
@@ -78,8 +75,7 @@ register_callback (gpointer userdata, gpointer func_result)
 	if (open_results_get_status (results)) {
 //TODO: while the *info set, clean it if the related entry was changed.
 //	should done it by gnome_app_entry_add_connector 
-//TODO: 
-printf ("You should login you email to confirm the regist\n");
+		printf ("You should login you email to confirm the regist\n");
 	} else {
 		val = open_results_get_meta (results, "statuscode");
 		code = atoi (val);
@@ -189,12 +185,52 @@ static void
 gnome_app_register_init (GnomeAppRegister *regist)
 {
 	GnomeAppRegisterPrivate *priv;
+	ClutterActor *main_ui;
+	ClutterActor *username_entry;
+	ClutterActor *password_entry;
+	ClutterActor *firstname_entry;
+	ClutterActor *lastname_entry;
+	ClutterActor *email_entry;
+	ClutterActor *back_button;
+	ClutterActor *register_button;
+	gchar *filename;
 
 	regist->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (regist,
 	                                                 GNOME_APP_TYPE_REGISTER,
 	                                                 GnomeAppRegisterPrivate);
+	priv->script = gnome_app_script_new_from_file ("app-register");
+	if (!priv->script) {
+		return;
+	}
 
-	priv->script = NULL;
+	clutter_script_connect_signals (priv->script, regist);
+
+	clutter_script_get_objects (priv->script,
+			"app-register", &main_ui,
+			"username-entry", &username_entry,
+			"password-entry", &password_entry,
+			"firstname-entry", &firstname_entry,
+			"lastname-entry", &lastname_entry,
+			"email-entry", &email_entry,
+			"back", &back_button,
+			"register", &register_button,
+			NULL);
+
+	gnome_app_entry_binding (username_entry);
+	gnome_app_entry_binding (password_entry);
+	gnome_app_entry_binding (firstname_entry);
+	gnome_app_entry_binding (lastname_entry);
+	gnome_app_entry_binding (email_entry);
+	gnome_app_button_binding (back_button);
+	gnome_app_button_binding (register_button);
+
+	/* TODO: remove it , reason explained in gnome-app-login 
+	filename = open_app_get_pixmap_uri ("login");
+	gnome_app_actor_add_background (CLUTTER_ACTOR (regist), filename);
+	g_free (filename);
+	*/
+
+	clutter_container_add_actor (CLUTTER_CONTAINER (regist), main_ui);
 }
 
 static void
@@ -283,64 +319,8 @@ GnomeAppRegister *
 gnome_app_register_new (void)
 {
 	GnomeAppRegister *regist;
-	GnomeAppRegisterPrivate *priv;
-	GnomeAppStore *store;
-	ClutterActor *username_entry;
-	ClutterActor *password_entry;
-	ClutterActor *firstname_entry;
-	ClutterActor *lastname_entry;
-	ClutterActor *email_entry;
-	ClutterActor *back_button;
-	ClutterActor *register_button;
 
 	regist = g_object_new (GNOME_APP_TYPE_REGISTER, NULL);
-	priv = regist->priv;
-	priv->script = gnome_app_script_new_from_file ("app-register");
-	if (!priv->script) {
-		g_object_unref (regist);
-		return NULL;
-	}
-
-	clutter_script_connect_signals (priv->script, regist);
-
-	clutter_script_get_objects (priv->script,
-			"username-entry", &username_entry,
-			"password-entry", &password_entry,
-			"firstname-entry", &firstname_entry,
-			"lastname-entry", &lastname_entry,
-			"email-entry", &email_entry,
-			"back", &back_button,
-			"register", &register_button,
-			NULL);
-
-	gnome_app_entry_binding (username_entry);
-	gnome_app_entry_binding (password_entry);
-	gnome_app_entry_binding (firstname_entry);
-	gnome_app_entry_binding (lastname_entry);
-	gnome_app_entry_binding (email_entry);
-	gnome_app_button_binding (back_button);
-	gnome_app_button_binding (register_button);
 
 	return regist;
-}
-
-void
-gnome_app_register_run (GnomeAppRegister *regist)
-{
-	GnomeAppRegisterPrivate *priv;
-	ClutterActor *stage;
-	gchar *filename;
-
-	priv = regist->priv;
-	
-	stage = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "app-register"));
-
-	gnome_app_stage_remove_decorate (stage);
-	gnome_app_stage_set_position (stage, GNOME_APP_POSITION_CENTER);
-	
-	filename = open_app_get_pixmap_uri ("login");
-	gnome_app_actor_add_background (stage, filename);
-	g_free (filename);
-
-	clutter_actor_show (stage);
 }
