@@ -487,13 +487,26 @@ gnome_app_script_preload (ClutterScript *script)
 	GList *l;
 	ClutterActor *actor;
 	const gchar *raw;
+	const gchar *real;
 
 	for (l = clutter_script_list_objects (script); l; l = l->next) {
 		actor = CLUTTER_ACTOR (l->data);
 		if (CLUTTER_IS_TEXT (actor)) {
 			raw = clutter_text_get_text (CLUTTER_TEXT (actor));
+			/*
+			 * Bad, all because of script did not recognize the po file.
+			 * set_text will finalize the content of clutter_text first
+			 * if we set_text by get_text,
+			 * the pointer will be 'wide'...
+			 * so does gtk_label_set_label.
+			 *
+			 * It is the bug of clutter and gtk, 
+			 *  	altough it may not worth to fix it ..
+			 */
 			if (raw && raw [0]) {
-				clutter_text_set_text (CLUTTER_TEXT (actor), _(raw));
+				real = _(raw);
+				if (raw != real)
+					clutter_text_set_text (CLUTTER_TEXT (actor), real);
 			}
 		}
 	}
@@ -506,6 +519,7 @@ gnome_app_script_new_from_file (const gchar *script_name)
 	GError *error;
 	gchar *filename;
 	gint i, len;
+	/*TODO */
 	const gchar *path [] = {
 		"/home/dliang/gnome-app-store/pixmaps/", 
 		NULL};

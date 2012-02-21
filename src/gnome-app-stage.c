@@ -196,7 +196,12 @@ gnome_app_stage_init (GnomeAppStage *app_stage)
 	clutter_container_add_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (priv->background));
 //	clutter_stage_set_title (CLUTTER_STAGE (app_stage), _("AppStore"));
         g_signal_connect (app_stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
-
+#if 0
+	//DEBUG
+	gnome_app_stage_load (app_stage,
+				"GnomeAppFrameUI",
+				NULL);
+#endif
 	auth_valid (app_stage);
 }
 
