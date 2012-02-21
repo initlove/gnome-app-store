@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-16 12:17+0800\n"
+"POT-Creation-Date: 2012-02-21 15:59+0800\n"
 "PO-Revision-Date: 2011-10-04 10:36+0800\n"
 "Last-Translator: liangchenye@gmail.com\n"
 "Language-Team: Liangchenye <liangchenye@gmail.com>\n"
@@ -15,67 +15,63 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/gnome-app-login.c:327
+#: ../src/gnome-app-login.c:190
 msgid "< user name >"
 msgstr "< 用户名 >"
 
-#: ../src/gnome-app-login.c:329
+#: ../src/gnome-app-login.c:192
 msgid "< password >"
 msgstr "< 密码 >"
 
-#: ../src/gnome-app-comment.c:235
+#: ../src/gnome-app-comment.c:239
 msgid "Cancel"
 msgstr "取消"
 
-#: ../src/gnome-app-comment.c:238
+#: ../src/gnome-app-comment.c:242
 msgid "Submit"
 msgstr "提交"
 
-#: ../src/gnome-app-comment.c:245 ../src/gnome-app-comment.c:420
+#: ../src/gnome-app-comment.c:249 ../src/gnome-app-comment.c:403
 msgid "Reply"
 msgstr "回复"
 
-#: ../src/gnome-app-comment.c:344
+#: ../src/gnome-app-comment.c:335
 #, c-format
 msgid "by %s"
 msgstr ""
 
-#: ../src/gnome-app-comment.c:351
+#: ../src/gnome-app-comment.c:342
 #, c-format
 msgid "on: %10s"
 msgstr ""
 
-#: ../src/gnome-app-message-ui.c:330
+#: ../src/gnome-app-message-ui.c:314
 msgid "(No message)"
 msgstr "（无信息)"
 
-#: ../src/gnome-app-application.c:100
-msgid "AppStore"
-msgstr "应用超市"
-
-#: ../src/gnome-app-info-page.c:318
+#: ../src/gnome-app-info-page.c:377
 msgid "- Remove Fan"
 msgstr "- 取消关注"
 
-#: ../src/gnome-app-info-page.c:321
+#: ../src/gnome-app-info-page.c:380
 msgid "+ Add Fan"
 msgstr "+ 添加关注"
 
-#: ../src/gnome-app-info-page.c:468
+#: ../src/gnome-app-info-page.c:535
 msgid "Download"
 msgstr "下载"
 
-#: ../src/gnome-app-info-page.c:619 ../src/gnome-app-info-page.c:764
+#: ../src/gnome-app-info-page.c:669 ../src/gnome-app-info-page.c:789
 #, c-format
 msgid "%d fans"
 msgstr "%d 关注"
 
-#: ../src/gnome-app-info-page.c:626 ../src/gnome-app-info-page.c:758
+#: ../src/gnome-app-info-page.c:676 ../src/gnome-app-info-page.c:781
 #, c-format
 msgid "%d downloads"
 msgstr "%d 下载"
 
-#: ../src/gnome-app-info-page.c:768
+#: ../src/gnome-app-info-page.c:793
 #, c-format
 msgid "%s comments"
 msgstr "%s 评论"
@@ -85,50 +81,76 @@ msgstr "%s 评论"
 msgid "%d Friends"
 msgstr "%d 好友"
 
-#: ../src/gnome-app-frame-ui.c:96
+#: ../src/gnome-app-frame-ui.c:93
 #, c-format
 msgid "%d apps"
 msgstr "%d 应用"
 
-#: ../common/open-app-utils.c:241
+#: ../common/open-app-utils.c:249
 msgid "Accessories"
 msgstr "辅助"
 
-#: ../common/open-app-utils.c:241
+#: ../common/open-app-utils.c:249
 msgid "Games"
 msgstr "游戏"
 
-#: ../common/open-app-utils.c:241
+#: ../common/open-app-utils.c:249
 msgid "Graphics"
 msgstr "图像"
 
-#: ../common/open-app-utils.c:241
+#: ../common/open-app-utils.c:249
 msgid "Internet"
 msgstr "网络"
 
-#: ../common/open-app-utils.c:241
+#: ../common/open-app-utils.c:249
 msgid "Office"
 msgstr "办公"
 
-#: ../common/open-app-utils.c:242
+#: ../common/open-app-utils.c:250
 msgid "Programming"
 msgstr "开发"
 
-#: ../common/open-app-utils.c:242
+#: ../common/open-app-utils.c:250
 msgid "Sound & Video"
 msgstr "声音 & 视频"
 
-#: ../common/open-app-utils.c:242
+#: ../common/open-app-utils.c:250
 msgid "System Tools"
 msgstr "系统工具"
 
-#: ../common/open-app-utils.c:242
+#: ../common/open-app-utils.c:250
 msgid "Universal Access"
 msgstr "通用访问"
 
-#: ../common/open-app-utils.c:243
+#: ../common/open-app-utils.c:251
 msgid "Other"
 msgstr "其他"
+
+#: ../common/open-app-utils.c:389
+msgid "It is not blank"
+msgstr "不是空字符串"
+
+#: ../common/open-app-utils.c:390
+msgid "Should not be blank"
+msgstr "请输入内容"
+
+#: ../common/open-app-utils.c:391
+msgid "Enter the valid email address"
+msgstr "请输入有效的邮箱地址"
+
+#: ../common/open-app-utils.c:392
+msgid "The password should be >=8 alphanumeric chars"
+msgstr "密码为8位以上（含）字母或数字"
+
+#: ../common/open-app-utils.c:399
+#, c-format
+msgid "The text should not be NULL"
+msgstr "字符不应当为空"
+
+#: ../common/open-app-utils.c:416
+#, c-format
+msgid "Cannot find the <%s> pattern\n"
+msgstr "找不到 <%s> 匹配规则\n"
 
 #: ../ui/app-login.json.h:1
 msgid "Autologin"
@@ -174,7 +196,7 @@ msgstr "评论"
 msgid "DOWNLOAD"
 msgstr "下载"
 
-#: ../ui/frame-ui.json.h:1
+#: ../ui/app-frame-ui.json.h:1
 msgid "Type to search..."
 msgstr "搜索.."
 
@@ -223,22 +245,17 @@ msgid "username"
 msgstr "用户名"
 
 #: ../ui/app-info-page.json.h:1
-msgid "Add to fan"
-msgstr "添加关注"
-
-#: ../ui/app-info-page.json.h:2
 msgid "Author name"
 msgstr "作者"
 
-#: ../ui/app-info-page.json.h:3
+#: ../ui/app-info-page.json.h:2
 msgid "Comment"
 msgstr "评论"
 
-#: ../ui/app-info-page.json.h:4
+#: ../ui/app-info-page.json.h:3
 msgid "comment here"
 msgstr "在这里评论"
 
-#: ../ui/app-info-page.json.h:5
+#: ../ui/app-info-page.json.h:4
 msgid "license"
 msgstr "许可证"
-

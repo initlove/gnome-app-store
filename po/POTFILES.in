@@ -8,7 +8,7 @@ src/gnome-app-score-ui.c
 src/gnome-app-comment.c
 src/gnome-app-comments.c
 src/gnome-app-message-ui.c
-src/gnome-app-application.c
+src/gnome-app-stage.c
 src/app_store.c
 src/gnome-app-info-page.c
 src/gnome-app-register.c
@@ -23,7 +23,7 @@ common/open-app-utils.c
 [type: gettext/script]ui/app-comment.json
 [type: gettext/script]ui/message-info-page.json
 [type: gettext/script]ui/app-info-page-actions.json
-[type: gettext/script]ui/frame-ui.json
+[type: gettext/script]ui/app-frame-ui.json
 [type: gettext/script]ui/app-register.json
 [type: gettext/script]ui/app-login.json
 [type: gettext/script]ui/app-account-ui.json
