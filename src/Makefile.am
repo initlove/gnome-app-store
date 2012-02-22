@@ -21,6 +21,7 @@ noinst_PROGRAMS =      \
 	$(NULL)
 
 gnome_app_store_SOURCES =        \
+	gnome-app-texture.c gnome-app-texture.h \
 	gnome-app-stage.c gnome-app-stage.h \
 	gnome-app-info-icon.c gnome-app-info-icon.h  \
 	gnome-app-login.c gnome-app-login.h \
@@ -87,6 +88,7 @@ test_message_LDADD =          \
 	$(GNOME_APP_STORE_LIBS)
 
 test_scroll_SOURCES = \
+	gnome-app-texture.c gnome-app-texture.h \
 	test_scroll.c
 
 test_scroll_LDADD =          \

@@ -102,6 +102,7 @@ GOBJECT_INTROSPECTION_CHECK([0.9.7])
 AC_CONFIG_FILES([
 Makefile
 pixmaps/Makefile
+pixmaps/spin/Makefile
 ui/Makefile
 common/Makefile
 liboasyncworker/Makefile

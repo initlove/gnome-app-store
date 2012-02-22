@@ -17,7 +17,7 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.
 
-   Author: Liang chenye <liangchenye@gmail.com>
+   Author: David Liang <dliang@gmail.com>
 */
 
 #include <libsoup/soup.h>
@@ -251,6 +251,16 @@ open_app_get_default_categories ()
 		N_("Other"), NULL
 	};
 	return defaults;
+}
+
+gchar *
+open_app_get_spin_dir (void)
+{
+	gchar *dir;
+
+	dir = g_build_filename (PIXMAPSDIR, "spin", NULL);
+
+	return dir;
 }
 
 /*TODO: make a hash? return const gchar *? */

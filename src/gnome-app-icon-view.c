@@ -218,7 +218,6 @@ gnome_app_icon_view_new (void)
 	GnomeAppIconView *icon_view;
 
 	icon_view = g_object_new (GNOME_APP_TYPE_ICON_VIEW, NULL);
-//	clutter_actor_hide (CLUTTER_ACTOR (icon_view));
 
 	return icon_view;
 }

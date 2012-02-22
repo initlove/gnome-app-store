@@ -545,3 +545,4 @@ gnome_app_script_new_from_file (const gchar *script_name)
 
 	return script;
 }
+

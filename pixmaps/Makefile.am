@@ -1,6 +1,9 @@
+SUBDIRS = spin
+
 pixmapsdir = $(datadir)/pixmaps/@PACKAGE@
 
 pixmaps_DATA =	\
+	gnome-spinner.png \
 	frame-background.png \
 	login.png \
 	missing.png \
@@ -30,5 +33,3 @@ pixmaps_DATA =	\
 	weather-clear-night.png \
 	weather-clear.png \
 	$(NULL)
-
-EXTRA_DIST = $(pixmaps_DATA)

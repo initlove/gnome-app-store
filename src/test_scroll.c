@@ -2,6 +2,7 @@
 #include <math.h>
 #include <gmodule.h>
 #include <clutter/clutter.h>
+#include "gnome-app-texture.h"
 
 #define RECT_WIDTH      400
 #define RECT_HEIGHT     300
@@ -72,28 +73,38 @@ main (int argc, gchar **argv)
   ClutterActor *stage;
   ClutterActor *scroll;
   ClutterAction *action;
-  gint i;
+  gfloat width, height;
+  gchar *filename = "/home/dliang/gnome-app-store/pixmaps/spin";
 
   if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
     return 1;
+        
+  clutter_threads_init ();
 
   stage = clutter_stage_new ();
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Scrolling");
   clutter_actor_set_size (stage, 800, 600);
   g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  scroll = gnome_app_dtexture_new_from_dir (filename);
+  clutter_container_add_actor (CLUTTER_CONTAINER (stage), scroll);
+  clutter_actor_show (scroll);
+  gnome_app_texture_start (scroll);
 
+//
+//clutter_actor_set_clip (pixmap, 0, 0, width/2, height/2);
+#if 0
   ClutterActor *text;
   gchar *str = NULL;
   gint len;
 
-  g_file_get_contents ("/tmp/text", &str, &len, NULL);
+  g_file_get_contents ("test_scroll.c", &str, &len, NULL);
   printf ("str is %s\n", str);
   text = clutter_text_new ();
   clutter_actor_set_width (text, 400);
   clutter_text_set_line_wrap (CLUTTER_TEXT (text), TRUE);
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), text);
   clutter_text_set_text (CLUTTER_TEXT (text), str);
-
+#endif
   clutter_actor_show (stage);
 
   clutter_main ();

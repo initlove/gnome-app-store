@@ -25,15 +25,18 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-icon-view.h"
 #include "gnome-app-ui-utils.h"
+#include "gnome-app-texture.h"
 
 struct _GnomeAppFrameUIPrivate
 {
         ClutterScript	*script;
 	ClutterActor	*account;
 	ClutterActor	*categories;
+	ClutterActor 	*spin;
         GnomeAppIconView *icon_view;
 	GnomeAppStore *store;
 
+	gboolean	lock;
 	gboolean	is_search_enabled;
 	gboolean	is_search_hint_enabled;
 	gint		pagesize;
@@ -48,6 +51,42 @@ enum
 };
 
 G_DEFINE_TYPE (GnomeAppFrameUI, gnome_app_frame_ui, CLUTTER_TYPE_GROUP)
+
+static gboolean
+is_frame_ui_locked (GnomeAppFrameUI *ui)
+{
+	GnomeAppFrameUIPrivate *priv;
+
+	priv = ui->priv;
+
+	return priv->lock;
+}
+
+static void
+frame_ui_lock (GnomeAppFrameUI *ui)
+{
+	GnomeAppFrameUIPrivate *priv;
+
+	priv = ui->priv;
+	if (priv->lock)
+		g_critical ("Should not lock more than once!");
+	priv->lock = TRUE;
+	gnome_app_texture_start (GNOME_APP_TEXTURE (priv->spin));
+	clutter_actor_hide (CLUTTER_ACTOR (priv->icon_view));
+}
+
+static void
+frame_ui_unlock (GnomeAppFrameUI *ui)
+{
+	GnomeAppFrameUIPrivate *priv;
+
+	priv = ui->priv;
+	if (!priv->lock)
+		g_critical ("Should not unlock more than once!");
+	priv->lock = FALSE;
+	gnome_app_texture_stop (GNOME_APP_TEXTURE (priv->spin));
+	clutter_actor_show (CLUTTER_ACTOR (priv->icon_view));
+}
 
 static void
 frame_ui_load_results (GnomeAppFrameUI *ui, OpenResults *results)
@@ -130,6 +169,7 @@ task_callback (gpointer userdata, gpointer func_result)
 	results = OPEN_RESULTS (func_result);
 	ui = GNOME_APP_FRAME_UI (userdata);
 	frame_ui_load_results (ui, results);
+	frame_ui_unlock (ui);
 
 	return NULL;
 }
@@ -152,6 +192,7 @@ frame_ui_set_default_data (GnomeAppFrameUI *ui)
 				"page", "0",
 				NULL);
 	gnome_app_task_set_callback (task, task_callback);
+        frame_ui_lock (ui);
 	gnome_app_task_push (task);
 
 	g_free (pagesize);
@@ -197,6 +238,9 @@ on_search_entry_activate (ClutterActor *actor,
 {
 	const gchar *search;
 
+	if (is_frame_ui_locked (ui))
+		return;
+
 	search = clutter_text_get_text (CLUTTER_TEXT (actor));
 	if (open_app_pattern_match ("blank", search, NULL))
 		return;
@@ -210,6 +254,7 @@ on_search_entry_activate (ClutterActor *actor,
 
 	if (priv->task)
 		g_object_unref (priv->task);
+
         task = gnome_app_task_new (ui, "GET", "/v1/content/data");
 	/*We need to ref it right after task_new, as some task may finished fast cause of proxy */
 	priv->task = g_object_ref (priv->task);
@@ -219,6 +264,7 @@ on_search_entry_activate (ClutterActor *actor,
 				"page", "0",
 				NULL);
 	gnome_app_task_set_callback (task, task_callback);
+        frame_ui_lock (ui);
 	gnome_app_task_push (task);
 
 	g_free (pagesize);
@@ -235,7 +281,7 @@ on_search_entry_event (ClutterActor *actor,
 
 	ui = GNOME_APP_FRAME_UI (data);
 	priv = ui->priv;
-				
+
 	clutter_script_get_objects (priv->script,
 			"search-hint", &search_hint,
 			NULL);
@@ -253,9 +299,9 @@ on_search_entry_event (ClutterActor *actor,
 }
 
 static gboolean
-on_category_event (ClutterActor *actor,
-                ClutterEvent *event,
-                gpointer      data)
+on_category_button_press (ClutterActor *actor,
+   		ClutterEvent *event,
+		gpointer      data)
 {
 	GnomeAppFrameUI *ui;
 	GnomeAppFrameUIPrivate *priv;
@@ -267,29 +313,27 @@ on_category_event (ClutterActor *actor,
 
 	ui = GNOME_APP_FRAME_UI (data);
 	priv = ui->priv;
-        switch (event->type)
-        {
-        case CLUTTER_BUTTON_PRESS:
-		pagesize = g_strdup_printf ("%d", priv->pagesize);
-		name = (gchar *) g_object_get_data (G_OBJECT (actor), "category_name");
-		cids = gnome_app_store_get_cids_by_name (priv->store, name);
+	if (is_frame_ui_locked (ui))
+		return TRUE;
+		
+	pagesize = g_strdup_printf ("%d", priv->pagesize);
+	name = (gchar *) g_object_get_data (G_OBJECT (actor), "category_name");
+	cids = gnome_app_store_get_cids_by_name (priv->store, name);
 printf ("click on %s cids %s\n", name, cids);
 /*TODO where to final the task */
-		if (priv->task)
-			g_object_unref (priv->task);
-        	task = gnome_app_task_new (ui, "GET", "/v1/content/data");
-		priv->task = g_object_ref (task);
-		gnome_app_task_add_params (task,
-				"categories", cids,
-				"pagesize", pagesize,
-				"page", "0",
-				NULL);
-		gnome_app_task_set_callback (task, task_callback);
-		gnome_app_task_push (task);
-
-		g_free (pagesize);
-		break;
-	}
+	if (priv->task)
+		g_object_unref (priv->task);
+        task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+	priv->task = g_object_ref (task);
+	gnome_app_task_add_params (task,
+			"categories", cids,
+			"pagesize", pagesize,
+			"page", "0",
+			NULL);
+	gnome_app_task_set_callback (task, task_callback);
+        frame_ui_lock (ui);
+	gnome_app_task_push (task);
+	g_free (pagesize);
 
 	return TRUE;
 }
@@ -338,6 +382,13 @@ on_icon_press (ClutterActor *actor,
 	ui = GNOME_APP_FRAME_UI (data);
 	priv = ui->priv;
 
+	/*TODO: if it was locked, and the user clicked again and again,
+	 * it means we should make the task priority higher 
+	 * 
+	 */
+	if (is_frame_ui_locked (ui))
+		return FALSE;
+
 	clutter_script_get_objects (priv->script,
 			"prev-icon", &prev,
 			"next-icon", &next,
@@ -365,12 +416,12 @@ on_icon_press (ClutterActor *actor,
 		} else if (actor == next) {
 			cur_page ++;
 		}
-        
 		task = gnome_app_task_copy (priv->task);
 		g_object_unref (priv->task);
 		priv->task = g_object_ref (task);
 		page = g_strdup_printf ("%d", cur_page);
         	gnome_app_task_add_param (task, "page", page);
+        	frame_ui_lock (ui);
 		gnome_app_task_push (task);
 		g_free (page);
 	}
@@ -405,7 +456,7 @@ create_category_list (GnomeAppFrameUI *ui)
 		clutter_actor_set_reactive (actor, TRUE);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), col, row);
 		row ++;
-		g_signal_connect (actor, "event", G_CALLBACK (on_category_event), ui);
+		g_signal_connect (actor, "button-press-event", G_CALLBACK (on_category_button_press), ui);
 	}
 
 	return layout_box;
@@ -419,6 +470,8 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	ClutterActor *account_group;
 	ClutterActor *icon_view_group;
 	ClutterActor *categories_group;
+	ClutterActor *prev;
+	ClutterActor *next;
 
 	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
 	                                                 GNOME_APP_TYPE_FRAME_UI,
@@ -426,6 +479,7 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	priv->is_search_enabled = FALSE;
 	priv->is_search_hint_enabled = TRUE;
 	priv->task = NULL;
+	priv->lock = FALSE;
 
         priv->script = gnome_app_script_new_from_file ("app-frame-ui");
         if (!priv->script) {
@@ -437,6 +491,8 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 			"account-group", &account_group,
 			"categories", &categories_group,
 			"icon-view", &icon_view_group,
+			"prev-icon", &prev,
+			"next-icon", &next,
 			NULL);
 	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (main_ui));
 
@@ -452,6 +508,18 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	priv->icon_view = gnome_app_icon_view_new ();
 	priv->pagesize = gnome_app_icon_view_get_pagesize (priv->icon_view);
 	clutter_container_add_actor (CLUTTER_CONTAINER (icon_view_group), CLUTTER_ACTOR (priv->icon_view));
+
+	gchar *spin_dir;
+	gfloat prev_x, prev_y;
+	gfloat next_x, next_y;
+
+	spin_dir = open_app_get_spin_dir ();
+	priv->spin = CLUTTER_ACTOR (gnome_app_dtexture_new_from_dir (spin_dir));
+	g_free (spin_dir);
+	clutter_container_add_actor (CLUTTER_CONTAINER (icon_view_group), CLUTTER_ACTOR (priv->spin));
+	clutter_actor_get_position (prev, &prev_x, &prev_y);
+	clutter_actor_get_position (next, &next_x, &next_y);
+	clutter_actor_set_position (priv->spin, (prev_x + next_x)/2, (prev_y + next_y)/2);
 
 	frame_ui_set_default_data (ui);
 }
