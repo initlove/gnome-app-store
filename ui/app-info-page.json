@@ -3,15 +3,14 @@
     "id" : "info-page",
     "type" : "ClutterGroup",
     "width" : 1000,
-    "height" : 700,
     "reactive" : true,
     "children" : [
       {
         "id" : "big-pic",
         "type" : "ClutterTexture",
-        "x" : 55,
+        "x" : 60,
         "y" : 40,
-        "width" : 380,
+        "width" : 340,
         "height" : 300,
         "opacity" : 255
       },
@@ -174,9 +173,9 @@
       {
         "id" : "comments-details",
 	"type" : "ClutterGroup",
-        "x" : 550,
+        "x" : 500,
         "y" : 460,
-	"width" : 300,
+	"width" : 360,
 	"height" : 400
       },
       {
@@ -201,8 +200,7 @@
 	"type" : "ClutterGroup",
         "x" : 50,
         "y" : 360,
-	"width" : 400,
-	"height" : 300
+	"width" : 360
       }
     ]
   }

@@ -59,6 +59,68 @@ static void	gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, Open
 static void	draw_pic (GnomeAppInfoPage *info_page);
 
 static void
+on_drag_end (ClutterDragAction   *action,
+		ClutterActor        *actor,
+		gfloat               event_x,
+		gfloat               event_y,
+		ClutterModifierType  modifiers,
+		GnomeAppInfoPage *info_page)
+{
+	gfloat total_height;
+	gfloat visual_height;
+	gfloat x, y;
+/*TODO: Problem in getting the real allocated height and the visual height */
+        y = clutter_actor_get_y (actor);
+	total_height = clutter_actor_get_height (actor);
+	visual_height = 700;
+
+	if (y > 0) {
+  		clutter_actor_animate (actor, CLUTTER_EASE_OUT_BOUNCE, 250,
+	 			"y", 0.0, NULL);
+		return;
+	}
+
+	if (y < (-1.0 * total_height + visual_height)) {
+  		clutter_actor_animate (actor, CLUTTER_EASE_OUT_BOUNCE, 250,
+	 			"y", -1.0 * total_height + 700, NULL);
+		return;
+	}
+
+}
+
+static void
+on_drag_motion (ClutterDragAction   *action,
+		ClutterActor        *actor,
+		gfloat               delta_x,
+		gfloat               delta_y,
+		GnomeAppInfoPage *info_page)
+{
+//printf ("motion %f %f\n", delta_x, delta_y);
+}
+
+static void
+on_drag_begin (ClutterDragAction   *action,
+		ClutterActor        *actor,
+		gfloat               event_x,
+		gfloat               event_y,
+		ClutterModifierType  modifiers,
+		GnomeAppInfoPage *info_page)
+{
+	return;
+	gfloat x, y;
+	x = clutter_actor_get_x (actor);
+        y = clutter_actor_get_y (actor);
+	printf ("event x %f y %f\n", event_x, event_y);
+	printf ("actor %f %f\n", x, y);
+
+	if (y > 0) {
+		clutter_actor_animate (actor, CLUTTER_EASE_OUT_BOUNCE, 100,
+				"y", 0.0, NULL);
+	}
+}
+
+
+static void
 gnome_app_info_page_init (GnomeAppInfoPage *info_page)
 {
 	GnomeAppInfoPagePrivate *priv;
@@ -90,11 +152,18 @@ gnome_app_info_page_init (GnomeAppInfoPage *info_page)
 			"return-button", &return_button,
 			NULL);
 
+	clutter_actor_set_reactive (CLUTTER_ACTOR (info_page), TRUE);
+	clutter_actor_set_clip_to_allocation (CLUTTER_ACTOR (info_page), TRUE);
 	clutter_container_add_actor (CLUTTER_CONTAINER (info_page), main_ui);
 	action = clutter_drag_action_new ();
 	clutter_actor_add_action (CLUTTER_ACTOR (info_page), action);
 	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (action),
 		CLUTTER_DRAG_Y_AXIS);
+	        
+	g_signal_connect (action, "drag-end", G_CALLBACK (on_drag_end), info_page);
+	g_signal_connect (action, "drag-motion", G_CALLBACK (on_drag_motion), info_page);
+	g_signal_connect (action, "drag-begin", G_CALLBACK (on_drag_begin), info_page);
+
 
 	gnome_app_entry_binding (comment_entry);
 	gnome_app_button_binding (fan_button);
@@ -574,7 +643,7 @@ get_description_actor (const gchar *desc)
 	ClutterActor *text;
 
 	ret = clutter_group_new ();
-	clutter_actor_set_clip_to_allocation (ret, TRUE);
+//	clutter_actor_set_clip_to_allocation (ret, TRUE);
 
 	group = clutter_group_new ();
 	text = clutter_text_new ();
@@ -800,7 +869,6 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 	for (list = clutter_container_get_children (CLUTTER_CONTAINER (description)); list; list = list->next)
 		clutter_container_remove_actor (CLUTTER_CONTAINER (description), CLUTTER_ACTOR (list->data));
 	clutter_container_add_actor (CLUTTER_CONTAINER (description), CLUTTER_ACTOR (description_actor));
-
 	/*clean the comments_details .. */
 	for (list = clutter_container_get_children (CLUTTER_CONTAINER (comments_details)); list; list = list->next)
 		clutter_container_remove_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (list->data));

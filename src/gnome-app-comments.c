@@ -14,7 +14,9 @@ Author: David Liang <dliang@novell.com>
 */
 #include <clutter/clutter.h>
 #include "open-result.h"
+#include "open-app-utils.h"
 #include "gnome-app-task.h"
+#include "gnome-app-texture.h"
 #include "gnome-app-comment.h"
 #include "gnome-app-comments.h"
 
@@ -27,6 +29,7 @@ struct _GnomeAppCommentsPrivate
 	ClutterAction *action_y;
 	ClutterLayoutManager *layout;
 	ClutterActor *layout_box;
+	ClutterActor *spin;
 
 	/*This should get from comment actor*/
 	gint view_height;
@@ -35,10 +38,49 @@ struct _GnomeAppCommentsPrivate
 	gchar *content;
 	gchar *content2;
 
+	gboolean lock;
 	GnomeAppTask *task;
 };
 
+/* Properties */
+enum
+{
+	PROP_0,
+	PROP_LOCK_STATUS,
+	PROP_LAST
+};
+
 G_DEFINE_TYPE (GnomeAppComments, gnome_app_comments, CLUTTER_TYPE_GROUP)
+
+static void
+gnome_app_comments_set_lock (GnomeAppComments *comments, const gchar *str)
+{
+	g_return_if_fail (str);
+
+	GnomeAppCommentsPrivate *priv;
+	gboolean _lock;
+
+	if (strcmp (str, "lock") == 0)
+		_lock = TRUE;
+	else if (strcmp (str, "unlock") == 0)
+		_lock = FALSE;
+	else
+		return;
+
+	priv = comments->priv;
+	if (priv->lock == _lock) {
+		g_critical ("You should not %s more than once!\tFrameUI\n", str);
+		return;
+	}
+	priv->lock = _lock;
+	if (priv->lock) {
+		gnome_app_texture_start (GNOME_APP_TEXTURE (priv->spin));
+		clutter_actor_hide (CLUTTER_ACTOR (priv->layout_box));
+	} else {
+		gnome_app_texture_stop (GNOME_APP_TEXTURE (priv->spin));
+		clutter_actor_show (CLUTTER_ACTOR (priv->layout_box));
+	}
+}
 
 static void
 on_drag_end (ClutterDragAction   *action,
@@ -104,11 +146,20 @@ gnome_app_comments_init (GnomeAppComments *comments)
   
 	clutter_container_add_actor (CLUTTER_CONTAINER (comments), priv->layout_box);
 
-	priv->view_width = 300.0;
+	priv->view_width = 350.0;
 	priv->view_height = 600.0;
 	priv->content = NULL;
 	priv->content2 = NULL;
 	priv->task = NULL;
+	priv->lock = FALSE;
+
+	gchar *spin_dir;
+
+	spin_dir = open_app_get_spin_dir ();
+	priv->spin = CLUTTER_ACTOR (gnome_app_dtexture_new_from_dir (spin_dir));
+	g_free (spin_dir);
+	clutter_container_add_actor (CLUTTER_CONTAINER (comments), CLUTTER_ACTOR (priv->spin));
+	clutter_actor_set_position (priv->spin, priv->view_width/2, 50);
 }
 
 static void
@@ -134,13 +185,59 @@ gnome_app_comments_finalize (GObject *object)
 }
 
 static void
+gnome_app_comments_set_property (GObject      *object,
+		  		guint         prop_id,
+				const GValue *value,
+				GParamSpec   *pspec)
+{
+	GnomeAppComments *comments;
+	const gchar *str;
+
+	comments = GNOME_APP_COMMENTS (object);
+	switch (prop_id)
+	{
+		case PROP_LOCK_STATUS:
+			str = g_value_get_string (value);
+			if (!str)
+				return;
+			gnome_app_comments_set_lock (comments, str);
+			break;
+	}
+}
+
+static void
+gnome_app_comments_get_property (GObject      *object,
+		                guint         prop_id,
+		                GValue       *value,
+		                GParamSpec   *pspec)
+{
+        GnomeAppComments *comments;
+
+	comments = GNOME_APP_COMMENTS (object);
+	switch (prop_id)
+	{
+			
+	}
+}
+
+static void
 gnome_app_comments_class_init (GnomeAppCommentsClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+	object_class->set_property = gnome_app_comments_set_property;
+	object_class->get_property = gnome_app_comments_get_property;
 	object_class->dispose = gnome_app_comments_dispose;
 	object_class->finalize = gnome_app_comments_finalize;
 	 
+	g_object_class_install_property (object_class,
+			PROP_LOCK_STATUS,
+			g_param_spec_string ("lock-status",
+				"Lock Status",
+				"Lock Status",
+				NULL,
+				G_PARAM_READWRITE));
+
 	g_type_class_add_private (object_class, sizeof (GnomeAppCommentsPrivate));
 }
 

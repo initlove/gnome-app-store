@@ -63,7 +63,7 @@ is_frame_ui_locked (GnomeAppFrameUI *ui)
 	return priv->lock;
 }
 
-void
+static void
 gnome_app_frame_ui_set_lock (GnomeAppFrameUI *ui, const gchar *str)
 {
 	g_return_if_fail (str);

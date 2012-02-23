@@ -189,6 +189,7 @@ gnome_app_stage_init (GnomeAppStage *app_stage)
 
         gnome_app_stage_remove_decorate (CLUTTER_ACTOR (app_stage));
 	gnome_app_stage_set_position (CLUTTER_ACTOR (app_stage), GNOME_APP_STAGE_POSITION_CENTER);
+	clutter_actor_set_reactive (CLUTTER_ACTOR (app_stage), TRUE);
 
 	priv->background = clutter_texture_new ();
 	clutter_actor_set_opacity (priv->background, 128);

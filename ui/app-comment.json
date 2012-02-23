@@ -58,7 +58,7 @@
         "type" : "ClutterText",
 	"x" : 0,
 	"y" : 70,
-	"width" : 320,
+	"width" : 350,
         "font-name" : "Sans 12px",
         "color" : "black",
         "line-alignment" : "start",

@@ -81,8 +81,8 @@
       {
         "id" : "account-group",
         "type" : "ClutterGroup",
-        "x" : 700,
-	"y" : 10
+        "x" : 740,
+	"y" : 20
       },
       {
 	"id" : "icon-view", 

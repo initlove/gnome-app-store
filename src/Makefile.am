@@ -45,6 +45,7 @@ gnome_app_store_LDADD =          \
 	$(GNOME_APP_STORE_LIBS)
 
 test_comments_SOURCES = \
+	gnome-app-texture.c gnome-app-texture.h	\
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
 	gnome-app-comment.c gnome-app-comment.h \
 	gnome-app-comments.c gnome-app-comments.h \
