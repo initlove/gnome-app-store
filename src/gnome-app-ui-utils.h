@@ -34,6 +34,9 @@ void		gnome_app_entry_add_hint 		(ClutterActor *actor, const gchar *hint);
 void		gnome_app_check_box_binding		(ClutterActor *actor);
 void		gnome_app_check_box_add_connector 	(ClutterActor *actor, ClutterActor *connector);
 gboolean	gnome_app_check_box_get_selected 	(ClutterActor *actor);
+void		gnome_app_button_binding 		(ClutterActor *actor);
+void		gnome_app_select_button_binding		(ClutterActor *actor);
+void		gnome_app_select_button_set 		(ClutterActor *actor, gboolean selected);
 
 ClutterScript * gnome_app_script_new_from_file		(const gchar *script_name);
 

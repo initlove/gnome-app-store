@@ -33,6 +33,7 @@ struct _GnomeAppFrameUIPrivate
 	ClutterActor	*account;
 	ClutterActor	*categories;
 	ClutterActor 	*spin;
+	ClutterActor    *selected_button;
         GnomeAppIconView *icon_view;
 	GnomeAppStore *store;
 
@@ -318,7 +319,12 @@ on_category_button_press (ClutterActor *actor,
 	priv = ui->priv;
 	if (is_frame_ui_locked (ui))
 		return TRUE;
-		
+
+	if (priv->selected_button != actor) {
+		gnome_app_select_button_set (priv->selected_button, FALSE);
+		priv->selected_button = actor;
+		gnome_app_select_button_set (priv->selected_button, TRUE);
+	}
 	pagesize = g_strdup_printf ("%d", priv->pagesize);
 	name = (gchar *) g_object_get_data (G_OBJECT (actor), "category_name");
 	cids = gnome_app_store_get_cids_by_name (priv->store, name);
@@ -437,6 +443,7 @@ create_category_list (GnomeAppFrameUI *ui)
 	ClutterLayoutManager *layout;
 	ClutterActor *layout_box, *actor;
 	const GList *list;
+	const gchar **categories;
 	GList *l;
 	gchar *name;
 	gint col, row;
@@ -446,11 +453,10 @@ create_category_list (GnomeAppFrameUI *ui)
 	layout_box = clutter_box_new (layout);
 
 	col = row = 0;
-	const gchar **categories;
-
 	categories = open_app_get_default_categories ();
 	for (categories; *categories; categories ++) {
 		actor = clutter_text_new ();
+		gnome_app_select_button_binding (actor);
 		g_object_set_data (G_OBJECT (actor), "category_name", (gpointer) *categories);
 		clutter_text_set_editable (CLUTTER_TEXT (actor), FALSE);
 		name = _((gchar *)*categories);
@@ -482,6 +488,7 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	priv->is_search_hint_enabled = TRUE;
 	priv->task = NULL;
 	priv->lock = FALSE;
+	priv->selected_button = NULL;
 
         priv->script = gnome_app_script_new_from_file ("app-frame-ui");
         if (!priv->script) {

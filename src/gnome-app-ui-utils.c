@@ -349,6 +349,7 @@ on_gnome_app_button_paint (ClutterActor *actor,
 	ClutterActorBox allocation = { 0, };
 	gfloat width, height;
 	gint mouse_status;
+	gboolean selected;
 
 	clutter_actor_get_allocation_box (actor, &allocation);
 	clutter_actor_box_clamp_to_pixel (&allocation);
@@ -544,5 +545,62 @@ gnome_app_script_new_from_file (const gchar *script_name)
 	g_free (filename);
 
 	return script;
+}
+
+static void
+on_gnome_app_select_button_paint (ClutterActor *actor,
+		gpointer      userdata)
+{
+	/*TODO: may use better color */
+	ClutterActorBox allocation = { 0, };
+	gfloat width, height;
+	gboolean selected;
+	gint mouse_status;
+
+	clutter_actor_get_allocation_box (actor, &allocation);
+	clutter_actor_box_clamp_to_pixel (&allocation);
+	clutter_actor_box_get_size (&allocation, &width, &height);
+
+	selected = (gboolean) g_object_get_data (G_OBJECT (actor), "selected");
+	if (selected) {
+		cogl_set_source_color4ub (255, 255, 0, 64);
+		cogl_rectangle (-4, -4, width + 4, height + 4);
+		return;
+	}
+
+	mouse_status = (gint) g_object_get_data (G_OBJECT (actor), "mouse-status");
+	switch (mouse_status) {
+		case MOUSE_ENTER:
+			cogl_set_source_color4ub (255, 0, 255, 64);
+			cogl_rectangle (-4, -4, width + 4, height + 4);
+			break;
+	}
+
+}
+
+void
+gnome_app_select_button_binding (ClutterActor *actor)
+{
+	gchar *binding;
+
+	binding = g_object_get_data (G_OBJECT (actor), "binding");
+	if (binding)
+		return;
+	else
+		g_object_set_data (G_OBJECT (actor), "binding", (gpointer) "binding");
+
+	gnome_app_actor_add_scale_state (actor);
+
+	g_object_set_data (G_OBJECT (actor), "mouse-status", (gpointer) MOUSE_NONE);
+	g_signal_connect (actor, "enter-event", G_CALLBACK (on_gnome_app_widget_enter), actor);
+	g_signal_connect (actor, "leave-event", G_CALLBACK (on_gnome_app_widget_leave), actor);	
+	g_signal_connect (actor, "paint", G_CALLBACK (on_gnome_app_select_button_paint), NULL);
+}
+
+void
+gnome_app_select_button_set (ClutterActor *actor, gboolean selected)
+{
+	g_object_set_data (G_OBJECT (actor), "selected", (gpointer) selected);
+	clutter_actor_queue_redraw (actor);
 }
 
