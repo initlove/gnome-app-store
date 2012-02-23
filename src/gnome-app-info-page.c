@@ -163,9 +163,9 @@ gnome_app_info_page_init (GnomeAppInfoPage *info_page)
 	g_signal_connect (action, "drag-end", G_CALLBACK (on_drag_end), info_page);
 	g_signal_connect (action, "drag-motion", G_CALLBACK (on_drag_motion), info_page);
 	g_signal_connect (action, "drag-begin", G_CALLBACK (on_drag_begin), info_page);
-
-
+/*TODO the entry should be automatic extend .. */
 	gnome_app_entry_binding (comment_entry);
+	gnome_app_entry_add_hint (comment_entry, _("< comment here >"));
 	gnome_app_button_binding (fan_button);
 	gnome_app_button_binding (next_button);
 	gnome_app_button_binding (prev_button);
@@ -746,6 +746,7 @@ load_details_info_callback (gpointer userdata, gpointer func_result)
 		clutter_text_set_text (CLUTTER_TEXT (downloads), str);
 		g_free (str);
 
+		/*TODO: if no comments, no need to load the comment */
 		comments_details = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "comments-details"));
 		comments_details_actor = CLUTTER_ACTOR (gnome_app_comments_new_with_content (open_result_get (priv->info, "id"), NULL));
 		for (list = clutter_container_get_children (CLUTTER_CONTAINER (comments_details)); list; list = list->next)

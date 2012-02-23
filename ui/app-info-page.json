@@ -149,10 +149,12 @@
       {
 	"id" : "comment-entry",
 	"type" : "ClutterText",
-	"text" : "comment here",
+        "font-name" : "Sans 20px",
 	"selectable" : true,
 	"editable" : true,
 	"reactive" : true,
+        "line-wrap" : true,
+	"line-wrap-mode" : "word",
 	"x" : 550,
 	"y" : 300,
 	"width" : 300,

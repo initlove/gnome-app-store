@@ -204,7 +204,7 @@ gnome_app_entry_add_hint (ClutterActor *actor, const gchar *hint)
 		return;
 	}
 	hint_actor = clutter_text_new ();
-	clutter_actor_set_opacity (hint_actor, 64);
+	clutter_actor_set_opacity (hint_actor, 128);
 	clutter_actor_set_reactive (hint_actor, FALSE);
 	clutter_text_set_editable (CLUTTER_TEXT (hint_actor), FALSE);
 	clutter_text_set_ellipsize (CLUTTER_TEXT (hint_actor), PANGO_ELLIPSIZE_END);

@@ -33,6 +33,7 @@ struct _GnomeAppCommentPrivate
 	OpenResult *comment;
 	gchar *content;
 	gchar *content2;
+	gboolean reply_entry_expand;
 };
 
 enum
@@ -113,6 +114,7 @@ gnome_app_comment_init (GnomeAppComment *comment)
 	priv->reply_entry = NULL;
 	priv->content = NULL;
 	priv->content2 = NULL;
+	priv->reply_entry_expand = FALSE;
 }
 
 static void
@@ -229,13 +231,12 @@ on_reply_button_press (ClutterActor *actor,
 {
 	GnomeAppComment *comment;
 	GnomeAppCommentPrivate *priv;
-	gboolean activatable;
 
 	comment = GNOME_APP_COMMENT (data);
 	priv = comment->priv;
 
-	activatable = clutter_text_get_activatable (CLUTTER_TEXT (priv->reply_entry));
-	if (!activatable) {
+	priv->reply_entry_expand = !priv->reply_entry_expand;
+	if (priv->reply_entry_expand) {
 		clutter_text_set_text (CLUTTER_TEXT (priv->reply_button), _("Cancel"));
 		clutter_actor_set_size (priv->reply_entry, 300, 100);
 		clutter_text_set_editable (CLUTTER_TEXT (priv->reply_entry), TRUE);
@@ -249,7 +250,6 @@ on_reply_button_press (ClutterActor *actor,
 		clutter_text_set_text (CLUTTER_TEXT (priv->reply_button), _("Reply"));
 		clutter_text_set_text (CLUTTER_TEXT (priv->submit_button), "");
 	}
-	clutter_text_set_activatable (CLUTTER_TEXT (priv->reply_entry), !activatable);
 
 	return TRUE;
 }
@@ -266,7 +266,7 @@ on_reply_entry_paint (ClutterActor *actor,
 	comment = GNOME_APP_COMMENT (data);
 	priv = comment->priv;
 
-	if (!clutter_text_get_activatable (CLUTTER_TEXT (actor)))
+	if (!priv->reply_entry_expand)
 		return;
 
 	clutter_actor_get_allocation_box (actor, &allocation);
@@ -367,7 +367,7 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 	clutter_text_set_line_wrap (CLUTTER_TEXT (priv->reply_entry), TRUE);
 	clutter_text_set_line_wrap_mode (CLUTTER_TEXT (priv->reply_entry), PANGO_WRAP_WORD);
 	clutter_text_set_selectable (CLUTTER_TEXT (priv->reply_entry), TRUE);
-	clutter_text_set_activatable (CLUTTER_TEXT (priv->reply_entry), FALSE);
+	clutter_text_set_editable (CLUTTER_TEXT (priv->reply_entry), TRUE);
 	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout),
 			priv->reply_entry,
 			TRUE, /*expand*/

@@ -262,6 +262,7 @@ on_search_entry_activate (ClutterActor *actor,
 	/*We need to ref it right after task_new, as some task may finished fast cause of proxy */
 	priv->task = g_object_ref (priv->task);
 	gnome_app_task_add_params (task,
+				"sortmode", "new",
 				"search", search,
 				"pagesize", pagesize,
 				"page", "0",
@@ -328,6 +329,7 @@ printf ("click on %s cids %s\n", name, cids);
         task = gnome_app_task_new (ui, "GET", "/v1/content/data");
 	priv->task = g_object_ref (task);
 	gnome_app_task_add_params (task,
+			"sortmode", "new",
 			"categories", cids,
 			"pagesize", pagesize,
 			"page", "0",
