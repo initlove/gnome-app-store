@@ -50,6 +50,7 @@ struct _GnomeAppIconViewClass
 
 GType			gnome_app_icon_view_get_type              	(void);
 GnomeAppIconView *	gnome_app_icon_view_new		               	(void);
+void			gnome_app_icon_view_clean			(GnomeAppIconView *icon_view);
 gint			gnome_app_icon_view_get_pagesize		(GnomeAppIconView *icon_view);
 
 G_END_DECLS

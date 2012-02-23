@@ -15,7 +15,7 @@ Author: David Liang <dliang@novell.com>
 #include <math.h>
 #include <clutter/clutter.h>
 #include "open-app-utils.h"
-#include "gnome-app-task.h"
+#include "open-results.h"
 #include "gnome-app-icon-view.h"
 #include "gnome-app-ui-utils.h"
 #include "gnome-app-info-icon.h"
@@ -28,14 +28,12 @@ struct _GnomeAppIconViewPrivate
 	ClutterLayoutManager *layout;
 	ClutterActor *layout_box;
 
-	GnomeAppTask *task;
 	GList *app_actors;
 	gint count;
 	gint rows;
 	gint cols;
 	gint icon_width;
 	gint icon_height;
-
 };
 
 /* Properties */
@@ -49,6 +47,19 @@ enum
 G_DEFINE_TYPE (GnomeAppIconView, gnome_app_icon_view, CLUTTER_TYPE_GROUP)
 
 static void	gnome_app_icon_view_set_with_data (GnomeAppIconView *icon_view, OpenResults *results);
+
+void
+gnome_app_icon_view_clean (GnomeAppIconView *icon_view)
+{
+	GnomeAppIconViewPrivate *priv = icon_view->priv;
+
+	if (priv->count) {
+		GList *l;
+		for (l = priv->app_actors; l; l = l->next)
+			clutter_actor_destroy (CLUTTER_ACTOR (l->data));
+		priv->count = 0;
+	}
+}
 
 static void
 on_drag_end (ClutterDragAction   *action,
@@ -108,7 +119,6 @@ gnome_app_icon_view_init (GnomeAppIconView *icon_view)
 	                                                 GnomeAppIconViewPrivate);
 
 	priv->script = NULL;
-	priv->task = NULL;
 	priv->app_actors = NULL;
 	priv->count = 0;
 	priv->rows = 5;	//FIXME: should be calculated
@@ -143,6 +153,7 @@ gnome_app_icon_view_set_property (GObject      *object,
 		GParamSpec   *pspec)
 {
 	GnomeAppIconView *icon_view;
+	const gchar *str;
 
 	icon_view = GNOME_APP_ICON_VIEW (object);
 	switch (prop_id)
@@ -185,8 +196,6 @@ gnome_app_icon_view_finalize (GObject *object)
 
 	if (priv->script)
 		g_object_unref (priv->script);
-	if (priv->task)
-		g_object_unref (priv->task);
 
 	G_OBJECT_CLASS (gnome_app_icon_view_parent_class)->finalize (object);
 }
@@ -220,19 +229,6 @@ gnome_app_icon_view_new (void)
 	icon_view = g_object_new (GNOME_APP_TYPE_ICON_VIEW, NULL);
 
 	return icon_view;
-}
-
-static void
-gnome_app_icon_view_clean (GnomeAppIconView *icon_view)
-{
-	GnomeAppIconViewPrivate *priv = icon_view->priv;
-
-	if (priv->count) {
-		GList *l;
-		for (l = priv->app_actors; l; l = l->next)
-			clutter_actor_destroy (CLUTTER_ACTOR (l->data));
-		priv->count = 0;
-	}
 }
 
 gint

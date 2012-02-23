@@ -47,6 +47,7 @@ struct _GnomeAppFrameUIPrivate
 enum
 {
 	PROP_0,
+	PROP_LOCK_STATUS,
 	PROP_LAST
 };
 
@@ -62,30 +63,34 @@ is_frame_ui_locked (GnomeAppFrameUI *ui)
 	return priv->lock;
 }
 
-static void
-frame_ui_lock (GnomeAppFrameUI *ui)
+void
+gnome_app_frame_ui_set_lock (GnomeAppFrameUI *ui, const gchar *str)
 {
+	g_return_if_fail (str);
+
 	GnomeAppFrameUIPrivate *priv;
+	gboolean _lock;
+
+	if (strcmp (str, "lock") == 0)
+		_lock = TRUE;
+	else if (strcmp (str, "unlock") == 0)
+		_lock = FALSE;
+	else
+		return;
 
 	priv = ui->priv;
-	if (priv->lock)
-		g_critical ("Should not lock more than once!");
-	priv->lock = TRUE;
-	gnome_app_texture_start (GNOME_APP_TEXTURE (priv->spin));
-	clutter_actor_hide (CLUTTER_ACTOR (priv->icon_view));
-}
-
-static void
-frame_ui_unlock (GnomeAppFrameUI *ui)
-{
-	GnomeAppFrameUIPrivate *priv;
-
-	priv = ui->priv;
-	if (!priv->lock)
-		g_critical ("Should not unlock more than once!");
-	priv->lock = FALSE;
-	gnome_app_texture_stop (GNOME_APP_TEXTURE (priv->spin));
-	clutter_actor_show (CLUTTER_ACTOR (priv->icon_view));
+	if (priv->lock == _lock) {
+		g_critical ("You should not %s more than once!\tFrameUI\n", str);
+		return;
+	}
+	priv->lock = _lock;
+	if (priv->lock) {
+		gnome_app_texture_start (GNOME_APP_TEXTURE (priv->spin)); 
+		clutter_actor_hide (CLUTTER_ACTOR (priv->icon_view));
+	} else {
+		gnome_app_texture_stop (GNOME_APP_TEXTURE (priv->spin));
+		clutter_actor_show (CLUTTER_ACTOR (priv->icon_view));
+	}
 }
 
 static void
@@ -169,7 +174,6 @@ task_callback (gpointer userdata, gpointer func_result)
 	results = OPEN_RESULTS (func_result);
 	ui = GNOME_APP_FRAME_UI (userdata);
 	frame_ui_load_results (ui, results);
-	frame_ui_unlock (ui);
 
 	return NULL;
 }
@@ -192,7 +196,6 @@ frame_ui_set_default_data (GnomeAppFrameUI *ui)
 				"page", "0",
 				NULL);
 	gnome_app_task_set_callback (task, task_callback);
-        frame_ui_lock (ui);
 	gnome_app_task_push (task);
 
 	g_free (pagesize);
@@ -264,7 +267,6 @@ on_search_entry_activate (ClutterActor *actor,
 				"page", "0",
 				NULL);
 	gnome_app_task_set_callback (task, task_callback);
-        frame_ui_lock (ui);
 	gnome_app_task_push (task);
 
 	g_free (pagesize);
@@ -331,7 +333,6 @@ printf ("click on %s cids %s\n", name, cids);
 			"page", "0",
 			NULL);
 	gnome_app_task_set_callback (task, task_callback);
-        frame_ui_lock (ui);
 	gnome_app_task_push (task);
 	g_free (pagesize);
 
@@ -421,7 +422,6 @@ on_icon_press (ClutterActor *actor,
 		priv->task = g_object_ref (task);
 		page = g_strdup_printf ("%d", cur_page);
         	gnome_app_task_add_param (task, "page", page);
-        	frame_ui_lock (ui);
 		gnome_app_task_push (task);
 		g_free (page);
 	}
@@ -530,12 +530,19 @@ gnome_app_frame_ui_set_property (GObject      *object,
 		const GValue *value,
 		GParamSpec   *pspec)
 {
-	GnomeAppFrameUI *ui;        
+	GnomeAppFrameUI *ui;
+	const gchar *str;
 
 	ui = GNOME_APP_FRAME_UI (object);
 			        
 	switch (prop_id)
 	{
+		case PROP_LOCK_STATUS:
+			str = g_value_get_string (value);
+			if (!str)
+				return;
+			gnome_app_frame_ui_set_lock (ui, str);
+			break;
 	}
 }
 
@@ -583,6 +590,14 @@ gnome_app_frame_ui_class_init (GnomeAppFrameUIClass *klass)
 	object_class->get_property = gnome_app_frame_ui_get_property;
 	object_class->dispose = gnome_app_frame_ui_dispose;
 	object_class->finalize = gnome_app_frame_ui_finalize;
+
+	g_object_class_install_property (object_class,
+			PROP_LOCK_STATUS,		
+			g_param_spec_string ("lock-status",
+			"Lock Status",
+			"Lock Status",
+			NULL,
+			G_PARAM_READWRITE));
 
 	g_type_class_add_private (object_class, sizeof (GnomeAppFrameUIPrivate));
 }

@@ -286,7 +286,7 @@ gnome_app_proxy_add (GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *resu
 			return;
 
 		key = gnome_app_task_to_str (task);
-		g_debug ("Add to proxy %s\n", key);
+	//	g_debug ("Add to proxy %s\n", key);
 		data = proxy_data_new (task, results);
 		g_hash_table_replace (proxy->priv->cache, key, data);
 		                

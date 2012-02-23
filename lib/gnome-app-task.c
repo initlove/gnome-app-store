@@ -228,7 +228,6 @@ async_func (OAsyncWorkerTask *oasync_task, gpointer arguments)
 		g_free (str);
 		return NULL;
 	} else {
-		g_debug ("%s\n", payload);
 	}
 	GnomeAppStore *store;
 	GnomeAppProxy *proxy;
@@ -269,17 +268,25 @@ static void
 task_callback (OAsyncWorkerTask *oasync_task, gpointer func_result)
 {
 	GnomeAppTask *app_task;
+	GnomeAppTaskPrivate *priv;
+	GParamSpec *spec;
 
 	app_task = o_async_worker_task_get_arguments (oasync_task); 
-	  
-	if (app_task->priv->callback) {
+	priv = app_task->priv;  
+	if (priv->callback) {
 		gnome_app_store_lock (gnome_app_store_get_default ());
-		app_task->priv->callback (app_task->priv->userdata, func_result);
+		priv->callback (priv->userdata, func_result);
 		gnome_app_store_unlock (gnome_app_store_get_default ());
+		/* after we callback, unlock the userdata by its own function */
+		if (priv->userdata) {
+			spec = g_object_class_find_property (G_OBJECT_GET_CLASS (priv->userdata), "lock-status");
+			if (spec)
+				g_object_set (G_OBJECT (priv->userdata), "lock-status", "unlock", NULL);
+		}
 	}
 	if (func_result) {
 		/*Download task */
-	        if (app_task->priv->url)
+	        if (priv->url)
 			g_free (func_result);
 		else
 			g_object_unref (func_result);
@@ -400,11 +407,13 @@ gnome_app_task_set_priority (GnomeAppTask *task, TaskPriority priority)
 void
 gnome_app_task_push (GnomeAppTask *task)
 {
+	GnomeAppTaskPrivate *priv;
 	const gchar *method;
 	OpenResults *results = NULL;
 
-	if (!task->priv->url) {
-		method = rest_proxy_call_get_method (task->priv->call);
+	priv = task->priv;
+	if (!priv->url) {
+		method = rest_proxy_call_get_method (priv->call);
 		//TODO: in some case, method is NULL? what is wrong? 
 		if (method && (strcasecmp (method, "GET") == 0)) {
 			GnomeAppStore *store;
@@ -415,8 +424,8 @@ gnome_app_task_push (GnomeAppTask *task)
 
 			results = gnome_app_proxy_find (proxy, task);
 			if (results) {
-				if (task->priv->callback)
-					task->priv->callback (task->priv->userdata, results);
+				if (priv->callback)
+					priv->callback (priv->userdata, results);
 				else 
 					g_debug ("Cannot find the callback ?");
 				//TODO: the task and the result ... should not final currently
@@ -450,8 +459,8 @@ gnome_app_task_push (GnomeAppTask *task)
 				g_free (filename);
 
 				if (results) {
-					if (task->priv->callback)
-						task->priv->callback (task->priv->userdata, results);
+					if (priv->callback)
+						priv->callback (priv->userdata, results);
 					gnome_app_proxy_add (proxy, task, results);
 //					g_object_unref (task);
 //					g_object_unref (results);
@@ -463,10 +472,10 @@ gnome_app_task_push (GnomeAppTask *task)
 	} else {
 		gchar *img_local_cache;
 
-		img_local_cache = open_app_get_local_icon (task->priv->url, FALSE);
+		img_local_cache = open_app_get_local_icon (priv->url, FALSE);
 		if (img_local_cache) {
-			if (task->priv->callback) {
-				task->priv->callback (task->priv->userdata, img_local_cache);
+			if (priv->callback) {
+				priv->callback (priv->userdata, img_local_cache);
 				g_object_unref (task);
 				g_free (img_local_cache);
 				return;
@@ -475,7 +484,17 @@ gnome_app_task_push (GnomeAppTask *task)
 		}
 	}
 PUSH_OUT:
-        o_async_worker_task_set_arguments (task->priv->async, task);
+        o_async_worker_task_set_arguments (priv->async, task);
+
+	GParamSpec *spec;
+	/* Before new thread 
+	 * we lock the userdata by its own function
+	 */
+	if (priv->userdata && priv->callback) {
+		spec = g_object_class_find_property (G_OBJECT_GET_CLASS (priv->userdata), "lock-status");
+		if (spec)
+			g_object_set (G_OBJECT (priv->userdata), "lock-status", "lock", NULL);
+	}
 	gnome_app_store_add_task (gnome_app_store_get_default (), task);
 }
 
