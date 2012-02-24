@@ -22,6 +22,7 @@
 #ifndef __GNOME_APP_WIDGETS_H__
 #define __GNOME_APP_WIDGETS_H__
 
+#include "gnome-app-check-box.h"
 #include "gnome-app-entry.h"
 #include "gnome-app-texture.h"
 #include "gnome-app-widget.h"

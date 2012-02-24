@@ -73,7 +73,7 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 				"username-entry", &username_entry,
 				"password-entry", &password_entry,
 				NULL);
-		save = gnome_app_check_box_get_selected (auto_login_check_box);
+		save = gnome_app_check_box_get_selected (GNOME_APP_CHECK_BOX (auto_login_check_box));
 		username = gnome_app_entry_get_text (GNOME_APP_ENTRY (username_entry));
 		password = gnome_app_entry_get_text (GNOME_APP_ENTRY (password_entry));
 		store = gnome_app_store_get_default ();
@@ -160,8 +160,6 @@ gnome_app_login_init (GnomeAppLogin *login)
 {
 	GnomeAppLoginPrivate *priv;
 	ClutterActor *main_ui;
-	ClutterActor *auto_login_check_box;
-        ClutterActor *auto_login_label;
 	ClutterActor *register_button;
 	ClutterActor *login_button;
 	gchar *filename;
@@ -178,13 +176,9 @@ gnome_app_login_init (GnomeAppLogin *login)
 	clutter_script_connect_signals (priv->script, login);
 	clutter_script_get_objects (priv->script,
 			"app-login", &main_ui,
-			"auto-login-check-box", &auto_login_check_box,
-			"auto-login-label", &auto_login_label,
 			"register", &register_button,
 			"login", &login_button,
 			NULL);
-	gnome_app_check_box_binding (auto_login_check_box);
-	gnome_app_check_box_add_connector (auto_login_check_box, auto_login_label);
 	gnome_app_button_binding (login_button);
 	gnome_app_button_binding (register_button);
 

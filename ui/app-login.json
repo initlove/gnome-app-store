@@ -46,24 +46,14 @@
       },
       {
         "id" : "auto-login-check-box",
-	"type" : "ClutterGroup",
+	"type" : "GnomeAppCheckBox",
 	"x" : 52, 
 	"y" : 180,
-	"width" : 16,
+	"width" : 200,
 	"height" : 16,
-	"reactive" : true
-      },
-      {
-        "id" : "auto-login-label",
-	"type" : "ClutterText",
 	"text" : "Autologin",
-	"x" : 80, 
-	"y" : 180,
-        "font-name" : "Sans 14px",
-        "color" : "black",
-        "line-alignment" : "start",
-        "line-wrap" : false,
-        "ellipsize" : "end",
+        "text-font-name" : "Sans 14px",
+        "text-color" : "black",
 	"reactive" : true
       },
       {
