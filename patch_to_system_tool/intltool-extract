@@ -756,7 +756,7 @@ sub type_quotedxml {
 }
 
 sub type_script {
-    my $tags = "\"text\"";
+    my $tags = "\"text\"|\"hint\"";
     while ($input =~ /($tags)([^\"]+)\"([^\"]+)\"/sg) {
 	$messages{entity_decode($3)} = [];
     }

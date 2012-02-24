@@ -40,6 +40,7 @@ enum
 {
 	PROP_0,
 	PROP_URL,
+	PROP_TEXTURE_TYPE,
 	PROP_LAST
 };
 
@@ -69,6 +70,7 @@ gnome_app_texture_init (GnomeAppTexture *texture)
 
 	priv->type = NONE_TEXTURE;
 	priv->url = NULL;
+	priv->status = TEXTURE_STATUS_INIT;
 }
 
 static void
@@ -80,6 +82,7 @@ gnome_app_texture_set_property (GObject *object,
 	GnomeAppTexture *texture;
 	GnomeAppTexturePrivate *priv;
 	ClutterActor *actor;
+	const gchar *str;
 
 	texture = GNOME_APP_TEXTURE (object);
 	priv = texture->priv;
@@ -89,6 +92,14 @@ gnome_app_texture_set_property (GObject *object,
 			if (priv->url)
 				g_free (priv->url);
 			priv->url = g_strdup (g_value_get_string (value));
+			break;
+		case PROP_TEXTURE_TYPE:
+			str = g_value_get_string (value);
+			if (strcmp (str, "dir") == 0) {
+				priv->type = DIR_TEXTURE;
+				priv->pos = 1;
+			} else if (strcmp (str, "mult") == 0)
+				priv->type = MULT_TEXTURE;
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -156,6 +167,14 @@ gnome_app_texture_class_init (GnomeAppTextureClass *klass)
 				NULL,
 				G_PARAM_READWRITE));
 
+	g_object_class_install_property (object_class,
+			PROP_TEXTURE_TYPE,
+			g_param_spec_string ("texture-type",
+				"Texture Type",
+				"Texture Type",
+				NULL,
+				G_PARAM_READWRITE));
+
 	g_type_class_add_private (object_class, sizeof (GnomeAppTexturePrivate));
 }
 
@@ -185,8 +204,6 @@ gnome_app_dtexture_new_from_dir (gchar *dir)
 	texture = g_object_new (GNOME_APP_TYPE_TEXTURE, NULL);
 	priv = texture->priv;
 	priv->type = DIR_TEXTURE;
-	priv->status = TEXTURE_STATUS_INIT;
-	priv->pos = 1;
 	priv->url = g_strdup (dir);
 
 	return texture;

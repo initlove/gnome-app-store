@@ -163,9 +163,10 @@ gnome_app_info_page_init (GnomeAppInfoPage *info_page)
 	g_signal_connect (action, "drag-end", G_CALLBACK (on_drag_end), info_page);
 	g_signal_connect (action, "drag-motion", G_CALLBACK (on_drag_motion), info_page);
 	g_signal_connect (action, "drag-begin", G_CALLBACK (on_drag_begin), info_page);
-/*TODO the entry should be automatic extend .. */
-	gnome_app_entry_binding (comment_entry);
-	gnome_app_entry_add_hint (comment_entry, _("< comment here >"));
+/*TODO the entry should be automatic extend .. 
+ *
+	the comment - entry should be better done.. it might be gnome-app-text	
+*/
 	gnome_app_button_binding (fan_button);
 	gnome_app_button_binding (next_button);
 	gnome_app_button_binding (prev_button);

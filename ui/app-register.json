@@ -22,18 +22,13 @@
       },
       {
         "id" : "username-entry",
-        "type" : "ClutterText",
+        "type" : "GnomeAppEntry",
 	"x" : 170,
 	"y" : 80,
         "width" : 130,
-	"editable" : true,
-        "font-name" : "Sans 17px",
-        "color" : "black",
-        "line-alignment" : "start",
-        "single-line-mode" : true,
-        "line-wrap" : false,
-    	"reactive" : true,
-        "ellipsize" : "end"
+        "text-font-name" : "Sans 17px",
+        "text-color" : "black",
+    	"reactive" : true
       },
       {
         "id" : "username-info",
@@ -65,18 +60,14 @@
       },
       {
         "id" : "password-entry",
-        "type" : "ClutterText",
+        "type" : "GnomeAppEntry",
 	"x" : 170,
 	"y" : 130,
         "width" : 130,
-	"editable" : true,
-        "font-name" : "Sans 17px",
-        "color" : "black",
-        "single-line-mode" : true,
-        "line-alignment" : "start",
-        "line-wrap" : false,
-    	"reactive" : true,
-        "ellipsize" : "end"
+	"password-char" : 42,
+        "text-font-name" : "Sans 17px",
+        "text-color" : "black",
+    	"reactive" : true
       },
       {
         "id" : "password-info",
@@ -108,18 +99,13 @@
       },
       {
         "id" : "firstname-entry",
-        "type" : "ClutterText",
+        "type" : "GnomeAppEntry",
 	"x" : 170,
 	"y" : 180,
         "width" : 130,
-	"editable" : true,
-        "font-name" : "Sans 17px",
-        "color" : "black",
-        "single-line-mode" : true,
-        "line-alignment" : "start",
-        "line-wrap" : false,
-    	"reactive" : true,
-        "ellipsize" : "end"
+        "text-font-name" : "Sans 17px",
+        "text-color" : "black",
+    	"reactive" : true
       },
       {
         "id" : "firstname-info",
@@ -151,18 +137,13 @@
       },
       {
         "id" : "lastname-entry",
-        "type" : "ClutterText",
+        "type" : "GnomeAppEntry",
 	"x" : 170,
 	"y" : 230,
         "width" : 130,
-	"editable" : true,
-        "font-name" : "Sans 17px",
-        "color" : "black",
-        "single-line-mode" : true,
-        "line-alignment" : "start",
-        "line-wrap" : false,
-    	"reactive" : true,
-        "ellipsize" : "end"
+        "text-font-name" : "Sans 17px",
+        "text-color" : "black",
+    	"reactive" : true
       },
       {
         "id" : "lastname-info",
@@ -194,18 +175,13 @@
       },
       {
         "id" : "email-entry",
-        "type" : "ClutterText",
+        "type" : "GnomeAppEntry",
 	"x" : 170,
 	"y" : 280,
         "width" : 130,
-	"editable" : true,
-        "font-name" : "Sans 17px",
-        "color" : "black",
-        "single-line-mode" : true,
-        "line-alignment" : "start",
-        "line-wrap" : false,
-    	"reactive" : true,
-        "ellipsize" : "end"
+        "text-font-name" : "Sans 17px",
+        "text-color" : "black",
+    	"reactive" : true
       },
       {
         "id" : "email-info",

@@ -21,6 +21,7 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-ui-utils.h"
 #include "gnome-app-stage.h"
 #include "gnome-app-login.h"
+#include "gnome-app-widgets.h"
 
 struct _GnomeAppLoginPrivate
 {
@@ -73,8 +74,8 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 				"password-entry", &password_entry,
 				NULL);
 		save = gnome_app_check_box_get_selected (auto_login_check_box);
-		username = clutter_text_get_text (CLUTTER_TEXT (username_entry));
-		password = clutter_text_get_text (CLUTTER_TEXT (password_entry));
+		username = gnome_app_entry_get_text (GNOME_APP_ENTRY (username_entry));
+		password = gnome_app_entry_get_text (GNOME_APP_ENTRY (password_entry));
 		store = gnome_app_store_get_default ();
 		g_object_set (store, "username", username, "password", password,
 				"save", save,
@@ -129,8 +130,8 @@ on_login_press (ClutterActor *actor,
 		       	"username-entry", &username_entry,
 			"password-entry", &password_entry,
 			NULL);
-	username = clutter_text_get_text (CLUTTER_TEXT (username_entry));
-	password = clutter_text_get_text (CLUTTER_TEXT (password_entry));
+	username = gnome_app_entry_get_text (GNOME_APP_ENTRY (username_entry));
+	password = gnome_app_entry_get_text (GNOME_APP_ENTRY (password_entry));
 	if (!username || !username [0]) {
 //		gnome_app_entry_add_warning (username_entry, "Input username!");
 		valid = FALSE;
@@ -159,8 +160,6 @@ gnome_app_login_init (GnomeAppLogin *login)
 {
 	GnomeAppLoginPrivate *priv;
 	ClutterActor *main_ui;
-	ClutterActor *username_entry;
-	ClutterActor *password_entry;
 	ClutterActor *auto_login_check_box;
         ClutterActor *auto_login_label;
 	ClutterActor *register_button;
@@ -179,17 +178,11 @@ gnome_app_login_init (GnomeAppLogin *login)
 	clutter_script_connect_signals (priv->script, login);
 	clutter_script_get_objects (priv->script,
 			"app-login", &main_ui,
-			"username-entry", &username_entry,
-			"password-entry", &password_entry,
 			"auto-login-check-box", &auto_login_check_box,
 			"auto-login-label", &auto_login_label,
 			"register", &register_button,
 			"login", &login_button,
 			NULL);
-	gnome_app_entry_binding (username_entry);
-	gnome_app_entry_add_hint (username_entry, _("< user name >"));
-	gnome_app_entry_binding (password_entry);
-	gnome_app_entry_add_hint (password_entry, _("< password >"));
 	gnome_app_check_box_binding (auto_login_check_box);
 	gnome_app_check_box_add_connector (auto_login_check_box, auto_login_label);
 	gnome_app_button_binding (login_button);
@@ -222,11 +215,11 @@ gnome_app_login_set_property (GObject *object,
 	{
 		case PROP_USERNAME:
 			actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "username-entry"));
-			clutter_text_set_text (CLUTTER_TEXT (actor), g_value_get_string (value));
+			gnome_app_entry_set_text (GNOME_APP_ENTRY (actor), (gchar *) g_value_get_string (value));
 			break;
 		case PROP_PASSWORD:
 			actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "password-entry"));
-			clutter_text_set_text (CLUTTER_TEXT (actor), g_value_get_string (value));
+			gnome_app_entry_set_text (GNOME_APP_ENTRY (actor), (gchar *) g_value_get_string (value));
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -250,11 +243,11 @@ gnome_app_login_get_property (GObject *object,
 	{
 		case PROP_USERNAME:
 			actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "username-entry"));
-			g_value_set_string (value, clutter_text_get_text (CLUTTER_TEXT (actor)));
+			g_value_set_string (value, gnome_app_entry_get_text (GNOME_APP_ENTRY (actor)));
 			break;
 		case PROP_PASSWORD:
 			actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "password-entry"));
-			g_value_set_string (value, clutter_text_get_text (CLUTTER_TEXT (actor)));
+			g_value_set_string (value, gnome_app_entry_get_text (GNOME_APP_ENTRY (actor)));
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

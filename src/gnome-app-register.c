@@ -18,6 +18,7 @@ Author: David Liang <dliang@novell.com>
 #include <string.h>
 #include <clutter/clutter.h>
 #include "open-app-utils.h"
+#include "gnome-app-widgets.h"
 #include "gnome-app-task.h"
 #include "gnome-app-ui-utils.h"
 #include "gnome-app-stage.h"
@@ -152,7 +153,7 @@ on_register_button_press (ClutterActor *actor,
 			       	data [i].an, &entry_actor,
 				data [i].info, &info_actor,
 				NULL);
-		data [i].val = clutter_text_get_text (CLUTTER_TEXT (entry_actor));
+		data [i].val = gnome_app_entry_get_text (GNOME_APP_ENTRY (entry_actor));
 		error = NULL;
 		if (open_app_pattern_match (data [i].pn, data [i].val, &error)) {
 			clutter_text_set_text (CLUTTER_TEXT (info_actor), "");
@@ -186,11 +187,6 @@ gnome_app_register_init (GnomeAppRegister *regist)
 {
 	GnomeAppRegisterPrivate *priv;
 	ClutterActor *main_ui;
-	ClutterActor *username_entry;
-	ClutterActor *password_entry;
-	ClutterActor *firstname_entry;
-	ClutterActor *lastname_entry;
-	ClutterActor *email_entry;
 	ClutterActor *back_button;
 	ClutterActor *register_button;
 	gchar *filename;
@@ -207,20 +203,10 @@ gnome_app_register_init (GnomeAppRegister *regist)
 
 	clutter_script_get_objects (priv->script,
 			"app-register", &main_ui,
-			"username-entry", &username_entry,
-			"password-entry", &password_entry,
-			"firstname-entry", &firstname_entry,
-			"lastname-entry", &lastname_entry,
-			"email-entry", &email_entry,
 			"back", &back_button,
 			"register", &register_button,
 			NULL);
 
-	gnome_app_entry_binding (username_entry);
-	gnome_app_entry_binding (password_entry);
-	gnome_app_entry_binding (firstname_entry);
-	gnome_app_entry_binding (lastname_entry);
-	gnome_app_entry_binding (email_entry);
 	gnome_app_button_binding (back_button);
 	gnome_app_button_binding (register_button);
 

@@ -2,6 +2,7 @@ AM_CPPFLAGS =                                                   \
 	-I$(top_srcdir)                                         \
 	-I$(top_srcdir)/common					\
 	-I$(top_srcdir)/lib					\
+	-I$(top_srcdir)/widgets					\
 	$(LIBREST_CFLAGS)					\
 	$(GNOME_APP_STORE_CFLAGS)                               \
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"                        \
@@ -21,7 +22,6 @@ noinst_PROGRAMS =      \
 	$(NULL)
 
 gnome_app_store_SOURCES =        \
-	gnome-app-texture.c gnome-app-texture.h \
 	gnome-app-stage.c gnome-app-stage.h \
 	gnome-app-info-icon.c gnome-app-info-icon.h  \
 	gnome-app-login.c gnome-app-login.h \
@@ -32,6 +32,7 @@ gnome_app_store_SOURCES =        \
 	gnome-app-icon-view.c gnome-app-icon-view.h \
 	gnome-app-info-page.c gnome-app-info-page.h \
 	gnome-app-comment.c gnome-app-comment.h \
+	$(top_srcdir)/widgets/libwidgets.la \
 	gnome-app-comments.c gnome-app-comments.h \
 	gnome-app-friends-ui.c gnome-app-friends-ui.h	\
 	gnome-app-message-ui.c gnome-app-message-ui.h	\
@@ -40,18 +41,19 @@ gnome_app_store_SOURCES =        \
 
 gnome_app_store_LDADD =          \
 	$(top_srcdir)/common/libopen-app-common.la \
+	$(top_srcdir)/widgets/libwidgets.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
 	$(LIBREST_LIBS)	\
 	$(GNOME_APP_STORE_LIBS)
 
 test_comments_SOURCES = \
-	gnome-app-texture.c gnome-app-texture.h	\
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
 	gnome-app-comment.c gnome-app-comment.h \
 	gnome-app-comments.c gnome-app-comments.h \
 	test_comments.c
 
 test_comments_LDADD =          \
+	$(top_srcdir)/widgets/libwidgets.la \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
 	$(GNOME_APP_STORE_LIBS)
@@ -64,6 +66,7 @@ test_account_SOURCES = \
 	test_account.c
 
 test_account_LDADD =          \
+	$(top_srcdir)/widgets/libwidgets.la \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
 	$(GNOME_APP_STORE_LIBS)
@@ -74,6 +77,7 @@ test_friends_SOURCES = \
 	test_friends.c
 
 test_friends_LDADD =          \
+	$(top_srcdir)/widgets/libwidgets.la \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
 	$(GNOME_APP_STORE_LIBS)
@@ -84,13 +88,14 @@ test_message_SOURCES = \
 	test_message.c
 
 test_message_LDADD =          \
+	$(top_srcdir)/widgets/libwidgets.la \
 	$(top_srcdir)/common/libopen-app-common.la \
 	$(top_srcdir)/lib/libgnome-app-store.la \
 	$(GNOME_APP_STORE_LIBS)
 
 test_scroll_SOURCES = \
-	gnome-app-texture.c gnome-app-texture.h \
 	test_scroll.c
 
 test_scroll_LDADD =          \
+	$(top_srcdir)/widgets/libwidgets.la \
 	$(GNOME_APP_STORE_LIBS)
