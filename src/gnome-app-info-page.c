@@ -18,6 +18,7 @@ Author: David Liang <lzwang@suse.com>
 #include <clutter/clutter.h>
 
 #include "open-app-utils.h"
+#include "gnome-app-widgets.h"
 #include "gnome-app-task.h"
 #include "gnome-app-comment.h"
 #include "gnome-app-comments.h"
@@ -167,12 +168,6 @@ gnome_app_info_page_init (GnomeAppInfoPage *info_page)
  *
 	the comment - entry should be better done.. it might be gnome-app-text	
 */
-	gnome_app_button_binding (fan_button);
-	gnome_app_button_binding (next_button);
-	gnome_app_button_binding (prev_button);
-	gnome_app_button_binding (comment_button);
-	gnome_app_button_binding (return_button);
-
 	return ;
 }
 
@@ -444,13 +439,14 @@ draw_fan_status (GnomeAppInfoPage *page)
 	actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "fan-button"));
 	switch (priv->fan_status) {
 		case IS_FAN:
-			clutter_text_set_text (CLUTTER_TEXT (actor), _("- Remove Fan"));
+			gnome_app_button_set_text (GNOME_APP_BUTTON (actor), _("- Remove Fan"));
 			break;
 		case NOT_FAN:
-			clutter_text_set_text (CLUTTER_TEXT (actor), _("+ Add Fan"));
+			gnome_app_button_set_text (GNOME_APP_BUTTON (actor), _("+ Add Fan"));
 			break;
 		default:
-			clutter_text_set_text (CLUTTER_TEXT (actor), "");
+			/*TODO:*/
+			gnome_app_button_set_text (GNOME_APP_BUTTON (actor), _("Not connect"));
 			break;
 	}
 

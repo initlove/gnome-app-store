@@ -160,9 +160,6 @@ gnome_app_login_init (GnomeAppLogin *login)
 {
 	GnomeAppLoginPrivate *priv;
 	ClutterActor *main_ui;
-	ClutterActor *register_button;
-	ClutterActor *login_button;
-	gchar *filename;
 
 	login->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (login,
 	                                                 GNOME_APP_TYPE_LOGIN,
@@ -176,11 +173,7 @@ gnome_app_login_init (GnomeAppLogin *login)
 	clutter_script_connect_signals (priv->script, login);
 	clutter_script_get_objects (priv->script,
 			"app-login", &main_ui,
-			"register", &register_button,
-			"login", &login_button,
 			NULL);
-	gnome_app_button_binding (login_button);
-	gnome_app_button_binding (register_button);
 
 	/* TODO: It seems not work, currently, this it done in the gnome_app_stage 
 	 *  if in the future, some small widget want to set its own background

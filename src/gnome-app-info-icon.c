@@ -126,7 +126,8 @@ gnome_app_info_icon_new_with_info (OpenResult *info)
 
 	clutter_text_set_text (CLUTTER_TEXT (name), open_result_get (info, "name"));
 	gnome_app_set_icon (pic, open_result_get (info, "smallpreviewpic1"));
-	gnome_app_button_binding (pic);
+	//TODO should use my button 
+//	gnome_app_button_binding (pic);
 
 	return info_icon;
 }

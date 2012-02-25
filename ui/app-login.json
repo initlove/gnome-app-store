@@ -58,31 +58,26 @@
       },
       {
         "id" : "register",
-        "type" : "ClutterText",
-        "text" : "Register",
+        "type" : "GnomeAppButton",
 	"x" : 180,
 	"y" : 180,
-        "font-name" : "Sans 14px",
-        "color" : "blue",
-        "line-alignment" : "start",
-        "line-wrap" : false,
+        "text" : "Register",
+        "text-font-name" : "Sans 14px",
+        "text-color" : "blue",
     	"reactive" : true,
-        "ellipsize" : "end",
         "signals" : [
           { "name" : "button-press-event", "handler" : "on_register_press" }
         ]
       },
       {
         "id" : "login",
-        "type" : "ClutterText",
-        "text" : "Login",
+        "type" : "GnomeAppButton",
 	"x" : 110,
 	"y" : 220,
-        "font-name" : "Sans 25px",
-        "color" : "blue",
-        "line-wrap" : false,
+        "text" : "Login",
+        "text-font-name" : "Sans 25px",
+        "text-color" : "blue",
     	"reactive" : true,
-        "ellipsize" : "end",
         "signals" : [
           { "name" : "button-press-event", "handler" : "on_login_press" }
         ]

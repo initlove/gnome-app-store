@@ -106,28 +106,6 @@ on_gnome_app_button_paint (ClutterActor *actor,
 	}
 }
 
-/*TODO: the touch screen and PC is different, click to show the effect is good for touch screen
- * move in to show effect is good for PC.
- */
-void
-gnome_app_button_binding (ClutterActor *actor)
-{
-	gchar *binding;
-
-	binding = g_object_get_data (G_OBJECT (actor), "binding");
-	if (binding)
-		return;
-	else
-		g_object_set_data (G_OBJECT (actor), "binding", (gpointer) "binding");
-
-	gnome_app_actor_add_scale_state (actor);
-
-	g_object_set_data (G_OBJECT (actor), "mouse-status", (gpointer) MOUSE_NONE);
-	g_signal_connect (actor, "enter-event", G_CALLBACK (on_gnome_app_widget_enter), actor);
-	g_signal_connect (actor, "leave-event", G_CALLBACK (on_gnome_app_widget_leave), actor);
-	g_signal_connect (actor, "paint", G_CALLBACK (on_gnome_app_button_paint), NULL);
-}
-
 void
 gnome_app_actor_add_background (ClutterActor *actor, gchar *filename)
 {

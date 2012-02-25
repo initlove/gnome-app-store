@@ -187,8 +187,6 @@ gnome_app_register_init (GnomeAppRegister *regist)
 {
 	GnomeAppRegisterPrivate *priv;
 	ClutterActor *main_ui;
-	ClutterActor *back_button;
-	ClutterActor *register_button;
 	gchar *filename;
 
 	regist->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (regist,
@@ -203,12 +201,7 @@ gnome_app_register_init (GnomeAppRegister *regist)
 
 	clutter_script_get_objects (priv->script,
 			"app-register", &main_ui,
-			"back", &back_button,
-			"register", &register_button,
 			NULL);
-
-	gnome_app_button_binding (back_button);
-	gnome_app_button_binding (register_button);
 
 	/* TODO: remove it , reason explained in gnome-app-login 
 	filename = open_app_get_pixmap_uri ("login");

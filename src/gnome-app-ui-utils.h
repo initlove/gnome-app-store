@@ -29,7 +29,6 @@ G_BEGIN_DECLS
 
 void		gnome_app_set_icon 			(ClutterActor *actor, const gchar *uri);
 void		gnome_app_actor_add_scale_state 	(ClutterActor *actor);
-void		gnome_app_button_binding 		(ClutterActor *actor);
 void		gnome_app_select_button_binding		(ClutterActor *actor);
 void		gnome_app_select_button_set 		(ClutterActor *actor, gboolean selected);
 

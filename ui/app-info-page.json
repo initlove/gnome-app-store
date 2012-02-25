@@ -16,26 +16,24 @@
       },
       {
         "id" : "prev",
-        "type" : "ClutterTexture",
+        "type" : "GnomeAppButton",
         "x" : 10,
         "y" : 150,
         "width" : 32,
         "height" : 32,
-	"filename" : "go-previous.png",
-        "opacity" : 255,
+	"image" : "go-previous.png",
         "signals" : [
           { "name" : "button-press-event", "handler" : "on_prev_button_press" }
         ]
       },
       {
         "id" : "next",
-        "type" : "ClutterTexture",
+        "type" : "GnomeAppButton",
         "x" : 450,
         "y" : 150,
         "width" : 32,
         "height" : 32,
-	"filename" : "go-next.png",
-        "opacity" : 255,
+	"image" : "go-next.png",
         "signals" : [
           { "name" : "button-press-event", "handler" : "on_next_button_press" }
         ]
@@ -105,11 +103,10 @@
       },
       {
         "id" : "fan-button",
-        "type" : "ClutterText",
-        "text" : "",
-        "font-name" : "Sans 17px",
+        "type" : "GnomeAppButton",
+        "text-font-name" : "Sans 17px",
+        "text-color" : "green",
         "reactive" : true,
-        "color" : "green",
         "x" : 750,
         "y" : 180,
         "signals" : [
@@ -162,9 +159,10 @@
       },
       {
         "id" : "comment-button",
-        "type" : "ClutterText",
+        "type" : "GnomeAppButton",
         "text" : "Comment",
-        "font-name" : "Sans 16px",
+        "text-font-name" : "Sans 16px",
+	"text-color" : "black",
         "reactive" : true,
         "x" : 760,
         "y" : 410,
@@ -182,16 +180,12 @@
       },
       {
         "id" : "return-button",
-        "type" : "ClutterTexture",
+        "type" : "GnomeAppButton",
         "x" : 900,
         "y" : 550,
         "width" : 64,
         "height" : 64,
-	"filename" : "back.png",
-        "keep-aspect-ratio" : true,
-        "anchor-x" : "5 em",
-        "anchor-y" : "5 pt",
-        "opacity" : 100,
+	"image" : "back.png",
         "reactive" : true,
         "signals" : [
           { "name" : "button-press-event", "handler" : "on_return_button_press" }
