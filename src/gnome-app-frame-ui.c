@@ -25,7 +25,7 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-frame-ui.h"
 #include "gnome-app-icon-view.h"
 #include "gnome-app-ui-utils.h"
-#include "gnome-app-texture.h"
+#include "gnome-app-widgets.h"
 
 struct _GnomeAppFrameUIPrivate
 {
@@ -318,12 +318,13 @@ on_category_button_press (ClutterActor *actor,
 	ui = GNOME_APP_FRAME_UI (data);
 	priv = ui->priv;
 	if (is_frame_ui_locked (ui))
-		return TRUE;
+		return FALSE;
 
-	if (priv->selected_button != actor) {
-		gnome_app_select_button_set (priv->selected_button, FALSE);
+	if (!priv->selected_button) {
 		priv->selected_button = actor;
-		gnome_app_select_button_set (priv->selected_button, TRUE);
+	} else {
+		gnome_app_button_set_selected (GNOME_APP_BUTTON (priv->selected_button), FALSE);
+		priv->selected_button = actor;
 	}
 	pagesize = g_strdup_printf ("%d", priv->pagesize);
 	name = (gchar *) g_object_get_data (G_OBJECT (actor), "category_name");
@@ -344,7 +345,7 @@ printf ("click on %s cids %s\n", name, cids);
 	gnome_app_task_push (task);
 	g_free (pagesize);
 
-	return TRUE;
+	return FALSE;
 }
 
 G_MODULE_EXPORT gboolean
@@ -455,13 +456,12 @@ create_category_list (GnomeAppFrameUI *ui)
 	col = row = 0;
 	categories = open_app_get_default_categories ();
 	for (categories; *categories; categories ++) {
-		actor = clutter_text_new ();
-		gnome_app_select_button_binding (actor);
-		g_object_set_data (G_OBJECT (actor), "category_name", (gpointer) *categories);
-		clutter_text_set_editable (CLUTTER_TEXT (actor), FALSE);
-		name = _((gchar *)*categories);
-		clutter_text_set_text (CLUTTER_TEXT (actor), name);
+		actor = CLUTTER_ACTOR (gnome_app_button_new ());
 		clutter_actor_set_reactive (actor, TRUE);
+		g_object_set (G_OBJECT (actor), "button-mode", "select", NULL);
+		g_object_set_data (G_OBJECT (actor), "category_name", (gpointer) *categories);
+		name = _((gchar *)*categories);
+		gnome_app_button_set_text (GNOME_APP_BUTTON (actor), name);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), col, row);
 		row ++;
 		g_signal_connect (actor, "button-press-event", G_CALLBACK (on_category_button_press), ui);
