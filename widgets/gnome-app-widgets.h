@@ -22,7 +22,6 @@
 #ifndef __GNOME_APP_WIDGETS_H__
 #define __GNOME_APP_WIDGETS_H__
 
-#include "gnome-app-score.h"
 #include "gnome-app-button.h"
 #include "gnome-app-check-box.h"
 #include "gnome-app-entry.h"

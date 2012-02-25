@@ -25,7 +25,6 @@
 void
 gnome_app_widgets_init ()
 {
-	gnome_app_score_get_type ();
 	gnome_app_button_get_type ();
 	gnome_app_check_box_get_type ();
 	gnome_app_texture_get_type ();

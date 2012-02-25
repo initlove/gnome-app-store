@@ -19,6 +19,7 @@ Author: David Liang <lzwang@suse.com>
 
 #include "open-app-utils.h"
 #include "gnome-app-widgets.h"
+#include "gnome-app-score.h"
 #include "gnome-app-task.h"
 #include "gnome-app-comment.h"
 #include "gnome-app-comments.h"
