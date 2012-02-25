@@ -23,7 +23,6 @@ Author: David Liang <lzwang@suse.com>
 #include "gnome-app-comment.h"
 #include "gnome-app-comments.h"
 #include "gnome-app-stage.h"
-#include "gnome-app-score-ui.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-ui-utils.h"
 
@@ -782,7 +781,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 	gint i;
 
 	ClutterActor *next, *prev;
-	ClutterActor *score, *score_actor;
+	ClutterActor *score;
 	ClutterActor *license;
 	ClutterActor *downloads, *download_group;
 	ClutterActor *fans, *fan_button;
@@ -836,11 +835,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 	priv->pic_count = count;
 	priv->current_pic = 1;
 
-
-	score_actor = CLUTTER_ACTOR (gnome_app_score_ui_new_with_score (open_result_get (info, "score")));
-	for (list = clutter_container_get_children (CLUTTER_CONTAINER (score)); list; list = list->next)
-		clutter_container_remove_actor (CLUTTER_CONTAINER (score), CLUTTER_ACTOR (list->data));
-	clutter_container_add_actor (CLUTTER_CONTAINER (score), score_actor);
+	g_object_set (G_OBJECT (score), "score", open_result_get (info, "score"));
 	clutter_text_set_text (CLUTTER_TEXT (license), open_result_get (info, "license"));
 
 	val = open_result_get (info, "downloads");

@@ -28,7 +28,6 @@ gnome_app_store_SOURCES =        \
 	gnome-app-register.c gnome-app-register.h \
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
 	gnome-app-frame-ui.c gnome-app-frame-ui.h \
-	gnome-app-score-ui.c gnome-app-score-ui.h \
 	gnome-app-icon-view.c gnome-app-icon-view.h \
 	gnome-app-info-page.c gnome-app-info-page.h \
 	gnome-app-comment.c gnome-app-comment.h \

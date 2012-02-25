@@ -72,7 +72,7 @@
       },
       {
         "id" : "score",
-	"type" : "ClutterGroup",
+	"type" : "GnomeAppScore",
         "x" : 550,
         "y" : 120,
 	"width" : 100,
