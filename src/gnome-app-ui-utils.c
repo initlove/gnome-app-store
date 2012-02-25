@@ -20,14 +20,6 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-task.h"
 #include "gnome-app-ui-utils.h"
 
-enum {
-	MOUSE_NONE,
-	MOUSE_ENTER,
-	MOUSE_LEAVE,
-};
-
-#define SCALE_UP_RATE  1.5
-
 static gpointer
 set_pic_callback (gpointer userdata, gpointer func_re)
 {
@@ -36,7 +28,7 @@ set_pic_callback (gpointer userdata, gpointer func_re)
 
 	actor = CLUTTER_ACTOR (userdata);
 	dest_url = (gchar *) func_re;
-	clutter_texture_set_from_file (CLUTTER_TEXTURE (actor), dest_url, NULL);
+	g_object_set (G_OBJECT (actor), "filename", dest_url, NULL);
 
 	return NULL;
 }
@@ -51,59 +43,6 @@ gnome_app_set_icon (ClutterActor *actor, const gchar *uri)
 	task = gnome_download_task_new (actor, uri);
 	gnome_app_task_set_callback (task, set_pic_callback);
 	gnome_app_task_push (task);
-}
-
-static gboolean
-on_gnome_app_widget_enter (ClutterActor *self,
-		ClutterEvent *event,
-		gpointer userdata)
-{
-	ClutterActor *actor;
-
-	actor = CLUTTER_ACTOR (userdata);
-	g_object_set_data (G_OBJECT (actor), "mouse-status", (gpointer) MOUSE_ENTER);
-	clutter_actor_queue_redraw (actor);
-
-	return FALSE;
-}
-
-static gboolean
-on_gnome_app_widget_leave (ClutterActor *self,
-		          ClutterEvent *event,
-			  gpointer userdata)
-{
-	ClutterActor *actor;
-
-	actor = CLUTTER_ACTOR (userdata);
-	g_object_set_data (G_OBJECT (actor), "mouse-status", (gpointer) MOUSE_LEAVE);
-	clutter_actor_queue_redraw (actor);
-
-	return FALSE;
-}
-
-static void
-on_gnome_app_button_paint (ClutterActor *actor,
-		gpointer      userdata)
-{
-	ClutterActorBox allocation = { 0, };
-	gfloat width, height;
-	gint mouse_status;
-	gboolean selected;
-
-	clutter_actor_get_allocation_box (actor, &allocation);
-	clutter_actor_box_clamp_to_pixel (&allocation);
-	clutter_actor_box_get_size (&allocation, &width, &height);
-
-	mouse_status = (gint) g_object_get_data (G_OBJECT (actor), "mouse-status");
-	switch (mouse_status) {
-		case MOUSE_ENTER:
-			cogl_set_source_color4ub (128, 128, 128, 255);
-			cogl_path_rectangle (-5, -5, width+5, height+5);
-			cogl_path_stroke ();
-			cogl_set_source_color4ub (255, 255, 255, 64);
-			cogl_rectangle (-4, -4, width + 4, height + 4);
-			break;
-	}
 }
 
 void

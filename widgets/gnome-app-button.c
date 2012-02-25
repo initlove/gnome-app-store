@@ -52,7 +52,7 @@ enum
 	PROP_TEXT,
 	PROP_FONT_NAME,
 	PROP_COLOR,
-	PROP_IMAGE,
+	PROP_FILENAME,
 	PROP_LAST
 };
 
@@ -69,6 +69,11 @@ gnome_app_button_paint (ClutterActor *self)
 
 	button = GNOME_APP_BUTTON (self);
 	priv = button->priv;
+
+	if (clutter_actor_is_scaled (CLUTTER_ACTOR (button))) {
+		CLUTTER_ACTOR_CLASS (gnome_app_button_parent_class)->paint (self);
+		return;
+	}
 
 	clutter_actor_get_allocation_box (CLUTTER_ACTOR (button), &allocation);
 	clutter_actor_box_clamp_to_pixel (&allocation);
@@ -171,6 +176,7 @@ gnome_app_button_set_property (GObject *object,
 	ClutterColor color;
 	const gchar *str;
 	gchar *filename;
+	gfloat width, height;
 
 	button = GNOME_APP_BUTTON (object);
 	priv = button->priv;
@@ -201,12 +207,15 @@ gnome_app_button_set_property (GObject *object,
 				clutter_text_set_color (CLUTTER_TEXT (priv->text), &color);
 			}
 			break;
-		case PROP_IMAGE:
+		case PROP_FILENAME:
 			priv->type = BUTTON_TEXTURE;
 			str = g_value_get_string (value);
 			filename = open_app_get_pixmap_uri (str);
+
 			if (filename) {
+				clutter_actor_get_size (CLUTTER_ACTOR (button), &width, &height);
 				clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->texture), filename, NULL);
+				clutter_actor_set_size (priv->texture, width, height);
 				g_free (filename);
 			}
 			break;
@@ -314,8 +323,8 @@ gnome_app_button_class_init (GnomeAppButtonClass *klass)
 				G_PARAM_READWRITE));
 
 	g_object_class_install_property (object_class,
-			PROP_IMAGE,
-			g_param_spec_string ("image",
+			PROP_FILENAME,
+			g_param_spec_string ("filename",
 				"filename of the image",
 				"filename of the image",
 				NULL,

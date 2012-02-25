@@ -272,6 +272,9 @@ open_app_get_pixmap_uri (const gchar *name)
 	gchar *uri;
 	gchar *real_name;
 
+	if (g_file_test (name, G_FILE_TEST_EXISTS))
+		return g_strdup (name);
+
 	if (strchr (name, '.')) {
 		real_name = g_strdup (name);
 	} else {

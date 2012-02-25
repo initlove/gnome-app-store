@@ -21,7 +21,7 @@
         "y" : 150,
         "width" : 32,
         "height" : 32,
-	"image" : "go-previous.png",
+	"filename" : "go-previous.png",
         "signals" : [
           { "name" : "button-press-event", "handler" : "on_prev_button_press" }
         ]
@@ -33,7 +33,7 @@
         "y" : 150,
         "width" : 32,
         "height" : 32,
-	"image" : "go-next.png",
+	"filename" : "go-next.png",
         "signals" : [
           { "name" : "button-press-event", "handler" : "on_next_button_press" }
         ]
@@ -185,7 +185,7 @@
         "y" : 550,
         "width" : 64,
         "height" : 64,
-	"image" : "back.png",
+	"filename" : "back.png",
         "reactive" : true,
         "signals" : [
           { "name" : "button-press-event", "handler" : "on_return_button_press" }
