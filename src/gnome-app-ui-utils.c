@@ -139,65 +139,6 @@ gnome_app_actor_add_background (ClutterActor *actor, gchar *filename)
 	clutter_actor_lower_bottom (texture);
 }
 
-static void
-scale_state_complete (ClutterState *state, gpointer userdata)
-{
-	ClutterActor *actor;
-
-	actor = CLUTTER_ACTOR (userdata);
-	  
-	if (clutter_actor_is_scaled (actor))
-	      clutter_state_set_state (state, "not-scaled");
-}
-
-static void
-on_scale_state_destroy (ClutterActor *actor,
-		gpointer userdata)
-{
-	ClutterState *state;
-
-	state = CLUTTER_STATE (userdata);
-
-	g_object_unref (G_OBJECT (state));
-}
-
-static gboolean
-on_scale_state_button_press (ClutterActor *self,
-      		ClutterEvent *event,
-		gpointer      userdata)
-{
-	ClutterState *state;
-
-	state = CLUTTER_STATE (userdata);
-	clutter_state_set_state (state, "scaled-up");
-//TODO
-	return FALSE;
-}
-
-void
-gnome_app_actor_add_scale_state (ClutterActor *actor)
-{
-	ClutterState *state;
-
-	g_object_set (G_OBJECT (actor),
-		"scale-gravity", CLUTTER_GRAVITY_CENTER,
-		NULL);
-	state = clutter_state_new ();
-	clutter_state_set_duration (state, NULL, NULL, 100);
-      	clutter_state_set (state, NULL, "not-scaled",
-		      	actor, "scale-x", CLUTTER_LINEAR, 1.0,
-			actor, "scale-y", CLUTTER_LINEAR, 1.0,
-			NULL);
-	clutter_state_set (state, NULL, "scaled-up",
-			actor, "scale-x", CLUTTER_LINEAR, SCALE_UP_RATE,
-			actor, "scale-y", CLUTTER_LINEAR, SCALE_UP_RATE,
-			NULL);
-	clutter_state_warp_to_state (state, "not-scaled");
-	g_signal_connect (state, "completed", G_CALLBACK (scale_state_complete), actor);
-	g_signal_connect (actor, "button-press-event", G_CALLBACK (on_scale_state_button_press), state);
-	g_signal_connect (actor, "destroy", G_CALLBACK (on_scale_state_destroy), state);
-}
-
 /*I have to do it, because implement po in script load need lots of time, for me. */
 static void
 gnome_app_script_preload (ClutterScript *script)

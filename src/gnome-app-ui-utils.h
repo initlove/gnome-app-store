@@ -28,7 +28,6 @@
 G_BEGIN_DECLS
 
 void		gnome_app_set_icon 			(ClutterActor *actor, const gchar *uri);
-void		gnome_app_actor_add_scale_state 	(ClutterActor *actor);
 ClutterScript * gnome_app_script_new_from_file		(const gchar *script_name);
 
 G_END_DECLS
