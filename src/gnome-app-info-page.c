@@ -582,6 +582,7 @@ draw_download_buttons (GnomeAppInfoPage *info_page)
 	download_group = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "download-group"));
 
 	layout = clutter_box_layout_new ();
+	clutter_box_layout_set_spacing (CLUTTER_BOX_LAYOUT (layout), 10);
 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (layout), TRUE);
 	layout_box = clutter_box_new (layout);
 	       
@@ -591,16 +592,15 @@ draw_download_buttons (GnomeAppInfoPage *info_page)
 		val = open_result_get (priv->info, str);
 		g_free (str);
 		if (val) {
-			button = clutter_text_new ();
+			button = CLUTTER_ACTOR (gnome_app_button_new ());
 			str = g_strdup_printf ("downloadname%d", i);
 			val = open_result_get (priv->info, str);
 			g_free (str);
 			if (val && val [0]) {
-				clutter_text_set_text (CLUTTER_TEXT (button), val);
+				gnome_app_button_set_text (GNOME_APP_BUTTON (button), (gchar *)val);
 			} else {
-				clutter_text_set_text (CLUTTER_TEXT (button), _("Download"));
+				gnome_app_button_set_text (GNOME_APP_BUTTON (button), _("Download"));
 			}
-			clutter_actor_set_reactive (button, TRUE);
 			clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout), button,
 				TRUE,
 				TRUE,

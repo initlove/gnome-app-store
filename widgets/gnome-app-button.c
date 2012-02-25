@@ -134,7 +134,7 @@ gnome_app_button_init (GnomeAppButton *button)
 
 	priv->type = BUTTON_NONE;
 	priv->mode = BUTTON_NORMAL;
-
+	clutter_actor_set_reactive (CLUTTER_ACTOR (button), TRUE);
 	priv->text = clutter_text_new ();
 	clutter_text_set_single_line_mode (CLUTTER_TEXT (priv->text), TRUE);
         clutter_text_set_editable (CLUTTER_TEXT (priv->text), FALSE);
