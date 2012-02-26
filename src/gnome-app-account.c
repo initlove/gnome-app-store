@@ -33,51 +33,16 @@ struct _GnomeAppAccountPrivate
 	gchar 		*person_id;
 };
 
+/* Properties */
+enum
+{
+	PROP_0,
+	PROP_PERSON_ID,
+       	PROP_LAST
+};
+
+
 G_DEFINE_TYPE (GnomeAppAccount, gnome_app_account, CLUTTER_TYPE_GROUP)
-
-static void
-gnome_app_account_init (GnomeAppAccount *account)
-{
-	GnomeAppAccountPrivate *priv;
-
-	account->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (account,
-	                                                 GNOME_APP_TYPE_ACCOUNT,
-	                                                 GnomeAppAccountPrivate);
-			
-	priv->script = NULL;
-	priv->person_id = NULL;
-}
-
-static void
-gnome_app_account_dispose (GObject *object)
-{
-	G_OBJECT_CLASS (gnome_app_account_parent_class)->dispose (object);
-}
-
-static void
-gnome_app_account_finalize (GObject *object)
-{
-	GnomeAppAccount *account = GNOME_APP_ACCOUNT (object);
-	GnomeAppAccountPrivate *priv = account->priv;
-
-	if (priv->script)
-		g_object_unref (priv->script);
-	if (priv->person_id)
-		g_free (priv->person_id);
-
-	G_OBJECT_CLASS (gnome_app_account_parent_class)->finalize (object);
-}
-
-static void
-gnome_app_account_class_init (GnomeAppAccountClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-	object_class->dispose = gnome_app_account_dispose;
-	object_class->finalize = gnome_app_account_finalize;
-	 
-	g_type_class_add_private (object_class, sizeof (GnomeAppAccountPrivate));
-}
 
 static gpointer
 set_account_callback (gpointer userdata, gpointer func_result)
@@ -131,7 +96,7 @@ set_account_callback (gpointer userdata, gpointer func_result)
 	val = open_result_get (result, "homepage");
 	clutter_text_set_text (CLUTTER_TEXT (homepage), val);
 
-	/*TODO there should have 'space' between name, this is to make my login name looks better */
+	/*TODO there should have 'space' between name, this is to make my account name looks better */
 	name = g_strdup_printf ("%s%s", 
 				open_result_get (result, "firstname"), 
 				open_result_get (result, "lastname"));
@@ -139,6 +104,31 @@ set_account_callback (gpointer userdata, gpointer func_result)
 	g_free (name);
 
 	return NULL;
+}
+
+static void
+gnome_app_account_load (GnomeAppAccount *account)
+{
+	GnomeAppAccountPrivate *priv;
+        ClutterActor *main_ui;
+	ClutterActor *friends;
+        ClutterActor *messages;
+
+	priv = account->priv;
+
+	if (priv->person_id) {
+		GnomeAppTask *task;
+		gchar *function;
+
+		function = g_strdup_printf ("/v1/person/data/%s",  priv->person_id);
+		task = gnome_app_task_new (account, "GET", function);
+		gnome_app_task_set_callback (task, set_account_callback);
+		gnome_app_task_push (task);
+
+		g_free (function);
+	} else {
+		/*TODO: display the not account interface */		
+	}
 }
 
 G_MODULE_EXPORT gboolean
@@ -181,58 +171,126 @@ on_message_press (ClutterActor *actor,
 	return TRUE;
 }
 
-GnomeAppAccount *
-gnome_app_account_new (gchar *personid)
+static void
+gnome_app_account_init (GnomeAppAccount *account)
 {
-	GnomeAppAccount *app_account;
 	GnomeAppAccountPrivate *priv;
         ClutterActor *main_ui;
-	ClutterActor *friends;
-        ClutterActor *messages;
+	GnomeAppStore *store;
+	const gchar *username;
 
-	app_account = g_object_new (GNOME_APP_TYPE_ACCOUNT, NULL);
-	priv = app_account->priv;
-
-	if (personid) {
-		priv->person_id = g_strdup (personid);
-	} else {
-		/*Display the login account */
-		GnomeAppStore *store;
-		const gchar *username;
-
-		store = gnome_app_store_get_default ();
-		username = gnome_app_store_get_username (store);
-		if (username)
-			priv->person_id = g_strdup (username);
-		else
-			priv->person_id = NULL;
-	}
-
+	account->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (account,
+	                                                 GNOME_APP_TYPE_ACCOUNT,
+	                                                 GnomeAppAccountPrivate);
+			
         priv->script = gnome_app_script_new_from_file ("app-account");
         if (!priv->script)
-		return app_account;
-        clutter_script_connect_signals (priv->script, app_account);
+		return;
+
+        clutter_script_connect_signals (priv->script, account);
         clutter_script_get_objects (priv->script, 
 			"app-account", &main_ui,
-			"friends", &friends,
-			"messages", &messages,
 			NULL);
 
-	clutter_container_add_actor (CLUTTER_CONTAINER (app_account), CLUTTER_ACTOR (main_ui));
+	clutter_container_add_actor (CLUTTER_CONTAINER (account), CLUTTER_ACTOR (main_ui));
 
-	if (priv->person_id) {
-		GnomeAppTask *task;
-		gchar *function;
-
-		function = g_strdup_printf ("/v1/person/data/%s",  priv->person_id);
-		task = gnome_app_task_new (app_account, "GET", function);
-		gnome_app_task_set_callback (task, set_account_callback);
-		gnome_app_task_push (task);
-
-		g_free (function);
-	} else {
-		/*TODO: display the not login interface */		
-	}
-
-	return app_account;
+	store = gnome_app_store_get_default ();
+	username = gnome_app_store_get_username (store);
+	if (username) {
+		priv->person_id = g_strdup (username);
+		gnome_app_account_load (account);
+	} else
+		priv->person_id = NULL;
 }
+
+static void
+gnome_app_account_dispose (GObject *object)
+{
+	G_OBJECT_CLASS (gnome_app_account_parent_class)->dispose (object);
+}
+
+static void
+gnome_app_account_finalize (GObject *object)
+{
+	GnomeAppAccount *account = GNOME_APP_ACCOUNT (object);
+	GnomeAppAccountPrivate *priv = account->priv;
+
+	if (priv->script)
+		g_object_unref (priv->script);
+	if (priv->person_id)
+		g_free (priv->person_id);
+
+	G_OBJECT_CLASS (gnome_app_account_parent_class)->finalize (object);
+}
+
+
+static void
+gnome_app_account_set_property (GObject *object,
+		guint         prop_id,
+		const GValue *value,
+		GParamSpec   *pspec)
+{
+	GnomeAppAccount *account;
+	GnomeAppAccountPrivate *priv;
+		
+	account = GNOME_APP_ACCOUNT (object);
+	priv = account->priv;
+	switch (prop_id)
+	{
+		case PROP_PERSON_ID:
+			if (priv->person_id)
+				g_free (priv->person_id);
+			priv->person_id = g_strdup (g_value_get_string (value));
+			gnome_app_account_load (account);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+gnome_app_account_get_property (GObject *object,
+		guint         prop_id,
+		GValue       *value,
+		GParamSpec   *pspec)
+{
+	GnomeAppAccount *account;
+ 	GnomeAppAccountPrivate *priv;
+
+	account = GNOME_APP_ACCOUNT (object);
+	priv = account->priv;
+	switch (prop_id)
+	{
+		case PROP_PERSON_ID:
+			g_value_set_string (value, priv->person_id);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+gnome_app_account_class_init (GnomeAppAccountClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+        object_class->set_property = gnome_app_account_set_property;
+	object_class->get_property = gnome_app_account_get_property;
+	object_class->dispose = gnome_app_account_dispose;
+	object_class->finalize = gnome_app_account_finalize;
+	 
+	g_type_class_add_private (object_class, sizeof (GnomeAppAccountPrivate));
+}
+
+GnomeAppAccount *
+gnome_app_account_new (void)
+{
+	GnomeAppAccount *account;
+
+	account = g_object_new (GNOME_APP_TYPE_ACCOUNT, NULL);
+
+	return account;
+}
+

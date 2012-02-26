@@ -3,6 +3,7 @@
 #include <glib/gi18n.h>
 #include <clutter/clutter.h>
 
+#include "gnome-app-account.h"
 #include "gnome-app-store.h"
 #include "gnome-app-stage.h"
 
@@ -10,6 +11,7 @@ static void
 gnome_app_type_regist_all ()
 {
 	gnome_app_widgets_init ();
+	gnome_app_account_get_type ();
 	gnome_app_login_get_type ();
 	gnome_app_register_get_type ();
 	gnome_app_frame_get_type ();

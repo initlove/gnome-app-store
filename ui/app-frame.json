@@ -77,8 +77,8 @@
         ]
       },
       {
-        "id" : "account-group",
-        "type" : "ClutterGroup",
+        "id" : "account",
+        "type" : "GnomeAppAccount",
         "x" : 740,
 	"y" : 20
       },

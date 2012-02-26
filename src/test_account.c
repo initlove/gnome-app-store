@@ -33,7 +33,7 @@ main (int argc, char *argv[])
 	gnome_app_store_set_lock_function (store, clutter_threads_enter);
 	gnome_app_store_set_unlock_function (store, clutter_threads_leave);
 
-	account = CLUTTER_ACTOR (gnome_app_account_new (NULL));
+	account = CLUTTER_ACTOR (gnome_app_account_new ());
 	clutter_container_add (CLUTTER_CONTAINER (stage), account, NULL);
 
 	g_main_loop_run (loop);

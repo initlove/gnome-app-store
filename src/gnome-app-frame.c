@@ -21,7 +21,6 @@ Author: David Liang <dliang@novell.com>
 #include "open-app-utils.h"
 #include "gnome-app-store.h"
 #include "gnome-app-task.h"
-#include "gnome-app-account.h"
 #include "gnome-app-frame.h"
 #include "gnome-app-icon-view.h"
 #include "gnome-app-ui-utils.h"
@@ -30,7 +29,6 @@ Author: David Liang <dliang@novell.com>
 struct _GnomeAppFramePrivate
 {
         ClutterScript	*script;
-	ClutterActor	*account;
 	ClutterActor	*categories;
 	ClutterActor 	*spin;
 	ClutterActor    *selected_button;
@@ -446,7 +444,6 @@ gnome_app_frame_init (GnomeAppFrame *frame)
 {
 	GnomeAppFramePrivate *priv;
 	ClutterActor *main_ui;
-	ClutterActor *account_group;
 	ClutterActor *icon_view_group;
 	ClutterActor *categories_group;
 	ClutterActor *prev;
@@ -468,7 +465,6 @@ gnome_app_frame_init (GnomeAppFrame *frame)
         clutter_script_connect_signals (priv->script, frame);
 	clutter_script_get_objects (priv->script, 
 			"frame", &main_ui,
-			"account-group", &account_group,
 			"categories", &categories_group,
 			"icon-view", &icon_view_group,
 			"prev-icon", &prev,
@@ -478,9 +474,6 @@ gnome_app_frame_init (GnomeAppFrame *frame)
 
 	priv->store = gnome_app_store_get_default ();
 	gnome_app_store_init_category (GNOME_APP_STORE (priv->store));
-
-	priv->account = CLUTTER_ACTOR (gnome_app_account_new (NULL));
-	clutter_container_add_actor (CLUTTER_CONTAINER (account_group), priv->account);
 
 	priv->categories = create_category_list (frame);
 	clutter_container_add_actor (CLUTTER_CONTAINER (categories_group), priv->categories);

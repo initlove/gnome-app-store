@@ -49,7 +49,7 @@ struct _GnomeAppAccountClass
 };
 
 GType			gnome_app_account_get_type              (void);
-GnomeAppAccount *	gnome_app_account_new			(gchar *personid);
+GnomeAppAccount *	gnome_app_account_new			(void);
 
 G_END_DECLS
 
