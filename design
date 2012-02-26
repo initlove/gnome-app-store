@@ -1,0 +1,37 @@
+common: useful functions
+	the open-result is essential here
+	In my understanding, if we want to work on the openapi
+	DONNOT define the special struct, 
+		for example, person, content, comment ..
+	if we define it, we miss the sprite of openapi.
+	as openapi is already well defined ( the function, the args, the return data )
+	we just need to use it, restruct is a duplicate work.
+liboasyncworker: the lib get from upstream
+	not fully understand it, just use it to 分配 task
+lib:	gnome-app-store lib
+	play as the proxy or server
+	provide data to the client
+widgets:
+	the widgets I draw, should merge widgets in gnome-shell/st
+	the final aim is to port all the widgets in jquery
+ui: the most important,  all the user interface were designed here
+src:
+	stage: as the navigator
+
+The ui plays as html, the src plays as the javascript, or we just need to use javascript
+
+1.	MVC	(which is what?)
+	visual: clutter-script
+		one script, on object
+		donnot want to autosize, as the page should be deside by the drawer.
+		not the coder, especially in imagination
+	control: signal in the script
+		implement in the codes
+	m:	what is ?
+	
+2.	
+	css +	 html + 	javascript
+	css	clutter-script	javascript/c/python ..
+
+
+		
