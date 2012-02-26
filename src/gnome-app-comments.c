@@ -152,12 +152,8 @@ gnome_app_comments_init (GnomeAppComments *comments)
 	priv->content2 = NULL;
 	priv->task = NULL;
 	priv->lock = FALSE;
-
-	gchar *spin_dir;
-
-	spin_dir = open_app_get_spin_dir ();
-	priv->spin = CLUTTER_ACTOR (gnome_app_dtexture_new_from_dir (spin_dir));
-	g_free (spin_dir);
+	priv->spin = CLUTTER_ACTOR (gnome_app_texture_new ());
+	g_object_set (G_OBJECT (priv->spin), "texture-type", "spin", NULL);
 	clutter_container_add_actor (CLUTTER_CONTAINER (comments), CLUTTER_ACTOR (priv->spin));
 	clutter_actor_set_position (priv->spin, priv->view_width/2, 50);
 }

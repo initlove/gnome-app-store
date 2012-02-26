@@ -84,9 +84,16 @@
       },
       {
 	"id" : "icon-view", 
-	"type" : "ClutterGroup",
+	"type" : "GnomeAppIconView",
 	"x" : 10,
 	"y" : 80
+      },
+      {
+	"id" : "spin", 
+	"type" : "GnomeAppTexture",
+	"x" : 340,
+	"y" : 300,
+	"texture-type" : "spin"
       },
       {
         "id" : "categories",

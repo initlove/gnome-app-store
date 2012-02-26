@@ -444,7 +444,6 @@ gnome_app_frame_init (GnomeAppFrame *frame)
 {
 	GnomeAppFramePrivate *priv;
 	ClutterActor *main_ui;
-	ClutterActor *icon_view_group;
 	ClutterActor *categories_group;
 	ClutterActor *prev;
 	ClutterActor *next;
@@ -466,7 +465,8 @@ gnome_app_frame_init (GnomeAppFrame *frame)
 	clutter_script_get_objects (priv->script, 
 			"frame", &main_ui,
 			"categories", &categories_group,
-			"icon-view", &icon_view_group,
+			"spin", &priv->spin,
+			"icon-view", &priv->icon_view,
 			"prev-icon", &prev,
 			"next-icon", &next,
 			NULL);
@@ -478,21 +478,7 @@ gnome_app_frame_init (GnomeAppFrame *frame)
 	priv->categories = create_category_list (frame);
 	clutter_container_add_actor (CLUTTER_CONTAINER (categories_group), priv->categories);
 
-	priv->icon_view = gnome_app_icon_view_new ();
 	priv->pagesize = gnome_app_icon_view_get_pagesize (priv->icon_view);
-	clutter_container_add_actor (CLUTTER_CONTAINER (icon_view_group), CLUTTER_ACTOR (priv->icon_view));
-
-	gchar *spin_dir;
-	gfloat prev_x, prev_y;
-	gfloat next_x, next_y;
-
-	spin_dir = open_app_get_spin_dir ();
-	priv->spin = CLUTTER_ACTOR (gnome_app_dtexture_new_from_dir (spin_dir));
-	g_free (spin_dir);
-	clutter_container_add_actor (CLUTTER_CONTAINER (icon_view_group), CLUTTER_ACTOR (priv->spin));
-	clutter_actor_get_position (prev, &prev_x, &prev_y);
-	clutter_actor_get_position (next, &next_x, &next_y);
-	clutter_actor_set_position (priv->spin, (prev_x + next_x)/2, (prev_y + next_y)/2);
 
 	frame_set_default_data (frame);
 }

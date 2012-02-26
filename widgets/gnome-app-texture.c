@@ -95,7 +95,13 @@ gnome_app_texture_set_property (GObject *object,
 			break;
 		case PROP_TEXTURE_TYPE:
 			str = g_value_get_string (value);
-			if (strcmp (str, "dir") == 0) {
+			if (strcmp (str, "spin") == 0) {
+				priv->type = DIR_TEXTURE;
+				priv->pos = 1;
+				if (priv->url)
+					g_free (priv->url);
+				priv->url = open_app_get_spin_dir ();
+			} else if (strcmp (str, "dir") == 0) {
 				priv->type = DIR_TEXTURE;
 				priv->pos = 1;
 			} else if (strcmp (str, "mult") == 0)
