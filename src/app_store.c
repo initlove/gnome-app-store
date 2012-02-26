@@ -11,6 +11,7 @@ static void
 gnome_app_type_regist_all ()
 {
 	gnome_app_widgets_init ();
+	gnome_app_icon_view_get_type ();
 	gnome_app_account_get_type ();
 	gnome_app_login_get_type ();
 	gnome_app_register_get_type ();
