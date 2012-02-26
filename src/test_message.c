@@ -4,7 +4,7 @@
 #include <glib/gi18n.h>
 
 #include "gnome-app-store.h"
-#include "gnome-app-message-ui.h"
+#include "gnome-app-message.h"
 
 int
 main (int argc, char *argv[])
@@ -31,7 +31,7 @@ main (int argc, char *argv[])
 	gnome_app_store_set_lock_function (store, clutter_threads_enter);
 	gnome_app_store_set_unlock_function (store, clutter_threads_leave);
 
-	message = CLUTTER_ACTOR (gnome_app_message_ui_new ());
+	message = CLUTTER_ACTOR (gnome_app_message_new ());
 	clutter_container_add (CLUTTER_CONTAINER (stage), message, NULL);
 #else
 	ClutterActor *page, *actor;

@@ -21,76 +21,76 @@ Author: David Liang <dliang@novell.com>
 #include "open-result.h"
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
-#include "gnome-app-friends-ui.h"
+#include "gnome-app-friends.h"
 
-struct _GnomeAppFriendsUIPrivate
+struct _GnomeAppFriendsPrivate
 {
 	gchar 		*person_id;
 	gint		friends_count;
 };
 
-G_DEFINE_TYPE (GnomeAppFriendsUI, gnome_app_friends_ui, CLUTTER_TYPE_GROUP)
+G_DEFINE_TYPE (GnomeAppFriends, gnome_app_friends, CLUTTER_TYPE_GROUP)
 
 static void
-gnome_app_friends_ui_init (GnomeAppFriendsUI *friends_ui)
+gnome_app_friends_init (GnomeAppFriends *friends)
 {
-	GnomeAppFriendsUIPrivate *priv;
+	GnomeAppFriendsPrivate *priv;
 
-	friends_ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (friends_ui,
-	                                                 GNOME_APP_TYPE_FRIENDS_UI,
-	                                                 GnomeAppFriendsUIPrivate);
+	friends->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (friends,
+	                                                 GNOME_APP_TYPE_FRIENDS,
+	                                                 GnomeAppFriendsPrivate);
 			
 	priv->person_id = NULL;
 	priv->friends_count = -1;
 }
 
 static void
-gnome_app_friends_ui_dispose (GObject *object)
+gnome_app_friends_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (gnome_app_friends_ui_parent_class)->dispose (object);
+	G_OBJECT_CLASS (gnome_app_friends_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_friends_ui_finalize (GObject *object)
+gnome_app_friends_finalize (GObject *object)
 {
-	GnomeAppFriendsUI *friends_ui = GNOME_APP_FRIENDS_UI (object);
-	GnomeAppFriendsUIPrivate *priv = friends_ui->priv;
+	GnomeAppFriends *friends = GNOME_APP_FRIENDS (object);
+	GnomeAppFriendsPrivate *priv = friends->priv;
 
 	if (priv->person_id)
 		g_free (priv->person_id);
 
-	G_OBJECT_CLASS (gnome_app_friends_ui_parent_class)->finalize (object);
+	G_OBJECT_CLASS (gnome_app_friends_parent_class)->finalize (object);
 }
 
 static void
-gnome_app_friends_ui_class_init (GnomeAppFriendsUIClass *klass)
+gnome_app_friends_class_init (GnomeAppFriendsClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = gnome_app_friends_ui_dispose;
-	object_class->finalize = gnome_app_friends_ui_finalize;
+	object_class->dispose = gnome_app_friends_dispose;
+	object_class->finalize = gnome_app_friends_finalize;
 	 
-	g_type_class_add_private (object_class, sizeof (GnomeAppFriendsUIPrivate));
+	g_type_class_add_private (object_class, sizeof (GnomeAppFriendsPrivate));
 }
 
 /*TODO: better way to merge this to the main class */
 /*TODO: use set data */
-typedef struct _FriendUIData {
+typedef struct _FriendData {
 	ClutterActor *icon;
 	ClutterActor *info;
-} FriendUIData;
+} FriendData;
 
 static gpointer
 add_friend_callback (gpointer userdata, gpointer func_result)
 {
-	FriendUIData *data;
+	FriendData *data;
 	OpenResult *result;
 	OpenResults *results;
 	GList *list;
 	const gchar *val;
 	const gchar *pic;
 
-	data = (FriendUIData *) userdata;
+	data = (FriendData *) userdata;
 	results = OPEN_RESULTS (func_result);
         if (!open_results_get_status (results)) {
 		/*TODO: fill the account with default val */
@@ -135,12 +135,12 @@ add_friend_callback (gpointer userdata, gpointer func_result)
 static void
 add_friend (ClutterActor *icon, ClutterActor *info, const gchar *person_id)
 {
-	FriendUIData *data;
+	FriendData *data;
 	GnomeAppTask *task;
 	gchar *function;
 
 	/*TODO: need to free this */
-	data = g_new0(FriendUIData, 1);
+	data = g_new0(FriendData, 1);
 	data->icon = icon;
 	data->info = info;
 
@@ -158,10 +158,10 @@ on_close_press (ClutterActor *actor,
 		ClutterEvent *event,
 		gpointer      data)
 {
-	GnomeAppFriendsUI *friends_ui;
-	friends_ui = GNOME_APP_FRIENDS_UI (data);
+	GnomeAppFriends *friends;
+	friends = GNOME_APP_FRIENDS (data);
 	printf ("on close press\n");
-	clutter_actor_destroy (CLUTTER_ACTOR (friends_ui));
+	clutter_actor_destroy (CLUTTER_ACTOR (friends));
 
 	return TRUE;
 }
@@ -169,21 +169,21 @@ on_close_press (ClutterActor *actor,
 static gpointer
 set_friends_callback (gpointer userdata, gpointer func_result)
 {
-	GnomeAppFriendsUI *friends_ui;
+	GnomeAppFriends *friends;
         OpenResult *result;
 	OpenResults *results;
         GList *l;
 	const gchar *val;
 
-	friends_ui = GNOME_APP_FRIENDS_UI (userdata);
+	friends = GNOME_APP_FRIENDS (userdata);
  	results = OPEN_RESULTS (func_result);
 
 	if (!open_results_get_status (results)) {
 		/*TODO: fill the friends with default val */
-		g_debug ("Fail to get the friend info of %s: %s\n", friends_ui->priv->person_id, open_results_get_meta (results, "message"));
+		g_debug ("Fail to get the friend info of %s: %s\n", friends->priv->person_id, open_results_get_meta (results, "message"));
 		return NULL;
 	} else {
-		friends_ui->priv->friends_count = open_results_get_total_items (results);
+		friends->priv->friends_count = open_results_get_total_items (results);
 		/*TODO: if none friends, different ui */
 
 		ClutterLayoutManager *layout;
@@ -198,7 +198,7 @@ set_friends_callback (gpointer userdata, gpointer func_result)
 		layout_box = clutter_box_new (layout);
 
 		info = clutter_text_new ();
-		str = g_strdup_printf (_("%d Friends"), friends_ui->priv->friends_count);
+		str = g_strdup_printf (_("%d Friends"), friends->priv->friends_count);
 		clutter_text_set_text (CLUTTER_TEXT (info), str);
 		g_free (str);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (info), col, row);
@@ -217,7 +217,7 @@ set_friends_callback (gpointer userdata, gpointer func_result)
 						FALSE, FALSE);
 		clutter_table_layout_set_fill (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (icon),
 						FALSE, FALSE);
-		g_signal_connect (icon, "button-press-event", G_CALLBACK (on_close_press), friends_ui);
+		g_signal_connect (icon, "button-press-event", G_CALLBACK (on_close_press), friends);
 
 		row ++;
 		for (l = open_results_get_data (results); l ; l = l->next) {
@@ -245,18 +245,18 @@ set_friends_callback (gpointer userdata, gpointer func_result)
 			/*TODO: send msg */
 //			g_signal_connect (actor, "event", G_CALLBACK (on_category_event), ui);
 		}
-		clutter_container_add_actor (CLUTTER_CONTAINER (friends_ui), CLUTTER_ACTOR (layout_box));
+		clutter_container_add_actor (CLUTTER_CONTAINER (friends), CLUTTER_ACTOR (layout_box));
 	}
 
 	return NULL;
 }
 
 /*TODO: background color */
-GnomeAppFriendsUI *
-gnome_app_friends_ui_new (const gchar *personid)
+GnomeAppFriends *
+gnome_app_friends_new (const gchar *personid)
 {
-	GnomeAppFriendsUI *friends_ui;
-	GnomeAppFriendsUIPrivate *priv;
+	GnomeAppFriends *friends;
+	GnomeAppFriendsPrivate *priv;
 	const gchar *id = NULL;
 
 	if (personid) {
@@ -270,15 +270,15 @@ gnome_app_friends_ui_new (const gchar *personid)
 	}
 
 	if (id) {
-		friends_ui = g_object_new (GNOME_APP_TYPE_FRIENDS_UI, NULL);
-		priv = friends_ui->priv;
+		friends = g_object_new (GNOME_APP_TYPE_FRIENDS, NULL);
+		priv = friends->priv;
 		priv->person_id = g_strdup (id);
 
 		GnomeAppTask *task;
 		gchar *function;
 
 		function = g_strdup_printf ("/v1/friend/data/%s",  priv->person_id);
-		task = gnome_app_task_new (friends_ui, "GET", function);
+		task = gnome_app_task_new (friends, "GET", function);
 		gnome_app_task_add_params (task,
 				"page",	"0",
 				"pagesize", "10",
@@ -288,7 +288,7 @@ gnome_app_friends_ui_new (const gchar *personid)
 
 		g_free (function);
 
-		return friends_ui;
+		return friends;
 	} else {
 		return NULL;
 	}

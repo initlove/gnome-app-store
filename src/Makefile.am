@@ -28,15 +28,14 @@ gnome_app_store_SOURCES =        \
 	gnome-app-login.c gnome-app-login.h \
 	gnome-app-register.c gnome-app-register.h \
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
-	gnome-app-frame-ui.c gnome-app-frame-ui.h \
+	gnome-app-frame.c gnome-app-frame.h \
 	gnome-app-icon-view.c gnome-app-icon-view.h \
 	gnome-app-info-page.c gnome-app-info-page.h \
 	gnome-app-comment.c gnome-app-comment.h \
-	$(top_srcdir)/widgets/libwidgets.la \
 	gnome-app-comments.c gnome-app-comments.h \
-	gnome-app-friends-ui.c gnome-app-friends-ui.h	\
-	gnome-app-message-ui.c gnome-app-message-ui.h	\
-	gnome-app-account-ui.c gnome-app-account-ui.h  \
+	gnome-app-friends.c gnome-app-friends.h	\
+	gnome-app-message.c gnome-app-message.h	\
+	gnome-app-account.c gnome-app-account.h  \
 	app_store.c
 
 gnome_app_store_LDADD =          \
@@ -60,9 +59,9 @@ test_comments_LDADD =          \
 
 test_account_SOURCES = \
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
-	gnome-app-friends-ui.c gnome-app-friends-ui.h	\
-	gnome-app-message-ui.c gnome-app-message-ui.h	\
-	gnome-app-account-ui.c gnome-app-account-ui.h  \
+	gnome-app-friends.c gnome-app-friends.h	\
+	gnome-app-message.c gnome-app-message.h	\
+	gnome-app-account.c gnome-app-account.h  \
 	test_account.c
 
 test_account_LDADD =          \
@@ -73,7 +72,7 @@ test_account_LDADD =          \
 
 test_friends_SOURCES = \
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
-	gnome-app-friends-ui.c gnome-app-friends-ui.h	\
+	gnome-app-friends.c gnome-app-friends.h	\
 	test_friends.c
 
 test_friends_LDADD =          \
@@ -84,7 +83,7 @@ test_friends_LDADD =          \
 
 test_message_SOURCES = \
 	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
-	gnome-app-message-ui.c gnome-app-message-ui.h	\
+	gnome-app-message.c gnome-app-message.h	\
 	test_message.c
 
 test_message_LDADD =          \

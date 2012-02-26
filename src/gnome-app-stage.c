@@ -26,7 +26,7 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-info-page.h"
 #include "gnome-app-login.h"
 #include "gnome-app-register.h"
-#include "gnome-app-frame-ui.h"
+#include "gnome-app-frame.h"
 
 struct _GnomeAppStagePrivate
 {
@@ -55,9 +55,7 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 	app_stage = GNOME_APP_STAGE (userdata);
 	priv = app_stage->priv;
 	if (results && open_results_get_status (results)) {
-		gnome_app_stage_load (app_stage,
-				"GnomeAppFrameUI",
-				NULL);
+		gnome_app_stage_load (app_stage, "GnomeAppFrame", NULL);
 	} else {
 		gchar *username;
 		gchar *password;
@@ -139,7 +137,7 @@ gnome_app_stage_show (GnomeAppStage *app_stage, GObject *app_actor)
 	if (filename) {
 		clutter_actor_set_size (CLUTTER_ACTOR (priv->background), width, height);
 		clutter_actor_show (CLUTTER_ACTOR (priv->background));
-		clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->background), filename, NULL);
+//		clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->background), filename, NULL);
 		g_free (filename);
 	} else {
 		clutter_actor_hide (CLUTTER_ACTOR (priv->background));
@@ -186,8 +184,11 @@ gnome_app_stage_init (GnomeAppStage *app_stage)
 
 	priv->table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 	priv->store = gnome_app_store_get_default ();
-
+#if 0
         gnome_app_stage_remove_decorate (CLUTTER_ACTOR (app_stage));
+#else
+	clutter_stage_set_title (CLUTTER_STAGE (app_stage), "App Store");
+#endif
 	gnome_app_stage_set_position (CLUTTER_ACTOR (app_stage), GNOME_APP_STAGE_POSITION_CENTER);
 	clutter_actor_set_reactive (CLUTTER_ACTOR (app_stage), TRUE);
 
@@ -195,13 +196,10 @@ gnome_app_stage_init (GnomeAppStage *app_stage)
 	clutter_actor_set_opacity (priv->background, 128);
 	clutter_actor_set_position (priv->background, 0, 0);
 	clutter_container_add_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (priv->background));
-//	clutter_stage_set_title (CLUTTER_STAGE (app_stage), _("AppStore"));
         g_signal_connect (app_stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 #if 1
 	//DEBUG
-	gnome_app_stage_load (app_stage,
-				"GnomeAppFrameUI",
-				NULL);
+	gnome_app_stage_load (app_stage, "GnomeAppFrame", NULL);
 #else
 	auth_valid (app_stage);
 #endif
@@ -396,3 +394,19 @@ gnome_app_stage_set_position (ClutterActor *stage, gint position)
 {
 	g_signal_connect (stage, "show", G_CALLBACK (set_position_on_show), (gpointer) position);
 }
+
+void
+gnome_app_stage_close (GnomeAppStage *app_stage)
+{
+	g_object_unref (app_stage);
+}
+
+G_MODULE_EXPORT void
+gnome_app_default_stage_close (void)
+{
+	GnomeAppStage *app_stage;
+
+	app_stage = gnome_app_stage_get_default ();
+	gnome_app_stage_close (app_stage);
+}
+

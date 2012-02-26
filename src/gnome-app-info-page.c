@@ -626,7 +626,7 @@ on_return_button_press (ClutterActor *actor,
 	GnomeAppStage *stage;
 
 	stage = gnome_app_stage_get_default ();
-	gnome_app_stage_load (stage, "GnomeAppFrameUI", NULL);
+	gnome_app_stage_load (stage, "GnomeAppFrame", NULL);
 
         return TRUE;
 }

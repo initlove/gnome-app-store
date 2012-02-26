@@ -7,15 +7,6 @@
     "reactive" : true,
     "children" : [
       {
-	"id" : "close",
-	"type" : "ClutterTexture",
-	"filename" : "close.png",
-	"x" : 260,
-	"y" : 2,
-	"width" : 20,
-	"height" : 20
-      },
-      {
         "id" : "username-entry",
         "type" : "GnomeAppEntry",
 	"x" : 50,

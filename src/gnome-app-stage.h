@@ -63,6 +63,8 @@ void			gnome_app_stage_move            (ClutterActor *stage, gint x, gint y);
 void			gnome_app_stage_set_position	(ClutterActor *stage, gint position);
 void			gnome_app_stage_remove_decorate (ClutterActor *stage);
 void			gnome_app_stage_load		(GnomeAppStage *app_stage, const gchar *type_name, ...);
+void			gnome_app_stage_close		(GnomeAppStage *app_stage);
+G_MODULE_EXPORT	void	gnome_app_default_stage_close	(void);
 
 G_END_DECLS
 

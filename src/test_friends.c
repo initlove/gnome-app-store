@@ -4,7 +4,7 @@
 #include <glib/gi18n.h>
 
 #include "gnome-app-store.h"
-#include "gnome-app-friends-ui.h"
+#include "gnome-app-friends.h"
 
 int
 main (int argc, char *argv[])
@@ -31,7 +31,7 @@ main (int argc, char *argv[])
 	gnome_app_store_set_lock_function (store, clutter_threads_enter);
 	gnome_app_store_set_unlock_function (store, clutter_threads_leave);
 
-	friends = CLUTTER_ACTOR (gnome_app_friends_ui_new (NULL));
+	friends = CLUTTER_ACTOR (gnome_app_friends_new (NULL));
 	clutter_container_add (CLUTTER_CONTAINER (stage), friends, NULL);
 
 	g_main_loop_run (loop);

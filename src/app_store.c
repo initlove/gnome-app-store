@@ -12,7 +12,7 @@ gnome_app_type_regist_all ()
 	gnome_app_widgets_init ();
 	gnome_app_login_get_type ();
 	gnome_app_register_get_type ();
-	gnome_app_frame_ui_get_type ();
+	gnome_app_frame_get_type ();
 	gnome_app_info_page_get_type ();
 }
 

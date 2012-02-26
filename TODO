@@ -3,3 +3,8 @@ We should make a better search entry...
 all the iconview and the etc should be implemented as a gobject and put to script
 
 lots of button animation work to do 
+
+
+make an application object
+which control all store  stage
+so donnot use such as gnome_app_stage_get_default

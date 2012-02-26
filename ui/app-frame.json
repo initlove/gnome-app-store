@@ -1,6 +1,6 @@
 {
   "Frame UI" : {
-    "id" : "frame-ui",
+    "id" : "frame",
     "type" : "ClutterGroup",
     "width" : 1000,
     "height" : 800,
@@ -73,9 +73,7 @@
 	"height" : 32,
 	"reactive" : true,
         "signals" : [
-          { "name" : "button-press-event", "handler" : "on_icon_press" },
-          { "name" : "enter-event", "handler" : "on_icon_enter" },
-          { "name" : "leave-event", "handler" : "on_icon_leave" }
+          { "name" : "button-press-event", "handler" : "on_icon_press" }
         ]
       },
       {
@@ -98,7 +96,7 @@
       },
       {
         "id" : "prev-icon",
-        "type" : "ClutterTexture",
+        "type" : "GnomeAppButton",
         "x" : 12,
 	"y" : 300,
 	"width" : 32,
@@ -106,14 +104,12 @@
 	"filename" : "go-previous.png",
 	"reactive" : true,
         "signals" : [
-          { "name" : "button-press-event", "handler" : "on_icon_press" },
-          { "name" : "enter-event", "handler" : "on_icon_enter" },
-          { "name" : "leave-event", "handler" : "on_icon_leave" }
+          { "name" : "button-press-event", "handler" : "on_icon_press" }
         ]
       },
       {
         "id" : "next-icon",
-        "type" : "ClutterTexture",
+        "type" : "GnomeAppButton",
         "x" : 700,
 	"y" : 300,
 	"width" : 32,
@@ -121,9 +117,7 @@
 	"filename" : "go-next.png",
 	"reactive" : true,
         "signals" : [
-          { "name" : "button-press-event", "handler" : "on_icon_press" },
-          { "name" : "enter-event", "handler" : "on_icon_enter" },
-          { "name" : "leave-event", "handler" : "on_icon_leave" }
+          { "name" : "button-press-event", "handler" : "on_icon_press" }
         ]
       }
     ]

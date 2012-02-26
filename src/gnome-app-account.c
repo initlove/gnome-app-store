@@ -21,74 +21,74 @@ Author: David Liang <dliang@novell.com>
 #include "open-result.h"
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
-#include "gnome-app-friends-ui.h"
-#include "gnome-app-message-ui.h"
-#include "gnome-app-account-ui.h"
+#include "gnome-app-friends.h"
+#include "gnome-app-message.h"
+#include "gnome-app-account.h"
 #include "gnome-app-ui-utils.h"
 
-struct _GnomeAppAccountUIPrivate
+struct _GnomeAppAccountPrivate
 {
 	ClutterScript	*script;
-	ClutterGroup    *ui_group;
+	ClutterGroup    *main_ui;
 	gchar 		*person_id;
 };
 
-G_DEFINE_TYPE (GnomeAppAccountUI, gnome_app_account_ui, CLUTTER_TYPE_GROUP)
+G_DEFINE_TYPE (GnomeAppAccount, gnome_app_account, CLUTTER_TYPE_GROUP)
 
 static void
-gnome_app_account_ui_init (GnomeAppAccountUI *account_ui)
+gnome_app_account_init (GnomeAppAccount *account)
 {
-	GnomeAppAccountUIPrivate *priv;
+	GnomeAppAccountPrivate *priv;
 
-	account_ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (account_ui,
-	                                                 GNOME_APP_TYPE_ACCOUNT_UI,
-	                                                 GnomeAppAccountUIPrivate);
+	account->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (account,
+	                                                 GNOME_APP_TYPE_ACCOUNT,
+	                                                 GnomeAppAccountPrivate);
 			
 	priv->script = NULL;
 	priv->person_id = NULL;
 }
 
 static void
-gnome_app_account_ui_dispose (GObject *object)
+gnome_app_account_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (gnome_app_account_ui_parent_class)->dispose (object);
+	G_OBJECT_CLASS (gnome_app_account_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_account_ui_finalize (GObject *object)
+gnome_app_account_finalize (GObject *object)
 {
-	GnomeAppAccountUI *account_ui = GNOME_APP_ACCOUNT_UI (object);
-	GnomeAppAccountUIPrivate *priv = account_ui->priv;
+	GnomeAppAccount *account = GNOME_APP_ACCOUNT (object);
+	GnomeAppAccountPrivate *priv = account->priv;
 
 	if (priv->script)
 		g_object_unref (priv->script);
 	if (priv->person_id)
 		g_free (priv->person_id);
 
-	G_OBJECT_CLASS (gnome_app_account_ui_parent_class)->finalize (object);
+	G_OBJECT_CLASS (gnome_app_account_parent_class)->finalize (object);
 }
 
 static void
-gnome_app_account_ui_class_init (GnomeAppAccountUIClass *klass)
+gnome_app_account_class_init (GnomeAppAccountClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = gnome_app_account_ui_dispose;
-	object_class->finalize = gnome_app_account_ui_finalize;
+	object_class->dispose = gnome_app_account_dispose;
+	object_class->finalize = gnome_app_account_finalize;
 	 
-	g_type_class_add_private (object_class, sizeof (GnomeAppAccountUIPrivate));
+	g_type_class_add_private (object_class, sizeof (GnomeAppAccountPrivate));
 }
 
 static gpointer
 set_account_callback (gpointer userdata, gpointer func_result)
 {
-	GnomeAppAccountUI *account_ui;
-	GnomeAppAccountUIPrivate *priv;
+	GnomeAppAccount *account;
+	GnomeAppAccountPrivate *priv;
 	OpenResults *results;
 
  	results = OPEN_RESULTS (func_result);
-	account_ui = GNOME_APP_ACCOUNT_UI (userdata);
-	priv = account_ui->priv;
+	account = GNOME_APP_ACCOUNT (userdata);
+	priv = account->priv;
 	if (!open_results_get_status (results)) {
 		/*TODO: fill the account with default val */
 		g_debug ("Fail to get the user info: %s\n", open_results_get_meta (results, "message"));
@@ -141,57 +141,57 @@ set_account_callback (gpointer userdata, gpointer func_result)
 	return NULL;
 }
 
-static gboolean
-on_friend_press (ClutterActor *actor,
+G_MODULE_EXPORT gboolean
+on_friends_press (ClutterActor *actor,
 		ClutterEvent *event,
 		gpointer      data)
 {
-	g_debug ("press on friend!");
-	GnomeAppAccountUI *account_ui;
-	GnomeAppFriendsUI *friend_ui;
+	g_debug ("press on friends!");
+	GnomeAppAccount *account;
+	GnomeAppFriends *friend;
 	gfloat x, y;
 
-	account_ui = GNOME_APP_ACCOUNT_UI (data);
+	account = GNOME_APP_ACCOUNT (data);
 
-	friend_ui = gnome_app_friends_ui_new (account_ui->priv->person_id);
-	clutter_container_add_actor (CLUTTER_CONTAINER (account_ui), CLUTTER_ACTOR (friend_ui));
+	friend = gnome_app_friends_new (account->priv->person_id);
+	clutter_container_add_actor (CLUTTER_CONTAINER (account), CLUTTER_ACTOR (friend));
 	clutter_actor_get_position (actor, &x, &y);
-	clutter_actor_set_position (CLUTTER_ACTOR (friend_ui), x + 10, y + 20);
+	clutter_actor_set_position (CLUTTER_ACTOR (friend), x + 10, y + 20);
 
 	return TRUE;
 }
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_message_press (ClutterActor *actor,
 		ClutterEvent *event,
 		gpointer      data)
 {
 	g_debug ("press on message!");
-	GnomeAppAccountUI *account_ui;
-	GnomeAppMessageUI *message_ui;
+	GnomeAppAccount *account;
+	GnomeAppMessage *message;
 	gfloat x, y;
 
-	account_ui = GNOME_APP_ACCOUNT_UI (data);
+	account = GNOME_APP_ACCOUNT (data);
 
-	message_ui = gnome_app_message_ui_new ();
-	clutter_container_add_actor (CLUTTER_CONTAINER (account_ui), CLUTTER_ACTOR (message_ui));
+	message = gnome_app_message_new ();
+	clutter_container_add_actor (CLUTTER_CONTAINER (account), CLUTTER_ACTOR (message));
 	clutter_actor_get_position (actor, &x, &y);
-	clutter_actor_set_position (CLUTTER_ACTOR (message_ui), x - 50, y + 20);
+	clutter_actor_set_position (CLUTTER_ACTOR (message), x - 50, y + 20);
 
 	return TRUE;
 }
 
-GnomeAppAccountUI *
-gnome_app_account_ui_new (gchar *personid)
+GnomeAppAccount *
+gnome_app_account_new (gchar *personid)
 {
-	GnomeAppAccountUI *app_account_ui;
-	GnomeAppAccountUIPrivate *priv;
-        ClutterActor *ui_group;
+	GnomeAppAccount *app_account;
+	GnomeAppAccountPrivate *priv;
+        ClutterActor *main_ui;
 	ClutterActor *friends;
         ClutterActor *messages;
 
-	app_account_ui = g_object_new (GNOME_APP_TYPE_ACCOUNT_UI, NULL);
-	priv = app_account_ui->priv;
+	app_account = g_object_new (GNOME_APP_TYPE_ACCOUNT, NULL);
+	priv = app_account->priv;
 
 	if (personid) {
 		priv->person_id = g_strdup (personid);
@@ -208,27 +208,24 @@ gnome_app_account_ui_new (gchar *personid)
 			priv->person_id = NULL;
 	}
 
-        priv->script = gnome_app_script_new_from_file ("app-account-ui");
+        priv->script = gnome_app_script_new_from_file ("app-account");
         if (!priv->script)
-		return app_account_ui;
-
+		return app_account;
+        clutter_script_connect_signals (priv->script, app_account);
         clutter_script_get_objects (priv->script, 
-			"app-account-ui", &ui_group,
+			"app-account", &main_ui,
 			"friends", &friends,
 			"messages", &messages,
 			NULL);
 
-	clutter_container_add_actor (CLUTTER_CONTAINER (app_account_ui), CLUTTER_ACTOR (ui_group));
-
-	g_signal_connect (friends, "button-press-event", G_CALLBACK (on_friend_press), app_account_ui);
-	g_signal_connect (messages, "button-press-event", G_CALLBACK (on_message_press), app_account_ui);
+	clutter_container_add_actor (CLUTTER_CONTAINER (app_account), CLUTTER_ACTOR (main_ui));
 
 	if (priv->person_id) {
 		GnomeAppTask *task;
 		gchar *function;
 
 		function = g_strdup_printf ("/v1/person/data/%s",  priv->person_id);
-		task = gnome_app_task_new (app_account_ui, "GET", function);
+		task = gnome_app_task_new (app_account, "GET", function);
 		gnome_app_task_set_callback (task, set_account_callback);
 		gnome_app_task_push (task);
 
@@ -237,5 +234,5 @@ gnome_app_account_ui_new (gchar *personid)
 		/*TODO: display the not login interface */		
 	}
 
-	return app_account_ui;
+	return app_account;
 }

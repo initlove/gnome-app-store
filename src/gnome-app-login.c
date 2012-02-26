@@ -266,14 +266,39 @@ gnome_app_login_finalize (GObject *object)
 }
 
 static void
+gnome_app_login_paint (ClutterActor *self)
+{
+       	GnomeAppLogin *login;
+        GnomeAppLoginPrivate *priv;
+	ClutterActorBox allocation = { 0, };
+	gfloat width, height;
+
+	login = GNOME_APP_LOGIN (self);
+	priv = login->priv;
+
+	clutter_actor_get_allocation_box (CLUTTER_ACTOR (login), &allocation);
+	clutter_actor_box_clamp_to_pixel (&allocation);
+	clutter_actor_box_get_size (&allocation, &width, &height);
+
+	cogl_set_source_color4ub (200, 200, 200, 50);
+	cogl_rectangle (-5.0, -5.0, width+5.0, height+5.0);
+
+	/* this will take care of painting every child */
+ 	CLUTTER_ACTOR_CLASS (gnome_app_login_parent_class)->paint (self);
+}
+
+static void
 gnome_app_login_class_init (GnomeAppLoginClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	ClutterActorClass *actor_class = CLUTTER_ACTOR_CLASS (klass);
 
         object_class->set_property = gnome_app_login_set_property;
 	object_class->get_property = gnome_app_login_get_property;
 	object_class->dispose = gnome_app_login_dispose;
 	object_class->finalize = gnome_app_login_finalize;
+	        
+	actor_class->paint = gnome_app_login_paint;
 
         /**
 	 *          * GnomeAppComment::refresh:

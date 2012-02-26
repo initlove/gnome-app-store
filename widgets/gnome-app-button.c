@@ -212,6 +212,8 @@ gnome_app_button_set_property (GObject *object,
 			str = g_value_get_string (value);
 			filename = open_app_get_pixmap_uri (str);
 
+			/*TODO: if 'filename' comes before width and height
+			 * signal connect to size change .. */
 			if (filename) {
 				clutter_actor_get_size (CLUTTER_ACTOR (button), &width, &height);
 				clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->texture), filename, NULL);

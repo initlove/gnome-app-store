@@ -1,6 +1,6 @@
 {
   "Account Info summary" : {
-    "id" : "app-account-ui",
+    "id" : "app-account",
     "type" : "ClutterGroup",
     "reactive" : true,
     "children" : [
@@ -12,12 +12,8 @@
 	"filename" : "person.png",
         "width" : 64,
         "height" : 64,
-        "keep-aspect-ratio" : true,
-        "anchor-x" : "5 em",
-        "anchor-y" : "5 pt",
         "opacity" : 200,
-    	"reactive" : true,
-        "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
+    	"reactive" : true
       },
       {
         "id" : "username",
@@ -63,29 +59,29 @@
       },
       {
         "id" : "friends",
-        "type" : "ClutterText",
-        "text" : "Friends",
+        "type" : "GnomeAppButton",
 	"x" : 8,
 	"y" : 72,
-        "font-name" : "Sans 16px",
-        "color" : "black",
-        "line-alignment" : "start",
-        "line-wrap" : false,
+        "text" : "Friends",
+        "text-font-name" : "Sans 16px",
+        "text-color" : "black",
     	"reactive" : true,
-        "ellipsize" : "end"
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_friends_press" }
+        ]
       },
       {
         "id" : "messages",
-        "type" : "ClutterText",
-        "text" : "Messages",
+        "type" : "GnomeAppButton",
 	"x" : 72,
 	"y" : 72,
-        "font-name" : "Sans 16px",
-        "color" : "black",
-        "line-alignment" : "start",
-        "line-wrap" : false,
+        "text" : "Messages",
+        "text-font-name" : "Sans 16px",
+        "text-color" : "black",
     	"reactive" : true,
-        "ellipsize" : "end"
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_message_press" }
+        ]
       }
     ]
   }

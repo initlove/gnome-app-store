@@ -21,13 +21,13 @@ Author: David Liang <dliang@novell.com>
 #include "open-app-utils.h"
 #include "gnome-app-store.h"
 #include "gnome-app-task.h"
-#include "gnome-app-account-ui.h"
-#include "gnome-app-frame-ui.h"
+#include "gnome-app-account.h"
+#include "gnome-app-frame.h"
 #include "gnome-app-icon-view.h"
 #include "gnome-app-ui-utils.h"
 #include "gnome-app-widgets.h"
 
-struct _GnomeAppFrameUIPrivate
+struct _GnomeAppFramePrivate
 {
         ClutterScript	*script;
 	ClutterActor	*account;
@@ -52,24 +52,24 @@ enum
 	PROP_LAST
 };
 
-G_DEFINE_TYPE (GnomeAppFrameUI, gnome_app_frame_ui, CLUTTER_TYPE_GROUP)
+G_DEFINE_TYPE (GnomeAppFrame, gnome_app_frame, CLUTTER_TYPE_GROUP)
 
 static gboolean
-is_frame_ui_locked (GnomeAppFrameUI *ui)
+is_frame_locked (GnomeAppFrame *frame)
 {
-	GnomeAppFrameUIPrivate *priv;
+	GnomeAppFramePrivate *priv;
 
-	priv = ui->priv;
+	priv = frame->priv;
 
 	return priv->lock;
 }
 
 static void
-gnome_app_frame_ui_set_lock (GnomeAppFrameUI *ui, const gchar *str)
+gnome_app_frame_set_lock (GnomeAppFrame *frame, const gchar *str)
 {
 	g_return_if_fail (str);
 
-	GnomeAppFrameUIPrivate *priv;
+	GnomeAppFramePrivate *priv;
 	gboolean _lock;
 
 	if (strcmp (str, "lock") == 0)
@@ -79,9 +79,9 @@ gnome_app_frame_ui_set_lock (GnomeAppFrameUI *ui, const gchar *str)
 	else
 		return;
 
-	priv = ui->priv;
+	priv = frame->priv;
 	if (priv->lock == _lock) {
-		g_critical ("You should not %s more than once!\tFrameUI\n", str);
+		g_critical ("You should not %s more than once!\tFrame\n", str);
 		return;
 	}
 	priv->lock = _lock;
@@ -95,9 +95,9 @@ gnome_app_frame_ui_set_lock (GnomeAppFrameUI *ui, const gchar *str)
 }
 
 static void
-frame_ui_load_results (GnomeAppFrameUI *ui, OpenResults *results)
+frame_load_results (GnomeAppFrame *frame, OpenResults *results)
 {
-	GnomeAppFrameUIPrivate *priv;
+	GnomeAppFramePrivate *priv;
 	ClutterActor *status;
 	ClutterActor *prev;
 	ClutterActor *next;
@@ -108,7 +108,7 @@ frame_ui_load_results (GnomeAppFrameUI *ui, OpenResults *results)
 		g_debug ("Error in getting results !\n");
 		return;
 	}
-	priv = ui->priv;
+	priv = frame->priv;
 	clutter_script_get_objects (priv->script,
 				"status", &status,
 				"total-items", &total_items,
@@ -169,27 +169,27 @@ frame_ui_load_results (GnomeAppFrameUI *ui, OpenResults *results)
 static gpointer
 task_callback (gpointer userdata, gpointer func_result)
 {
-	GnomeAppFrameUI *ui;
+	GnomeAppFrame *frame;
 	OpenResults *results;
 
 	results = OPEN_RESULTS (func_result);
-	ui = GNOME_APP_FRAME_UI (userdata);
-	frame_ui_load_results (ui, results);
+	frame = GNOME_APP_FRAME (userdata);
+	frame_load_results (frame, results);
 
 	return NULL;
 }
 
 static void
-frame_ui_set_default_data (GnomeAppFrameUI *ui)
+frame_set_default_data (GnomeAppFrame *frame)
 {
-	GnomeAppFrameUIPrivate *priv;
+	GnomeAppFramePrivate *priv;
 	GnomeAppTask *task;
 	gchar *pagesize;
 
-	priv = ui->priv;
+	priv = frame->priv;
 	pagesize = g_strdup_printf ("%d", priv->pagesize);
 
-        task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+        task = gnome_app_task_new (frame, "GET", "/v1/content/data");
 	priv->task = g_object_ref (task);
 	gnome_app_task_add_params (task,
 				"sortmode", "new",
@@ -204,14 +204,14 @@ frame_ui_set_default_data (GnomeAppFrameUI *ui)
 
 G_MODULE_EXPORT void
 on_search_entry_text_changed (ClutterActor *actor,
-		GnomeAppFrameUI *ui)
+		GnomeAppFrame *frame)
 {
-	GnomeAppFrameUIPrivate *priv;
+	GnomeAppFramePrivate *priv;
 	ClutterActor *search_icon;
 	ClutterActor *search_hint;
 	const gchar *search;
 
-	priv = ui->priv;
+	priv = frame->priv;
 	clutter_script_get_objects (priv->script,
 			"search-icon", &search_icon,
 			"search-hint", &search_hint,
@@ -230,36 +230,36 @@ on_search_entry_text_changed (ClutterActor *actor,
 		}
 	}
 		
-	if (ui->priv->is_search_hint_enabled) {
-		ui->priv->is_search_hint_enabled = FALSE;
+	if (frame->priv->is_search_hint_enabled) {
+		frame->priv->is_search_hint_enabled = FALSE;
 		clutter_actor_hide (search_hint);
 	}
 }
 
 G_MODULE_EXPORT void
 on_search_entry_activate (ClutterActor *actor,
-		GnomeAppFrameUI *ui)
+		GnomeAppFrame *frame)
 {
 	const gchar *search;
 
-	if (is_frame_ui_locked (ui))
+	if (is_frame_locked (frame))
 		return;
 
 	search = clutter_text_get_text (CLUTTER_TEXT (actor));
 	if (open_app_pattern_match ("blank", search, NULL))
 		return;
 
-	GnomeAppFrameUIPrivate *priv;
+	GnomeAppFramePrivate *priv;
 	GnomeAppTask *task;
 	gchar *pagesize;
 
-	priv = ui->priv;
+	priv = frame->priv;
 	pagesize = g_strdup_printf ("%d", priv->pagesize);
 
 	if (priv->task)
 		g_object_unref (priv->task);
 
-        task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+        task = gnome_app_task_new (frame, "GET", "/v1/content/data");
 	/*We need to ref it right after task_new, as some task may finished fast cause of proxy */
 	priv->task = g_object_ref (priv->task);
 	gnome_app_task_add_params (task,
@@ -279,12 +279,12 @@ on_search_entry_event (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
-	GnomeAppFrameUI *ui;
-	GnomeAppFrameUIPrivate *priv;
+	GnomeAppFrame *frame;
+	GnomeAppFramePrivate *priv;
 	ClutterActor *search_hint;
 
-	ui = GNOME_APP_FRAME_UI (data);
-	priv = ui->priv;
+	frame = GNOME_APP_FRAME (data);
+	priv = frame->priv;
 
 	clutter_script_get_objects (priv->script,
 			"search-hint", &search_hint,
@@ -307,17 +307,17 @@ on_category_button_press (ClutterActor *actor,
    		ClutterEvent *event,
 		gpointer      data)
 {
-	GnomeAppFrameUI *ui;
-	GnomeAppFrameUIPrivate *priv;
+	GnomeAppFrame *frame;
+	GnomeAppFramePrivate *priv;
 	GnomeAppTask *task;
 	const gchar *name;
 	const gchar *cids;
 	gchar *pagesize;
 	gchar *page;
 
-	ui = GNOME_APP_FRAME_UI (data);
-	priv = ui->priv;
-	if (is_frame_ui_locked (ui))
+	frame = GNOME_APP_FRAME (data);
+	priv = frame->priv;
+	if (is_frame_locked (frame))
 		return FALSE;
 
 	if (!priv->selected_button) {
@@ -333,7 +333,7 @@ printf ("click on %s cids %s\n", name, cids);
 /*TODO where to final the task */
 	if (priv->task)
 		g_object_unref (priv->task);
-        task = gnome_app_task_new (ui, "GET", "/v1/content/data");
+        task = gnome_app_task_new (frame, "GET", "/v1/content/data");
 	priv->task = g_object_ref (task);
 	gnome_app_task_add_params (task,
 			"sortmode", "new",
@@ -349,54 +349,25 @@ printf ("click on %s cids %s\n", name, cids);
 }
 
 G_MODULE_EXPORT gboolean
-on_icon_enter (ClutterActor *actor,
-                ClutterEvent *event,
-                gpointer      data)
-{
-	GnomeAppFrameUI *ui;
-
-	ui = GNOME_APP_FRAME_UI (data);
-	clutter_actor_set_scale (actor, 1.5, 1.5);
-	clutter_actor_move_by (actor, -8, -8);
-
-	return TRUE;
-}
-
-G_MODULE_EXPORT gboolean
-on_icon_leave (ClutterActor *actor,
-                ClutterEvent *event,
-                gpointer      data)
-{
-	GnomeAppFrameUI *ui;
-
-	ui = GNOME_APP_FRAME_UI (data);
-/*TODO: bad numbers, should have better animation */
-	clutter_actor_set_scale (actor, 1, 1);
-	clutter_actor_move_by (actor, 8, 8);
-
-	return TRUE;
-}
-
-G_MODULE_EXPORT gboolean
 on_icon_press (ClutterActor *actor,
                 ClutterEvent *event,
                 gpointer      data)
 {
-	GnomeAppFrameUI *ui;
-	GnomeAppFrameUIPrivate *priv;
+	GnomeAppFrame *frame;
+	GnomeAppFramePrivate *priv;
 	ClutterActor	*prev;
 	ClutterActor	*next;
 	ClutterActor	*search_icon;
 	ClutterActor	*search_entry;
 
-	ui = GNOME_APP_FRAME_UI (data);
-	priv = ui->priv;
+	frame = GNOME_APP_FRAME (data);
+	priv = frame->priv;
 
 	/*TODO: if it was locked, and the user clicked again and again,
 	 * it means we should make the task priority higher 
 	 * 
 	 */
-	if (is_frame_ui_locked (ui))
+	if (is_frame_locked (frame))
 		return FALSE;
 
 	clutter_script_get_objects (priv->script,
@@ -406,7 +377,7 @@ on_icon_press (ClutterActor *actor,
 			"search-entry", &search_entry,
 			NULL);
 	if (actor == search_icon) {
-		on_search_entry_activate (search_entry, ui);
+		on_search_entry_activate (search_entry, frame);
 	} else {
 		GnomeAppTask *task;
 		const gchar *val;
@@ -439,7 +410,7 @@ on_icon_press (ClutterActor *actor,
 }
 
 static ClutterActor *
-create_category_list (GnomeAppFrameUI *ui)
+create_category_list (GnomeAppFrame *frame)
 {
 	ClutterLayoutManager *layout;
 	ClutterActor *layout_box, *actor;
@@ -464,16 +435,16 @@ create_category_list (GnomeAppFrameUI *ui)
 		gnome_app_button_set_text (GNOME_APP_BUTTON (actor), name);
 		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), col, row);
 		row ++;
-		g_signal_connect (actor, "button-press-event", G_CALLBACK (on_category_button_press), ui);
+		g_signal_connect (actor, "button-press-event", G_CALLBACK (on_category_button_press), frame);
 	}
 
 	return layout_box;
 }
 
 static void
-gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
+gnome_app_frame_init (GnomeAppFrame *frame)
 {
-	GnomeAppFrameUIPrivate *priv;
+	GnomeAppFramePrivate *priv;
 	ClutterActor *main_ui;
 	ClutterActor *account_group;
 	ClutterActor *icon_view_group;
@@ -481,37 +452,37 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	ClutterActor *prev;
 	ClutterActor *next;
 
-	ui->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (ui,
-	                                                 GNOME_APP_TYPE_FRAME_UI,
-	                                                 GnomeAppFrameUIPrivate);
+	frame->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (frame,
+	                                                 GNOME_APP_TYPE_FRAME,
+	                                                 GnomeAppFramePrivate);
 	priv->is_search_enabled = FALSE;
 	priv->is_search_hint_enabled = TRUE;
 	priv->task = NULL;
 	priv->lock = FALSE;
 	priv->selected_button = NULL;
 
-        priv->script = gnome_app_script_new_from_file ("app-frame-ui");
+        priv->script = gnome_app_script_new_from_file ("app-frame");
         if (!priv->script) {
 		return ;
         }
-        clutter_script_connect_signals (priv->script, ui);
+        clutter_script_connect_signals (priv->script, frame);
 	clutter_script_get_objects (priv->script, 
-			"frame-ui", &main_ui,
+			"frame", &main_ui,
 			"account-group", &account_group,
 			"categories", &categories_group,
 			"icon-view", &icon_view_group,
 			"prev-icon", &prev,
 			"next-icon", &next,
 			NULL);
-	clutter_container_add_actor (CLUTTER_CONTAINER (ui), CLUTTER_ACTOR (main_ui));
+	clutter_container_add_actor (CLUTTER_CONTAINER (frame), CLUTTER_ACTOR (main_ui));
 
 	priv->store = gnome_app_store_get_default ();
 	gnome_app_store_init_category (GNOME_APP_STORE (priv->store));
 
-	priv->account = CLUTTER_ACTOR (gnome_app_account_ui_new (NULL));
+	priv->account = CLUTTER_ACTOR (gnome_app_account_new (NULL));
 	clutter_container_add_actor (CLUTTER_CONTAINER (account_group), priv->account);
 
-	priv->categories = create_category_list (ui);
+	priv->categories = create_category_list (frame);
 	clutter_container_add_actor (CLUTTER_CONTAINER (categories_group), priv->categories);
 
 	priv->icon_view = gnome_app_icon_view_new ();
@@ -530,19 +501,19 @@ gnome_app_frame_ui_init (GnomeAppFrameUI *ui)
 	clutter_actor_get_position (next, &next_x, &next_y);
 	clutter_actor_set_position (priv->spin, (prev_x + next_x)/2, (prev_y + next_y)/2);
 
-	frame_ui_set_default_data (ui);
+	frame_set_default_data (frame);
 }
 
 static void
-gnome_app_frame_ui_set_property (GObject      *object,
+gnome_app_frame_set_property (GObject      *object,
 		guint         prop_id,
 		const GValue *value,
 		GParamSpec   *pspec)
 {
-	GnomeAppFrameUI *ui;
+	GnomeAppFrame *frame;
 	const gchar *str;
 
-	ui = GNOME_APP_FRAME_UI (object);
+	frame = GNOME_APP_FRAME (object);
 			        
 	switch (prop_id)
 	{
@@ -550,20 +521,20 @@ gnome_app_frame_ui_set_property (GObject      *object,
 			str = g_value_get_string (value);
 			if (!str)
 				return;
-			gnome_app_frame_ui_set_lock (ui, str);
+			gnome_app_frame_set_lock (frame, str);
 			break;
 	}
 }
 
 static void
-gnome_app_frame_ui_get_property (GObject      *object,
+gnome_app_frame_get_property (GObject      *object,
 		guint         prop_id,
 		GValue       *value,
 		GParamSpec   *pspec)
 {
-	GnomeAppFrameUI *ui;        
+	GnomeAppFrame *frame;        
 
-	ui = GNOME_APP_FRAME_UI (object);
+	frame = GNOME_APP_FRAME (object);
 
 	switch (prop_id)
 	{
@@ -571,34 +542,34 @@ gnome_app_frame_ui_get_property (GObject      *object,
 }
 
 static void
-gnome_app_frame_ui_dispose (GObject *object)
+gnome_app_frame_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (gnome_app_frame_ui_parent_class)->dispose (object);
+	G_OBJECT_CLASS (gnome_app_frame_parent_class)->dispose (object);
 }
 
 static void
-gnome_app_frame_ui_finalize (GObject *object)
+gnome_app_frame_finalize (GObject *object)
 {
-	GnomeAppFrameUI *ui = GNOME_APP_FRAME_UI (object);
-	GnomeAppFrameUIPrivate *priv = ui->priv;
+	GnomeAppFrame *frame = GNOME_APP_FRAME (object);
+	GnomeAppFramePrivate *priv = frame->priv;
 
 	if (priv->icon_view)
 		g_object_unref (priv->icon_view);
 	if (priv->task)
 		g_object_unref (priv->task);
 
-	G_OBJECT_CLASS (gnome_app_frame_ui_parent_class)->finalize (object);
+	G_OBJECT_CLASS (gnome_app_frame_parent_class)->finalize (object);
 }
 
 static void
-gnome_app_frame_ui_class_init (GnomeAppFrameUIClass *klass)
+gnome_app_frame_class_init (GnomeAppFrameClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-        object_class->set_property = gnome_app_frame_ui_set_property;
-	object_class->get_property = gnome_app_frame_ui_get_property;
-	object_class->dispose = gnome_app_frame_ui_dispose;
-	object_class->finalize = gnome_app_frame_ui_finalize;
+        object_class->set_property = gnome_app_frame_set_property;
+	object_class->get_property = gnome_app_frame_get_property;
+	object_class->dispose = gnome_app_frame_dispose;
+	object_class->finalize = gnome_app_frame_finalize;
 
 	g_object_class_install_property (object_class,
 			PROP_LOCK_STATUS,		
@@ -608,15 +579,15 @@ gnome_app_frame_ui_class_init (GnomeAppFrameUIClass *klass)
 			NULL,
 			G_PARAM_READWRITE));
 
-	g_type_class_add_private (object_class, sizeof (GnomeAppFrameUIPrivate));
+	g_type_class_add_private (object_class, sizeof (GnomeAppFramePrivate));
 }
 
-GnomeAppFrameUI *
-gnome_app_frame_ui_new (void)
+GnomeAppFrame *
+gnome_app_frame_new (void)
 {
-	GnomeAppFrameUI *ui;
+	GnomeAppFrame *frame;
 
-	ui = g_object_new (GNOME_APP_TYPE_FRAME_UI, NULL);
+	frame = g_object_new (GNOME_APP_TYPE_FRAME, NULL);
 
-	return ui;
+	return frame;
 }
