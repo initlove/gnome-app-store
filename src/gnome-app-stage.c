@@ -130,7 +130,7 @@ gnome_app_stage_show (GnomeAppStage *app_stage, gint mode, GObject *app_actor)
 		
 	clutter_actor_get_size (CLUTTER_ACTOR (app_actor), &width, &height);
 	//TODO: this should improve
-	if ((width < priv->default_width/2) && (height < priv->default_height/2)) {
+	if ((width < priv->default_width) && (height < priv->default_height)) {
 		stage_width = width;
        		stage_height = height;
 	} else {

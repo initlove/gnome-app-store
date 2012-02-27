@@ -123,23 +123,6 @@ on_text_changed (ClutterActor *actor,
 		clutter_actor_show (priv->hint);
 }
 
-static void 
-on_allocation_changed (ClutterActor           *self,
-		const ClutterActorBox  *box,
-		ClutterAllocationFlags  flags,
-		GnomeAppText *text)
-{
-	GnomeAppTextPrivate *priv;
-	gfloat width, height;
-
-	/*TODO: get the preferred size */
-	priv = text->priv;
-	width = clutter_actor_box_get_width (box);
-	height = clutter_actor_box_get_height (box);
-	clutter_actor_set_width (priv->text, width);
-	clutter_actor_set_width (priv->hint, width);
-}
-
 static void
 gnome_app_text_init (GnomeAppText *text)
 {
@@ -173,10 +156,6 @@ gnome_app_text_init (GnomeAppText *text)
 	g_signal_connect (priv->text, "key_focus_in", G_CALLBACK (on_text_key_focus_in), text);
 	g_signal_connect (priv->text, "key_focus_out", G_CALLBACK (on_text_key_focus_out), text);
 	g_signal_connect (priv->text, "paint", G_CALLBACK (on_text_paint), text);
-return;
-	g_signal_connect (CLUTTER_ACTOR (text), "allocation-changed",
-		                  G_CALLBACK (on_allocation_changed),
-		                    text);
 }
 
 static void

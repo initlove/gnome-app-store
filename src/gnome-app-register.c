@@ -85,20 +85,20 @@ register_callback (gpointer userdata, gpointer func_result)
 			case 101:
 			case 102:
 			case 103:
-			case 106:
 				g_debug ("This should be handled by the client.\n");
 				g_debug ("TODO if have time .\n");
 				break;
 			case 104:
-/*TODO: check it while type it */
 				actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "username-info"));
-				val = open_results_get_meta (results, "message");
-				clutter_text_set_text (CLUTTER_TEXT (actor), val);
+				clutter_text_set_text (CLUTTER_TEXT (actor), _("login already exists"));
 				break;
 			case 105:
 				actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "email-info"));
-				val = open_results_get_meta (results, "message");
-				clutter_text_set_text (CLUTTER_TEXT (actor), val);
+				clutter_text_set_text (CLUTTER_TEXT (actor), _("email already taken"));
+				break;
+			case 106:
+				actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "email-info"));
+				clutter_text_set_text (CLUTTER_TEXT (actor), _("email invalid"));
 				break;
 			default:
 				break;

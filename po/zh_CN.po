@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-27 15:36+0800\n"
+"POT-Creation-Date: 2012-02-27 22:34+0800\n"
 "PO-Revision-Date: 2011-10-04 10:36+0800\n"
 "Last-Translator: dliang@novell.com\n"
 "Language-Team: David Liang <dliang@novell.com>\n"
-"Language: \n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"Content-Transfer-Encoding: 8bits\n"
 
 #: ../src/gnome-app-comment.c:60
 msgid "Cancel"
@@ -37,37 +37,45 @@ msgstr ""
 msgid "(No message)"
 msgstr "（无信息)"
 
-#: ../src/gnome-app-info-page.c:443
-msgid "- Remove Fan"
-msgstr "- 取消关注"
-
-#: ../src/gnome-app-info-page.c:446
-msgid "+ Add Fan"
-msgstr "+ 添加关注"
-
-#. TODO:
-#: ../src/gnome-app-info-page.c:450
-msgid "Loading Fan status"
-msgstr "加载关注状态"
-
-#: ../src/gnome-app-info-page.c:603
+#: ../src/gnome-app-info-page.c:113 ../ui/app-info-page.json.h:3
 msgid "Download"
 msgstr "下载"
 
-#: ../src/gnome-app-info-page.c:736 ../src/gnome-app-info-page.c:853
+#. TODO: the download count may not good, should check with the server
+#: ../src/gnome-app-info-page.c:129 ../src/gnome-app-info-page.c:356
+#: ../src/gnome-app-info-page.c:763
+msgid "%d downloads  (%d link)"
+msgstr "%d 下载 (%d 链接)"
+
+#: ../src/gnome-app-info-page.c:503
+msgid "- Remove Fan"
+msgstr "- 取消关注"
+
+#: ../src/gnome-app-info-page.c:507
+msgid "+ Add Fan"
+msgstr "+ 添加关注"
+
+#: ../src/gnome-app-info-page.c:755 ../src/gnome-app-info-page.c:869
 #, c-format
 msgid "%d fans"
 msgstr "%d 关注"
 
-#: ../src/gnome-app-info-page.c:743 ../src/gnome-app-info-page.c:845
-#, c-format
-msgid "%d downloads"
-msgstr "%d 下载"
-
-#: ../src/gnome-app-info-page.c:859
+#: ../src/gnome-app-info-page.c:875
 #, c-format
 msgid "%s comments"
 msgstr "%s 评论"
+
+#: ../src/gnome-app-register.c:93
+msgid "login already exists"
+msgstr "用户名已经存在"
+
+#: ../src/gnome-app-register.c:97
+msgid "email already taken"
+msgstr "邮件已经被使用"
+
+#: ../src/gnome-app-register.c:101
+msgid "email invalid"
+msgstr "邮件无效"
 
 #: ../src/gnome-app-friends.c:201
 #, c-format
@@ -177,10 +185,6 @@ msgstr "应用名"
 msgid "Submit"
 msgstr "提交"
 
-#: ../ui/app-comment.json.h:3
-msgid "type"
-msgstr "类型"
-
 #: ../ui/message-info-page.json.h:1
 msgid "Date:"
 msgstr "日期:"
@@ -250,20 +254,25 @@ msgid "company"
 msgstr "公司"
 
 #: ../ui/app-info-page.json.h:1
-msgid "< comment here >"
-msgstr "< 在这里评论 >"
-
-#: ../ui/app-info-page.json.h:2
 msgid "Author name"
 msgstr "作者"
 
-#: ../ui/app-info-page.json.h:3
+#: ../ui/app-info-page.json.h:2
 msgid "Comment"
 msgstr "评论"
 
 #: ../ui/app-info-page.json.h:4
 msgid "license"
 msgstr "许可证"
+
+#~ msgid "Loading Fan status"
+#~ msgstr "加载关注状态"
+
+#~ msgid "type"
+#~ msgstr "类型"
+
+#~ msgid "< comment here >"
+#~ msgstr "< 在这里评论 >"
 
 #~ msgid "username"
 #~ msgstr "用户名"

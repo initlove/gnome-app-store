@@ -30,6 +30,7 @@ struct _GnomeAppEntryPrivate
 enum
 {
 	PROP_0,
+	PROP_WIDTH,
 	PROP_TEXT,
 	PROP_FONT_NAME,
 	PROP_COLOR,
@@ -133,7 +134,6 @@ gnome_app_entry_init (GnomeAppEntry *entry)
 
 
 	priv->hint = clutter_text_new ();
-	clutter_actor_set_width (priv->hint, 200);
 	clutter_actor_set_opacity (priv->hint, 128);
 	clutter_actor_set_reactive (priv->hint, FALSE);
 	clutter_text_set_single_line_mode (CLUTTER_TEXT (priv->hint), TRUE);
@@ -145,7 +145,6 @@ gnome_app_entry_init (GnomeAppEntry *entry)
 	clutter_actor_set_position (priv->hint, 5, 5);
 
 	priv->text = clutter_text_new ();
-	clutter_actor_set_width (priv->text, 200);
 	clutter_actor_set_reactive (priv->text, TRUE);
 	clutter_text_set_single_line_mode (CLUTTER_TEXT (priv->text), TRUE);
         clutter_text_set_editable (CLUTTER_TEXT (priv->text), TRUE);
@@ -168,11 +167,18 @@ gnome_app_entry_set_property (GObject *object,
 	GnomeAppEntryPrivate *priv;
 	ClutterColor color;
 	const gchar *str;
+	gfloat width;
 
 	entry = GNOME_APP_ENTRY (object);
 	priv = entry->priv;
 	switch (prop_id)
 	{
+		case PROP_WIDTH:
+			width = g_value_get_float (value);
+			clutter_actor_set_width (CLUTTER_ACTOR (entry), width);
+			clutter_actor_set_width (CLUTTER_ACTOR (priv->text), width);
+			clutter_actor_set_width (CLUTTER_ACTOR (priv->hint), width);
+			break;
 		case PROP_TEXT:
 			str = g_value_get_string (value);
 			clutter_text_set_text (CLUTTER_TEXT (priv->text), _(str));
@@ -290,6 +296,15 @@ gnome_app_entry_class_init (GnomeAppEntryClass *klass)
 	object_class->finalize = gnome_app_entry_finalize;
 
 	actor_class->allocate = gnome_app_entry_allocate;
+
+	g_object_class_install_property (object_class,
+			PROP_WIDTH,
+			g_param_spec_float ("width",
+				"width of the text",
+				"width of the text",
+				-G_MAXFLOAT, G_MAXFLOAT,
+				0.0,
+				G_PARAM_WRITABLE));
 
 	g_object_class_install_property (object_class,
 			PROP_TEXT,
