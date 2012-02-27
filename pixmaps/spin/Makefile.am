@@ -1,6 +1,6 @@
-pixmapsdir = $(datadir)/pixmaps/@PACKAGE@/spin/
+spinpixmapsdir = $(datadir)/pixmaps/@PACKAGE@/spin/
 
-pixmaps_DATA =	\
+spinpixmaps_DATA =	\
 	0.png \
 	1.png \
 	2.png \
@@ -35,4 +35,4 @@ pixmaps_DATA =	\
 	31.png \
 	$(NULL)
 
-EXTRA_DIST = $(pixmaps_DATA)
+EXTRA_DIST = $(spinpixmaps_DATA)
