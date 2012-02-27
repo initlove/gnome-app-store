@@ -26,8 +26,8 @@ Author: David Liang <dliang@novell.com>
 #include "common/open-result.h"
 #include "common/open-results.h"
 
-#ifndef DEVEL_MODE
-#define DEVEL_MODE
+#ifdef DEVEL_MODE
+#undef DEVEL_MODE
 #endif
 
 struct _GnomeAppTaskPrivate
