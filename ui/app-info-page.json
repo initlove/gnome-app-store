@@ -3,7 +3,6 @@
     "id" : "info-page",
     "type" : "ClutterGroup",
     "width" : 1000,
-    "height" : 800,
     "reactive" : true,
     "children" : [
       {

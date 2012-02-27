@@ -17,6 +17,7 @@ Author: David Liang <dliang@novell.com>
 #include <clutter/clutter.h>
 
 #include "open-app-utils.h"
+#include "gnome-app-widgets.h"
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
 #include "gnome-app-comment.h"
@@ -25,7 +26,7 @@ Author: David Liang <dliang@novell.com>
 struct _GnomeAppCommentPrivate
 {
         ClutterScript *script;
-	ClutterGroup    *ui_group;
+	ClutterGroup *main_ui;
 	ClutterActor *reply_entry;
 	ClutterActor *reply_button;
 	ClutterActor *submit_button;
@@ -45,6 +46,42 @@ enum
 static guint comment_signals[LAST_SIGNAL] = { 0, };
 
 G_DEFINE_TYPE (GnomeAppComment, gnome_app_comment, CLUTTER_TYPE_GROUP)
+
+static void
+app_comment_expand_entry (GnomeAppComment *comment)
+{
+	GnomeAppCommentPrivate *priv;
+
+	priv = comment->priv;
+	if (priv->reply_entry_expand) {
+		clutter_actor_set_height (priv->reply_entry, -1);
+		clutter_actor_set_opacity (priv->reply_entry, 255);
+		clutter_actor_set_opacity (priv->submit_button, 255);
+		gnome_app_button_set_text (GNOME_APP_BUTTON (priv->reply_button), _("Cancel"));
+	} else {
+		clutter_actor_set_height (priv->reply_entry, 0);
+		clutter_actor_set_opacity (priv->reply_entry, 0);
+		clutter_actor_set_opacity (priv->submit_button,0);
+		gnome_app_button_set_text (GNOME_APP_BUTTON (priv->reply_button), _("Reply"));
+	}
+}
+
+static void
+on_app_comment_paint (ClutterActor *actor,
+	              gpointer      data)
+{
+	ClutterActorBox allocation = { 0, };
+	gfloat width, height, gap;
+
+	clutter_actor_get_allocation_box (actor, &allocation);
+	clutter_actor_box_clamp_to_pixel (&allocation);
+	clutter_actor_box_get_size (&allocation, &width, &height);
+	gap = width / 10;
+        cogl_set_source_color4ub (0, 0, 0, 100);
+	cogl_path_line (gap * 2, 2, width - gap, 0);
+
+	cogl_path_stroke ();
+}
 
 static gpointer
 _set_user_icon_1 (gpointer userdata, gpointer func_result)
@@ -109,12 +146,27 @@ gnome_app_comment_init (GnomeAppComment *comment)
 	comment->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (comment,
 	                                                 GNOME_APP_TYPE_COMMENT,
 	                                                 GnomeAppCommentPrivate);
-	priv->script = NULL;
 	priv->comment = NULL;
-	priv->reply_entry = NULL;
 	priv->content = NULL;
 	priv->content2 = NULL;
 	priv->reply_entry_expand = FALSE;
+
+        priv->script = gnome_app_script_new_from_file ("app-comment");
+        if (!priv->script) {
+		return ;
+        }
+
+	clutter_script_connect_signals (priv->script, comment);
+        clutter_script_get_objects (priv->script, 
+				"app-comment", &priv->main_ui,
+				"submit-button", &priv->submit_button,
+				"reply-button", &priv->reply_button,
+				"reply-entry", &priv->reply_entry,
+			       	NULL);
+	app_comment_expand_entry (comment);
+	clutter_container_add_actor (CLUTTER_CONTAINER (comment), CLUTTER_ACTOR (priv->main_ui));
+
+	return ;
 }
 
 static void
@@ -187,7 +239,7 @@ comment_reply_callback (gpointer userdata, gpointer func_result)
 	return NULL;
 }
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_submit_button_press (ClutterActor *actor,
 	             ClutterEvent *event,
 	             gpointer      data)
@@ -198,7 +250,7 @@ on_submit_button_press (ClutterActor *actor,
 
 	comment = GNOME_APP_COMMENT (data);
 	priv = comment->priv;
-	str = clutter_text_get_text (CLUTTER_TEXT (priv->reply_entry));
+	str = gnome_app_text_get_text (GNOME_APP_TEXT (priv->reply_entry));
 	if (open_app_pattern_match ("blank", str, NULL)) {
 		//TODO: doing sth
 		return FALSE;
@@ -224,7 +276,7 @@ on_submit_button_press (ClutterActor *actor,
 	return TRUE;
 }
 
-static gboolean
+G_MODULE_EXPORT gboolean
 on_reply_button_press (ClutterActor *actor,
 	             ClutterEvent *event,
 	             gpointer      data)
@@ -236,63 +288,9 @@ on_reply_button_press (ClutterActor *actor,
 	priv = comment->priv;
 
 	priv->reply_entry_expand = !priv->reply_entry_expand;
-	if (priv->reply_entry_expand) {
-		clutter_text_set_text (CLUTTER_TEXT (priv->reply_button), _("Cancel"));
-		clutter_actor_set_size (priv->reply_entry, 300, 100);
-		clutter_text_set_editable (CLUTTER_TEXT (priv->reply_entry), TRUE);
-		clutter_text_set_text (CLUTTER_TEXT (priv->submit_button), _("Submit"));
-	} else {
-		// why should I do this: becase when I hide reply_entry, the reply_button will be hide .
-		// no idea why this happen
-		clutter_actor_set_size (priv->reply_entry, 1, 1);
-		clutter_text_set_text (CLUTTER_TEXT (priv->reply_entry), NULL);
-		clutter_text_set_editable (CLUTTER_TEXT (priv->reply_entry), FALSE);
-		clutter_text_set_text (CLUTTER_TEXT (priv->reply_button), _("Reply"));
-		clutter_text_set_text (CLUTTER_TEXT (priv->submit_button), "");
-	}
+	app_comment_expand_entry (comment);
 
 	return TRUE;
-}
-
-static void
-on_reply_entry_paint (ClutterActor *actor,
-	              gpointer      data)
-{
-	GnomeAppComment *comment;
-	GnomeAppCommentPrivate *priv;
-	ClutterActorBox allocation = { 0, };
-	gfloat width, height;
-
-	comment = GNOME_APP_COMMENT (data);
-	priv = comment->priv;
-
-	if (!priv->reply_entry_expand)
-		return;
-
-	clutter_actor_get_allocation_box (actor, &allocation);
-	clutter_actor_box_clamp_to_pixel (&allocation);
-	clutter_actor_box_get_size (&allocation, &width, &height);
-
-	cogl_set_source_color4ub (0, 0, 0, 255);
-	cogl_path_rectangle (1, 1, width, height);
-	cogl_path_stroke ();
-}
-
-static void
-on_app_comment_paint (ClutterActor *actor,
-	              gpointer      data)
-{
-	ClutterActorBox allocation = { 0, };
-	gfloat width, height, gap;
-
-	clutter_actor_get_allocation_box (actor, &allocation);
-	clutter_actor_box_clamp_to_pixel (&allocation);
-	clutter_actor_box_get_size (&allocation, &width, &height);
-	gap = width / 10;
-        cogl_set_source_color4ub (0, 0, 0, 100);
-	cogl_path_line (gap * 2, 2, width - gap, 0);
-
-	cogl_path_stroke ();
 }
 
 GnomeAppComment *
@@ -300,8 +298,6 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 {
 	GnomeAppComment *app_comment;
 	GnomeAppCommentPrivate *priv;
-	ClutterLayoutManager *layout, *child_layout;
-	ClutterActor *box, *child_box;
 	ClutterActor *subject;
 	ClutterActor *user;
 	ClutterActor *date;
@@ -313,13 +309,8 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 	app_comment = g_object_new (GNOME_APP_TYPE_COMMENT, NULL);
 	priv = app_comment->priv;
 	priv->comment = g_object_ref (comment);
-        priv->script = gnome_app_script_new_from_file ("app-comment");
-        if (!priv->script) {
-		return app_comment;
-        }
 
         clutter_script_get_objects (priv->script, 
-				"app-comment", &priv->ui_group,
 				"subject", &subject,
 				"user", &user,
 				"date", &date,
@@ -327,8 +318,7 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 				"usericon", &usericon,
 			       	NULL);
                 
-	val = open_result_get (comment, "subject");
-	clutter_text_set_text (CLUTTER_TEXT (subject), val);
+	clutter_text_set_text (CLUTTER_TEXT (subject), open_result_get (comment, "subject"));
 
 	val = open_result_get (comment, "user");
 	if (val) {
@@ -344,77 +334,8 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 		g_free (str);
 	}
 
-	val = open_result_get (comment, "text");
-	clutter_text_set_text (CLUTTER_TEXT (text), val);
-
-	val = open_result_get (comment, "user");
-	set_user_icon (usericon, val);
-
-        layout = clutter_box_layout_new ();
-	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (layout), TRUE);
-	box = clutter_box_new (layout);
-        
-	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout),
-			CLUTTER_ACTOR (priv->ui_group),
-			FALSE, /*expand*/
-			FALSE, /*x-fill*/
-			FALSE, /*y-fill*/
-			CLUTTER_BOX_ALIGNMENT_START,
-			CLUTTER_BOX_ALIGNMENT_START);
-
-	priv->reply_entry = clutter_text_new ();
-	clutter_actor_set_reactive (priv->reply_entry, TRUE);
-	clutter_text_set_line_wrap (CLUTTER_TEXT (priv->reply_entry), TRUE);
-	clutter_text_set_line_wrap_mode (CLUTTER_TEXT (priv->reply_entry), PANGO_WRAP_WORD);
-	clutter_text_set_selectable (CLUTTER_TEXT (priv->reply_entry), TRUE);
-	clutter_text_set_editable (CLUTTER_TEXT (priv->reply_entry), TRUE);
-	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout),
-			priv->reply_entry,
-			TRUE, /*expand*/
-			TRUE, /*x-fill*/
-			TRUE, /*y-fill*/
-			CLUTTER_BOX_ALIGNMENT_START,
-			CLUTTER_BOX_ALIGNMENT_START);
-
-        child_layout = clutter_box_layout_new ();
-	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (child_layout), FALSE);
-	child_box = clutter_box_new (child_layout);
-
-	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout),
-			child_box,
-			TRUE, /*expand*/
-			TRUE, /*x-fill*/
-			TRUE, /*y-fill*/
-			CLUTTER_BOX_ALIGNMENT_START,
-			CLUTTER_BOX_ALIGNMENT_START);
-
-	priv->submit_button = clutter_text_new ();
-	clutter_actor_set_reactive (priv->submit_button, TRUE);
-	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (child_layout),
-			priv->submit_button,
-			TRUE, /*expand*/
-			FALSE, /*x-fill*/
-			TRUE, /*y-fill*/
-			CLUTTER_BOX_ALIGNMENT_START,
-			CLUTTER_BOX_ALIGNMENT_START);
-
-	priv->reply_button = clutter_text_new ();
-	clutter_actor_set_reactive (priv->reply_button, TRUE);
-	clutter_text_set_text (CLUTTER_TEXT (priv->reply_button), _("Reply"));
-	clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (child_layout),
-			priv->reply_button,
-			FALSE, /*expand*/
-			FALSE, /*x-fill*/
-			TRUE, /*y-fill*/
-			CLUTTER_BOX_ALIGNMENT_END,
-			CLUTTER_BOX_ALIGNMENT_END);
-
-	g_signal_connect (priv->reply_entry, "paint", G_CALLBACK (on_reply_entry_paint), app_comment);
-	g_signal_connect (priv->submit_button, "button-press-event", G_CALLBACK (on_submit_button_press), app_comment);
-	g_signal_connect (priv->reply_button, "button-press-event", G_CALLBACK (on_reply_button_press), app_comment);
-
-	clutter_container_add_actor (CLUTTER_CONTAINER (app_comment), CLUTTER_ACTOR (box));
-	g_signal_connect (app_comment, "paint", G_CALLBACK (on_app_comment_paint), app_comment);
+	clutter_text_set_text (CLUTTER_TEXT (text), open_result_get (comment, "text"));
+	set_user_icon (usericon, open_result_get (comment, "user"));
 
 	return app_comment;
 }

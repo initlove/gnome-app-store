@@ -2,6 +2,7 @@
   "Info preview" : {
     "id" : "app-comment", 
     "type" : "ClutterGroup",
+    "width" : 400,
     "reactive" : true,
     "children" : [
       {
@@ -12,12 +13,7 @@
 	"filename" : "person.png",
 	"x" : 2,
 	"y" : 10,
-        "keep-aspect-ratio" : true,
-        "anchor-x" : "5 em",
-        "anchor-y" : "5 pt",
-        "opacity" : 200,
-    	"reactive" : true,
-        "behaviours" : [ "rotate-behaviour", "fade-behaviour" ]
+    	"reactive" : true
       },
       {
         "id" : "subject",
@@ -54,16 +50,67 @@
         "ellipsize" : "end"
       },
       {
-        "id" : "text",
-        "type" : "ClutterText",
-	"x" : 0,
-	"y" : 70,
-	"width" : 350,
-        "font-name" : "Sans 12px",
-        "color" : "black",
-        "line-alignment" : "start",
-        "line-wrap" : true,
-        "ellipsize" : "none"
+        "id" : "reply-box",
+        "type" : "ClutterBox",
+        "x" : 10,
+        "y" : 60,
+        "layout-manager" : {
+                "type" : "ClutterBoxLayout" ,
+                "vertical" : true,
+                "spacing" : 10
+        },
+        "children" : [
+      	      {
+	        "id" : "text",
+        	"type" : "ClutterText",
+		"width" : 350,
+        	"font-name" : "Sans 12px",
+	        "color" : "black",
+        	"line-alignment" : "start",
+	        "line-wrap" : true,
+        	"ellipsize" : "none"
+	      },
+              {
+                "id" : "reply-entry",
+                "type" : "GnomeAppText",
+                "text-font-name" : "Sans 16px",
+                "text-color" : "black",
+                "width" : 320,
+                "reactive" : true
+              },
+      	      {
+	        "id" : "reply-button-box",
+	        "type" : "ClutterBox",
+        		"layout-manager" : {
+	                "type" : "ClutterBoxLayout" ,
+                	"spacing" : 100
+		        },
+	        "children" : [
+      		      {
+                	"id" : "submit-button",
+	                "type" : "GnomeAppButton",
+        	        "text" : "Submit",
+                	"text-font-name" : "Sans 16px",
+	                "text-color" : "black",
+        	        "reactive" : true,
+                	"signals" : [
+	                  { "name" : "button-press-event", "handler" : "on_submit_button_press" }
+        	        ]
+	              },
+      		      {
+                	"id" : "reply-button",
+	                "type" : "GnomeAppButton",
+        	        "text" : "Reply",
+                	"text-font-name" : "Sans 16px",
+	                "text-color" : "black",
+        	        "reactive" : true,
+                	"signals" : [
+	                  { "name" : "button-press-event", "handler" : "on_reply_button_press" }
+        	        ]
+	              }
+		]
+	      }
+	]
       }
     ]
   }
