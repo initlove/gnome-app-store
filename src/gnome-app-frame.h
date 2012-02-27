@@ -16,7 +16,7 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Sframete 330,
    Boston, MA 02111-1307, USA.
 
-   Author: Liang chenye <liangchenye@gmail.com>
+   Author: David Liang <dliang@novell.com>
 */
 
 #ifndef __GNOME_APP_FRAME_H__

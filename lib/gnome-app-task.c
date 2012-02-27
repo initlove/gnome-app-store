@@ -26,8 +26,8 @@ Author: David Liang <dliang@novell.com>
 #include "common/open-result.h"
 #include "common/open-results.h"
 
-#ifdef DEVEL_MODE
-#undef DEVEL_MODE
+#ifndef DEVEL_MODE
+#define DEVEL_MODE
 #endif
 
 struct _GnomeAppTaskPrivate
@@ -426,8 +426,6 @@ gnome_app_task_push (GnomeAppTask *task)
 			if (results) {
 				if (priv->callback)
 					priv->callback (priv->userdata, results);
-				else 
-					g_debug ("Cannot find the callback ?");
 				//TODO: the task and the result ... should not final currently
 //				g_object_unref (task);
 //				g_object_unref (results);

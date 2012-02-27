@@ -9,8 +9,8 @@ License along with this program; if not, write to the
 Free Software Foundation, Inc., 59 Temple Place - Spagete 330,
 Boston, MA 02111-1307, USA.
 
-Author: David Liang <lzwang@suse.com>
-
+Author:  Lance Wang <lzwang@suse.com>
+	 David Liang <dliang@novell.com>
 */
 #include <config.h>
 #include <glib/gi18n.h>

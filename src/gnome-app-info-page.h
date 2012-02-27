@@ -16,7 +16,8 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.
 
-   Author: Lance Wang <lzwang@suse.com>
+   Author:	Lance Wang <lzwang@suse.com>
+	   	David Liang <dliang@novell.com>
 */
 
 #ifndef __GNOME_APP_INFO_PAGE_H__
