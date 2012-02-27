@@ -10,8 +10,8 @@
         "type" : "ClutterTexture",
         "x" : 60,
         "y" : 40,
-        "width" : 340,
-        "height" : 300,
+        "width" : 320,
+        "height" : 280,
         "opacity" : 255
       },
       {
@@ -71,85 +71,12 @@
         "ellipsize" : "none"
       },
       {
-        "id" : "score",
-	"type" : "GnomeAppScore",
-        "x" : 550,
-        "y" : 120,
-	"width" : 100,
-	"height" : 20
-      },
-      {
-        "id" : "license",
-        "type" : "ClutterText",
-        "x" : 550,
-        "y" : 150,
-        "text" : "license",
-        "font-name" : "Sans 13px",
-        "color" : "black",
-        "line-alignment" : "center",
-        "line-wrap" : false,
-        "ellipsize" : "none"
-      },
-      {
-        "id" : "fans",
-        "type" : "ClutterText",
-        "x" : 550,
-        "y" : 180,
-        "font-name" : "Sans 13px",
-        "color" : "black",
-        "line-alignment" : "center",
-        "line-wrap" : false,
-        "ellipsize" : "none"
-      },
-      {
-        "id" : "fan-button",
-        "type" : "GnomeAppButton",
-        "text-font-name" : "Sans 17px",
-        "text-color" : "green",
-        "reactive" : true,
-        "x" : 750,
-        "y" : 180,
-        "signals" : [
-          { "name" : "button-press-event", "handler" : "on_fan_button_press" }
-        ]
-      },
-
-      {
-        "id" : "downloads",
-        "type" : "ClutterText",
-        "x" : 550,
-        "y" : 210,
-        "font-name" : "Sans 13px",
-        "color" : "black",
-        "line-alignment" : "center",
-        "line-wrap" : false,
-        "ellipsize" : "none"
-      },
-      {
-        "id" : "download-group",
-        "type" : "ClutterGroup",
-        "reactive" : true,
-        "x" : 750,
-        "y" : 210
-      },
-      {
-        "id" : "comments",
-        "type" : "ClutterText",
-        "x" : 550,
-        "y" : 240,
-        "font-name" : "Sans 13px",
-        "color" : "black",
-        "line-alignment" : "center",
-        "line-wrap" : false,
-        "ellipsize" : "none"
-      },
-      {
         "id" : "return-button",
         "type" : "GnomeAppButton",
         "x" : 900,
-        "y" : 550,
-        "width" : 64,
-        "height" : 64,
+        "y" : 300,
+	"width" : 64,
+	"height" : 64,
 	"filename" : "back.png",
         "reactive" : true,
         "signals" : [
@@ -160,28 +87,101 @@
         "id" : "description",
 	"type" : "ClutterGroup",
         "x" : 50,
-        "y" : 360,
-	"width" : 360
+        "y" : 340,
+	"width" : 350
       },
       {
-        "id" : "comment-box",
+        "id" : "data-box",
         "type" : "ClutterBox",
-	"x" : 500,
-	"y" : 300,
+	"x" : 480,
+	"y" : 100,
         "layout-manager" : {
                 "type" : "ClutterBoxLayout" ,
 		"vertical" : true,
-                "spacing" : 30
+                "spacing" : 20
         },
         "children" : [
+      	      {
+		"id" : "score",
+		"type" : "GnomeAppScore",
+		"layout::x-align" : "start",
+		"width" : 100,
+		"height" : 20
+	      },
+	      {
+	        "id" : "license",
+	        "type" : "ClutterText",
+		"layout::x-align" : "start",
+        	"text" : "license",
+	        "font-name" : "Sans 13px",
+	        "color" : "black",
+	        "line-alignment" : "center",
+	        "line-wrap" : false,
+        	"ellipsize" : "none"
+	      },
+              {
+	        "id" : "fan-box",
+	        "type" : "ClutterBox",
+		"layout::x-align" : "start",
+       		 "layout-manager" : {
+                	"type" : "ClutterBoxLayout" ,
+        	        "spacing" : 20
+		},
+	        "children" : [
+		      {
+        		"id" : "fans",
+		        "type" : "ClutterText",
+		        "font-name" : "Sans 13px",
+		        "color" : "black",
+		        "line-alignment" : "center",
+		        "line-wrap" : false,
+		        "ellipsize" : "none"
+		      },
+		      {
+		        "id" : "fan-button",
+		        "type" : "GnomeAppButton",
+		        "text-font-name" : "Sans 17px",
+		        "text-color" : "blue",
+		        "reactive" : true,
+		        "signals" : [
+		          { "name" : "button-press-event", "handler" : "on_fan_button_press" }
+		        ]
+		      }
+		 ]
+	      },
+      	      {
+		"id" : "download-count",
+	        "type" : "GnomeAppButton",
+		"layout::x-align" : "start",
+		"button-mode" : "select",
+		"text" : "Download",
+		"text-font-name" : "Sans 17px",
+		"text-color" : "blue",
+		"signals" : [
+		          { "name" : "button-press-event", "handler" : "on_downloads_button_press" }
+		]
+	      },
+	      {
+	        "id" : "download-group",
+	        "type" : "ClutterGroup",
+		"layout::x-align" : "start",
+	        "reactive" : true
+	      },
+	      {
+	        "id" : "comment-count",
+	        "type" : "ClutterText",
+		"layout::x-align" : "start",
+	        "font-name" : "Sans 13px",
+	        "color" : "black",
+	        "line-alignment" : "center",
+	        "line-wrap" : false,
+        	"ellipsize" : "none"
+	      },
 	      {
 		"id" : "comment-entry",
 		"type" : "GnomeAppText",
         	"text-font-name" : "Sans 20px",
 		"text-color" : "black",
-		"hint" : "< comment here >",
-		"hint-font-name" : "Sans 18px",
-		"hint-color" : "black",
 		"width" : 350,
 		"reactive" : true
 	      },

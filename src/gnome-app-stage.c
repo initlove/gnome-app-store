@@ -35,6 +35,9 @@ struct _GnomeAppStagePrivate
 	ClutterActor *background;
 	//TODO: learn from nautilus or firefox, make history a list if necessary
 	ClutterActor *history;
+
+	gfloat default_width;
+	gfloat default_height;
 };
 
 enum {
@@ -119,18 +122,27 @@ gnome_app_stage_show (GnomeAppStage *app_stage, gint mode, GObject *app_actor)
 {
 	GnomeAppStagePrivate *priv;
 	gfloat width, height;
+	gfloat stage_width, stage_height;
 	gchar *filename;
 
 	priv = app_stage->priv;
 	g_hash_table_foreach (priv->table, (GHFunc) app_actor_hide, app_actor);
 		
 	clutter_actor_get_size (CLUTTER_ACTOR (app_actor), &width, &height);
-	clutter_actor_set_size (CLUTTER_ACTOR (app_stage), width, height);
+	//TODO: this should improve
+	if ((width < priv->default_width/2) && (height < priv->default_height/2)) {
+		stage_width = width;
+       		stage_height = height;
+	} else {
+		stage_width = priv->default_width;
+		stage_height = priv->default_height;
+	}
+	clutter_actor_set_size (CLUTTER_ACTOR (app_stage), stage_width, stage_height);
 	set_position_on_show (CLUTTER_ACTOR (app_stage), GNOME_APP_STAGE_POSITION_CENTER);
 
 	priv->history = CLUTTER_ACTOR (app_actor);
 	clutter_actor_show (CLUTTER_ACTOR (app_actor));
-
+#if 0
 	/*TODO: should get from theme, for example */
 	if (GNOME_APP_IS_LOGIN (app_actor)) {
 		filename = open_app_get_pixmap_uri ("login");
@@ -141,13 +153,14 @@ gnome_app_stage_show (GnomeAppStage *app_stage, gint mode, GObject *app_actor)
 	}
 	if (filename) {
 		//TODO: need good background to reopen it
-		clutter_actor_set_size (CLUTTER_ACTOR (priv->background), width, height);
+		clutter_actor_set_size (CLUTTER_ACTOR (priv->background), stage_width, stage_height);
 		clutter_actor_show (CLUTTER_ACTOR (priv->background));
-//		clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->background), filename, NULL);
+		clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->background), filename, NULL);
 		g_free (filename);
 	} else {
 		clutter_actor_hide (CLUTTER_ACTOR (priv->background));
 	}
+#endif
 }
 
 void
@@ -196,11 +209,12 @@ gnome_app_stage_init (GnomeAppStage *app_stage)
 	priv->table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 	priv->store = gnome_app_store_get_default ();
 	priv->history = NULL;
+	priv->default_width = 1000;
+	priv->default_height = 700;
 #if 0
         gnome_app_stage_remove_decorate (CLUTTER_ACTOR (app_stage));
-#else
-	clutter_stage_set_title (CLUTTER_STAGE (app_stage), "App Store");
 #endif
+	clutter_stage_set_title (CLUTTER_STAGE (app_stage), "App Store");
 	gnome_app_stage_set_position (CLUTTER_ACTOR (app_stage), GNOME_APP_STAGE_POSITION_CENTER);
 	clutter_actor_set_reactive (CLUTTER_ACTOR (app_stage), TRUE);
 

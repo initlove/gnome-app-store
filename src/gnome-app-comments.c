@@ -273,7 +273,6 @@ gnome_app_comments_new_with_content (const gchar *content, const gchar *content2
 		priv->content = g_strdup (content);
 	if (content2)
 		priv->content2 = g_strdup (content2);
-
 	
 	function = g_strdup_printf ("/v1/comments/data/1/%s/0", content);
 	task = gnome_app_task_new (comments, "GET", function);

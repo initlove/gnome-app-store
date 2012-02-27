@@ -2,6 +2,10 @@
    download interface
    register interface
 
+The Return button should be done in the stage level together with history list.
+Add more effect like: to the top, to the end
+  while there is lots of informations in the info-page
+
 
 We should make a better search entry...
 

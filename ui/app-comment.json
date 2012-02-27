@@ -61,7 +61,7 @@
         },
         "children" : [
       	      {
-	        "id" : "text",
+	        "id" : "message",
         	"type" : "ClutterText",
 		"width" : 350,
         	"font-name" : "Sans 12px",
@@ -81,10 +81,11 @@
       	      {
 	        "id" : "reply-button-box",
 	        "type" : "ClutterBox",
-        		"layout-manager" : {
+		"x" : 40,
+        	"layout-manager" : {
 	                "type" : "ClutterBoxLayout" ,
                 	"spacing" : 100
-		        },
+		},
 	        "children" : [
       		      {
                 	"id" : "submit-button",

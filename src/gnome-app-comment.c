@@ -301,7 +301,7 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 	ClutterActor *subject;
 	ClutterActor *user;
 	ClutterActor *date;
-	ClutterActor *text;
+	ClutterActor *message;
 	ClutterActor *usericon;
         const gchar *val;
 	gchar *str;
@@ -314,7 +314,7 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 				"subject", &subject,
 				"user", &user,
 				"date", &date,
-				"text", &text,
+				"message", &message,
 				"usericon", &usericon,
 			       	NULL);
                 
@@ -334,7 +334,7 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 		g_free (str);
 	}
 
-	clutter_text_set_text (CLUTTER_TEXT (text), open_result_get (comment, "text"));
+	clutter_text_set_text (CLUTTER_TEXT (message), open_result_get (comment, "text"));
 	set_user_icon (usericon, open_result_get (comment, "user"));
 
 	return app_comment;

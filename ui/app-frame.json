@@ -3,7 +3,7 @@
     "id" : "frame",
     "type" : "ClutterGroup",
     "width" : 1000,
-    "height" : 800,
+    "height" : 700,
     "children" : [
       {
         "id" : "total-items",
