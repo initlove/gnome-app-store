@@ -54,7 +54,7 @@ on_back_button_press (ClutterActor *actor,
 	GnomeAppStage *app_stage;
 
 	app_stage = gnome_app_stage_get_default ();
-	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL,
+	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_DEFAULT,
 			"GnomeAppLogin", NULL);
 
 	return FALSE;

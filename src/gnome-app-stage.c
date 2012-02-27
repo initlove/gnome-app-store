@@ -57,7 +57,7 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 	app_stage = GNOME_APP_STAGE (userdata);
 	priv = app_stage->priv;
 	if (results && open_results_get_status (results)) {
-		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL, "GnomeAppFrame", NULL);
+		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_NEW, "GnomeAppFrame", NULL);
 	} else {
 		gchar *username;
 		gchar *password;
@@ -66,7 +66,7 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 			"username", &username, 
 			"password", &password, 
 			NULL);
-		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL,
+		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_DEFAULT,
 				"GnomeAppLogin",
 				"username", &username,
 				"password", &password,
@@ -96,7 +96,7 @@ auth_valid (GnomeAppStage *app_stage)
 				NULL);
 		gnome_app_task_push (task);
         } else {
-                gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL,
+                gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_DEFAULT,
 				"GnomeAppLogin",
 				"username", username,
 				"password", password, 
@@ -123,18 +123,11 @@ gnome_app_stage_show (GnomeAppStage *app_stage, gint mode, GObject *app_actor)
 
 	priv = app_stage->priv;
 	g_hash_table_foreach (priv->table, (GHFunc) app_actor_hide, app_actor);
-	if ((mode == GNOME_APP_STAGE_LOAD_INSIDE) && (priv->history)) {
-		gfloat actor_width, actor_height;
-		width = clutter_actor_get_width (CLUTTER_ACTOR (app_stage));
-		height = clutter_actor_get_height (CLUTTER_ACTOR (app_stage));
-		actor_width = clutter_actor_get_width (CLUTTER_ACTOR (app_actor));
-		actor_height = clutter_actor_get_height (CLUTTER_ACTOR (app_actor));
-		clutter_actor_set_position (CLUTTER_ACTOR (app_actor), (width - actor_width)/2, (height - actor_height)/2);
-	} else {
-		clutter_actor_get_size (CLUTTER_ACTOR (app_actor), &width, &height);
-		clutter_actor_set_size (CLUTTER_ACTOR (app_stage), width, height);
-		set_position_on_show (CLUTTER_ACTOR (app_stage), GNOME_APP_STAGE_POSITION_CENTER);
-	}
+		
+	clutter_actor_get_size (CLUTTER_ACTOR (app_actor), &width, &height);
+	clutter_actor_set_size (CLUTTER_ACTOR (app_stage), width, height);
+	set_position_on_show (CLUTTER_ACTOR (app_stage), GNOME_APP_STAGE_POSITION_CENTER);
+
 	priv->history = CLUTTER_ACTOR (app_actor);
 	clutter_actor_show (CLUTTER_ACTOR (app_actor));
 
@@ -167,15 +160,20 @@ gnome_app_stage_load (GnomeAppStage *app_stage, gint mode, const gchar *type_nam
 
 	priv = app_stage->priv;
 	app_actor = g_hash_table_lookup (priv->table, type_name);
-	if (!app_actor) {
-		app_actor = g_object_new (g_type_from_name (type_name), NULL);
-		if (app_actor) {
+	if (app_actor) {
+		if (mode == GNOME_APP_STAGE_LOAD_NEW) {
+			clutter_container_remove_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (app_actor));
+			g_hash_table_remove (priv->table, type_name);
+			app_actor = g_object_new (g_type_from_name (type_name), NULL);
 			clutter_container_add_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (app_actor));
 			g_hash_table_insert (priv->table, g_strdup (type_name), app_actor);
-		} else {
-			g_critical ("error in finding object : %s\n", type_name);
 		}
+	} else {
+		app_actor = g_object_new (g_type_from_name (type_name), NULL);
+		clutter_container_add_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (app_actor));
+		g_hash_table_insert (priv->table, g_strdup (type_name), app_actor);
 	}
+
 	va_start (args, type_name);
 	first_name = va_arg (args, const gchar *);
 	if (first_name) {
@@ -213,7 +211,7 @@ gnome_app_stage_init (GnomeAppStage *app_stage)
         g_signal_connect (app_stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 #if 0
 	//DEBUG
-	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL, "GnomeAppFrame", NULL);
+	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_DEFAULT, "GnomeAppFrame", NULL);
 #else
 	auth_valid (app_stage);
 #endif

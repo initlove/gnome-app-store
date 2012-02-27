@@ -342,7 +342,7 @@ next_page_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 	const gchar *name;
 	const gchar *content;
 
-	g_debug ("Next page predict!");
+//	g_debug ("Next page predict!");
 	if (strcasecmp (gnome_app_task_get_method (task), "GET") != 0) {
 		g_critical ("No reason to predict next page in POST task!");
 		return NULL;

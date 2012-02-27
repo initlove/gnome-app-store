@@ -128,6 +128,10 @@ gnome_app_account_load (GnomeAppAccount *account)
 		GnomeAppTask *task;
 		gchar *function;
 
+       		clutter_script_get_objects (priv->script, 
+			"login", &login,
+			NULL);
+		clutter_actor_hide (login);
 		function = g_strdup_printf ("/v1/person/data/%s",  priv->person_id);
 		task = gnome_app_task_new (account, "GET", function);
 		gnome_app_task_set_callback (task, set_account_callback);
@@ -159,7 +163,7 @@ on_account_login_press (ClutterActor *actor,
 	GnomeAppStage *app_stage;
 
 	app_stage = gnome_app_stage_get_default ();
-	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_INSIDE, "GnomeAppLogin", NULL);
+	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_DEFAULT, "GnomeAppLogin", NULL);
 
 	return TRUE;
 }

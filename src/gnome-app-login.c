@@ -84,7 +84,7 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 		g_signal_emit (login, login_signals [AUTH], 0);
 */
 		app_stage = gnome_app_stage_get_default ();
-		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL,
+		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_NEW,
 				"GnomeAppFrame", 
 				NULL);
 	} else {
@@ -102,7 +102,7 @@ on_register_press (ClutterActor *actor,
 	GnomeAppStage *app_stage;
 
 	app_stage = gnome_app_stage_get_default ();
-	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL,
+	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_DEFAULT,
 			"GnomeAppRegister", NULL);
 
 	return TRUE;
@@ -169,7 +169,7 @@ on_guest_login_press (ClutterActor *actor,
 				"save", NULL,
 				NULL);
 	app_stage = gnome_app_stage_get_default ();
-	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL,
+	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_NEW,
 				"GnomeAppFrame", 
 				NULL);
 }

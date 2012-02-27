@@ -447,7 +447,7 @@ draw_fan_status (GnomeAppInfoPage *page)
 			break;
 		default:
 			/*TODO:*/
-			gnome_app_button_set_text (GNOME_APP_BUTTON (actor), _("Not connect"));
+			gnome_app_button_set_text (GNOME_APP_BUTTON (actor), _("Loading Fan status"));
 			break;
 	}
 
@@ -627,7 +627,7 @@ on_return_button_press (ClutterActor *actor,
 	GnomeAppStage *stage;
 
 	stage = gnome_app_stage_get_default ();
-	gnome_app_stage_load (stage, GNOME_APP_STAGE_LOAD_FULL, "GnomeAppFrame", NULL);
+	gnome_app_stage_load (stage, GNOME_APP_STAGE_LOAD_DEFAULT, "GnomeAppFrame", NULL);
 
         return TRUE;
 }

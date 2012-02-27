@@ -51,9 +51,12 @@ struct _GnomeAppStageClass
         ClutterStageClass parent_class;
 };
 
+/*	LOAD_NEW: 	 remove the previous page, total new page
+ *	LOAD_DEFAULT: 	 use the cached page if we have
+ */
 enum {
-	GNOME_APP_STAGE_LOAD_FULL,
-	GNOME_APP_STAGE_LOAD_INSIDE,
+	GNOME_APP_STAGE_LOAD_NEW,
+	GNOME_APP_STAGE_LOAD_DEFAULT
 };
 
 enum {

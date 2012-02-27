@@ -36,7 +36,8 @@ set_pic_callback (gpointer userdata, gpointer func_re)
 void
 gnome_app_set_icon (ClutterActor *actor, const gchar *uri)
 {
-	g_return_if_fail (actor && uri);
+	if (!uri)
+		return;
 
 	GnomeAppTask *task;
 		
