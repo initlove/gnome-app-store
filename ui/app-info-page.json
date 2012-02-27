@@ -3,6 +3,7 @@
     "id" : "info-page",
     "type" : "ClutterGroup",
     "width" : 1000,
+    "height" : 800,
     "reactive" : true,
     "children" : [
       {
@@ -144,41 +145,6 @@
         "ellipsize" : "none"
       },
       {
-	"id" : "comment-entry",
-	"type" : "ClutterText",
-        "font-name" : "Sans 20px",
-	"selectable" : true,
-	"editable" : true,
-	"reactive" : true,
-        "line-wrap" : true,
-	"line-wrap-mode" : "word",
-	"x" : 550,
-	"y" : 300,
-	"width" : 300,
-	"height" : 100
-      },
-      {
-        "id" : "comment-button",
-        "type" : "GnomeAppButton",
-        "text" : "Comment",
-        "text-font-name" : "Sans 16px",
-	"text-color" : "black",
-        "reactive" : true,
-        "x" : 760,
-        "y" : 410,
-        "signals" : [
-          { "name" : "button-press-event", "handler" : "on_comment_button_press" }
-        ]
-      },
-      {
-        "id" : "comments-details",
-	"type" : "ClutterGroup",
-        "x" : 500,
-        "y" : 460,
-	"width" : 360,
-	"height" : 400
-      },
-      {
         "id" : "return-button",
         "type" : "GnomeAppButton",
         "x" : 900,
@@ -197,6 +163,46 @@
         "x" : 50,
         "y" : 360,
 	"width" : 360
+      },
+      {
+        "id" : "comment-box",
+        "type" : "ClutterBox",
+	"x" : 500,
+	"y" : 300,
+        "layout-manager" : {
+                "type" : "ClutterBoxLayout" ,
+		"vertical" : true,
+                "spacing" : 30
+        },
+        "children" : [
+	      {
+		"id" : "comment-entry",
+		"type" : "GnomeAppText",
+        	"text-font-name" : "Sans 20px",
+		"text-color" : "black",
+		"hint" : "< comment here >",
+		"hint-font-name" : "Sans 18px",
+		"hint-color" : "black",
+		"width" : 350,
+		"reactive" : true
+	      },
+	      {
+        	"id" : "comment-button",
+	        "type" : "GnomeAppButton",
+	        "text" : "Comment",
+        	"text-font-name" : "Sans 16px",
+		"text-color" : "black",
+        	"reactive" : true,
+        	"signals" : [
+	          { "name" : "button-press-event", "handler" : "on_comment_button_press" }
+        	]
+	      },
+	      {
+        	"id" : "comments-details",
+		"type" : "ClutterGroup",
+		"width" : 400
+	      }
+	]
       }
     ]
   }

@@ -21,7 +21,7 @@ noinst_PROGRAMS =      \
 	test_scroll	\
 	$(NULL)
 
-gnome_app_store_SOURCES =        \
+SOURCE_FILES =	\
 	gnome-app-stage.c gnome-app-stage.h \
 	gnome-app-info-icon.c gnome-app-info-icon.h  \
 	gnome-app-score.c gnome-app-score.h \
@@ -36,6 +36,10 @@ gnome_app_store_SOURCES =        \
 	gnome-app-friends.c gnome-app-friends.h	\
 	gnome-app-message.c gnome-app-message.h	\
 	gnome-app-account.c gnome-app-account.h  \
+	$(NULL)
+
+gnome_app_store_SOURCES =        \
+	$(SOURCE_FILES)		\
 	app_store.c
 
 gnome_app_store_LDADD =          \
@@ -46,9 +50,7 @@ gnome_app_store_LDADD =          \
 	$(GNOME_APP_STORE_LIBS)
 
 test_comments_SOURCES = \
-	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
-	gnome-app-comment.c gnome-app-comment.h \
-	gnome-app-comments.c gnome-app-comments.h \
+	$(SOURCE_FILES)		\
 	test_comments.c
 
 test_comments_LDADD =          \
@@ -58,10 +60,7 @@ test_comments_LDADD =          \
 	$(GNOME_APP_STORE_LIBS)
 
 test_account_SOURCES = \
-	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
-	gnome-app-friends.c gnome-app-friends.h	\
-	gnome-app-message.c gnome-app-message.h	\
-	gnome-app-account.c gnome-app-account.h  \
+	$(SOURCE_FILES)		\
 	test_account.c
 
 test_account_LDADD =          \
@@ -71,8 +70,7 @@ test_account_LDADD =          \
 	$(GNOME_APP_STORE_LIBS)
 
 test_friends_SOURCES = \
-	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
-	gnome-app-friends.c gnome-app-friends.h	\
+	$(SOURCE_FILES)		\
 	test_friends.c
 
 test_friends_LDADD =          \
@@ -82,8 +80,7 @@ test_friends_LDADD =          \
 	$(GNOME_APP_STORE_LIBS)
 
 test_message_SOURCES = \
-	gnome-app-ui-utils.c gnome-app-ui-utils.h	\
-	gnome-app-message.c gnome-app-message.h	\
+	$(SOURCE_FILES)		\
 	test_message.c
 
 test_message_LDADD =          \

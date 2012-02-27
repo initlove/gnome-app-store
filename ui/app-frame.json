@@ -86,7 +86,7 @@
 	"id" : "icon-view", 
 	"type" : "GnomeAppIconView",
 	"x" : 10,
-	"y" : 80
+	"y" : 100
       },
       {
 	"id" : "spin", 

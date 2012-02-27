@@ -24,6 +24,7 @@
 
 #include "gnome-app-button.h"
 #include "gnome-app-check-box.h"
+#include "gnome-app-text.h"
 #include "gnome-app-entry.h"
 #include "gnome-app-texture.h"
 #include "gnome-app-widget.h"

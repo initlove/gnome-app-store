@@ -121,10 +121,10 @@ gnome_app_icon_view_init (GnomeAppIconView *icon_view)
 	priv->script = NULL;
 	priv->app_actors = NULL;
 	priv->count = 0;
-	priv->rows = 5;	//FIXME: should be calculated
-	priv->cols = 7; //FIXME: should be calculated
-	priv->icon_width = 96;
-	priv->icon_height = 96;
+	priv->rows = 4;	//FIXME: should be calculated
+	priv->cols = 5; //FIXME: should be calculated
+	priv->icon_width = 128;
+	priv->icon_height = 128;
 
 	priv->viewport = clutter_box_new (clutter_box_layout_new ());
 	clutter_container_add_actor (CLUTTER_CONTAINER (icon_view), priv->viewport);

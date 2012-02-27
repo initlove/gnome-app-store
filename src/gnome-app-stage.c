@@ -33,6 +33,8 @@ struct _GnomeAppStagePrivate
 	GnomeAppStore *store;
 	GHashTable *table;
 	ClutterActor *background;
+	//TODO: learn from nautilus or firefox, make history a list if necessary
+	ClutterActor *history;
 };
 
 enum {
@@ -55,7 +57,7 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 	app_stage = GNOME_APP_STAGE (userdata);
 	priv = app_stage->priv;
 	if (results && open_results_get_status (results)) {
-		gnome_app_stage_load (app_stage, "GnomeAppFrame", NULL);
+		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL, "GnomeAppFrame", NULL);
 	} else {
 		gchar *username;
 		gchar *password;
@@ -64,7 +66,7 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 			"username", &username, 
 			"password", &password, 
 			NULL);
-		gnome_app_stage_load (app_stage,
+		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL,
 				"GnomeAppLogin",
 				"username", &username,
 				"password", &password,
@@ -94,7 +96,7 @@ auth_valid (GnomeAppStage *app_stage)
 				NULL);
 		gnome_app_task_push (task);
         } else {
-                gnome_app_stage_load (app_stage,
+                gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL,
 				"GnomeAppLogin",
 				"username", username,
 				"password", password, 
@@ -113,7 +115,7 @@ app_actor_hide (gpointer key,
 }
 
 static void
-gnome_app_stage_show (GnomeAppStage *app_stage, GObject *app_actor)
+gnome_app_stage_show (GnomeAppStage *app_stage, gint mode, GObject *app_actor)
 {
 	GnomeAppStagePrivate *priv;
 	gfloat width, height;
@@ -121,10 +123,20 @@ gnome_app_stage_show (GnomeAppStage *app_stage, GObject *app_actor)
 
 	priv = app_stage->priv;
 	g_hash_table_foreach (priv->table, (GHFunc) app_actor_hide, app_actor);
+	if ((mode == GNOME_APP_STAGE_LOAD_INSIDE) && (priv->history)) {
+		gfloat actor_width, actor_height;
+		width = clutter_actor_get_width (CLUTTER_ACTOR (app_stage));
+		height = clutter_actor_get_height (CLUTTER_ACTOR (app_stage));
+		actor_width = clutter_actor_get_width (CLUTTER_ACTOR (app_actor));
+		actor_height = clutter_actor_get_height (CLUTTER_ACTOR (app_actor));
+		clutter_actor_set_position (CLUTTER_ACTOR (app_actor), (width - actor_width)/2, (height - actor_height)/2);
+	} else {
+		clutter_actor_get_size (CLUTTER_ACTOR (app_actor), &width, &height);
+		clutter_actor_set_size (CLUTTER_ACTOR (app_stage), width, height);
+		set_position_on_show (CLUTTER_ACTOR (app_stage), GNOME_APP_STAGE_POSITION_CENTER);
+	}
+	priv->history = CLUTTER_ACTOR (app_actor);
 	clutter_actor_show (CLUTTER_ACTOR (app_actor));
-	clutter_actor_get_size (CLUTTER_ACTOR (app_actor), &width, &height);
-	clutter_actor_set_size (CLUTTER_ACTOR (app_stage), width, height);
-	set_position_on_show (CLUTTER_ACTOR (app_stage), GNOME_APP_STAGE_POSITION_CENTER);
 
 	/*TODO: should get from theme, for example */
 	if (GNOME_APP_IS_LOGIN (app_actor)) {
@@ -135,6 +147,7 @@ gnome_app_stage_show (GnomeAppStage *app_stage, GObject *app_actor)
 		filename = NULL;
 	}
 	if (filename) {
+		//TODO: need good background to reopen it
 		clutter_actor_set_size (CLUTTER_ACTOR (priv->background), width, height);
 		clutter_actor_show (CLUTTER_ACTOR (priv->background));
 //		clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->background), filename, NULL);
@@ -145,7 +158,7 @@ gnome_app_stage_show (GnomeAppStage *app_stage, GObject *app_actor)
 }
 
 void
-gnome_app_stage_load (GnomeAppStage *app_stage, const gchar *type_name, ...)
+gnome_app_stage_load (GnomeAppStage *app_stage, gint mode, const gchar *type_name, ...)
 {
 	GnomeAppStagePrivate *priv;
 	GObject *app_actor;
@@ -170,7 +183,7 @@ gnome_app_stage_load (GnomeAppStage *app_stage, const gchar *type_name, ...)
 	}
 	va_end (args);
 
-	gnome_app_stage_show (app_stage, app_actor);
+	gnome_app_stage_show (app_stage, mode, app_actor);
 }
 
 static void
@@ -184,6 +197,7 @@ gnome_app_stage_init (GnomeAppStage *app_stage)
 
 	priv->table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 	priv->store = gnome_app_store_get_default ();
+	priv->history = NULL;
 #if 0
         gnome_app_stage_remove_decorate (CLUTTER_ACTOR (app_stage));
 #else
@@ -197,9 +211,9 @@ gnome_app_stage_init (GnomeAppStage *app_stage)
 	clutter_actor_set_position (priv->background, 0, 0);
 	clutter_container_add_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (priv->background));
         g_signal_connect (app_stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
-#if 1
+#if 0
 	//DEBUG
-	gnome_app_stage_load (app_stage, "GnomeAppFrame", NULL);
+	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL, "GnomeAppFrame", NULL);
 #else
 	auth_valid (app_stage);
 #endif

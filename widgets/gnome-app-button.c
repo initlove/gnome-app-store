@@ -211,7 +211,6 @@ gnome_app_button_set_property (GObject *object,
 			priv->type = BUTTON_TEXTURE;
 			str = g_value_get_string (value);
 			filename = open_app_get_pixmap_uri (str);
-
 			/*TODO: if 'filename' comes before width and height
 			 * signal connect to size change .. */
 			if (filename) {

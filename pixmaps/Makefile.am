@@ -3,6 +3,7 @@ SUBDIRS = spin
 pixmapsdir = $(datadir)/pixmaps/@PACKAGE@
 
 pixmaps_DATA =	\
+	gnome.png \
 	gnome-spinner.png \
 	frame-background.png \
 	login.png \

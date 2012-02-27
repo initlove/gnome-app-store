@@ -87,7 +87,7 @@ on_info_icon_event (ClutterActor *actor,
 	{
 		case CLUTTER_BUTTON_PRESS:
 			app_stage = gnome_app_stage_get_default ();
-			gnome_app_stage_load (app_stage, "GnomeAppInfoPage", "info", priv->info, NULL);
+			gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL, "GnomeAppInfoPage", "info", priv->info, NULL);
 			break;
 		case CLUTTER_ENTER:
 			clutter_actor_set_scale (actor, 1.5, 1.5);

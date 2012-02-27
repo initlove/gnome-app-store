@@ -378,8 +378,9 @@ on_comment_button_press (ClutterActor *actor,
 	page = GNOME_APP_INFO_PAGE (data);
 	priv = page->priv;
 	comment_entry = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "comment-entry"));
+	//TODO: subject needed? make it simple?
 	subject = "thanks!";
-	message = clutter_text_get_text (CLUTTER_TEXT (comment_entry));
+	message = gnome_app_text_get_text (GNOME_APP_TEXT (comment_entry));
 	if (open_app_pattern_match ("blank", message, NULL)) {
 		//TODO: doing sth
 		return FALSE;
@@ -626,7 +627,7 @@ on_return_button_press (ClutterActor *actor,
 	GnomeAppStage *stage;
 
 	stage = gnome_app_stage_get_default ();
-	gnome_app_stage_load (stage, "GnomeAppFrame", NULL);
+	gnome_app_stage_load (stage, GNOME_APP_STAGE_LOAD_FULL, "GnomeAppFrame", NULL);
 
         return TRUE;
 }
@@ -836,7 +837,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 	priv->pic_count = count;
 	priv->current_pic = 1;
 
-	g_object_set (G_OBJECT (score), "score", open_result_get (info, "score"));
+	g_object_set (G_OBJECT (score), "score", open_result_get (info, "score"), NULL);
 	clutter_text_set_text (CLUTTER_TEXT (license), open_result_get (info, "license"));
 
 	val = open_result_get (info, "downloads");
@@ -852,6 +853,8 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 	str = g_strdup_printf (_("%d fans"), priv->fan_count);
 	clutter_text_set_text (CLUTTER_TEXT (fans), str);
 	g_free (str);
+
+	gnome_app_text_set_text (GNOME_APP_TEXT (comment_entry), NULL);
 
 	str = g_strdup_printf (_("%s comments"), open_result_get (info, "comments"));
 	clutter_text_set_text (CLUTTER_TEXT (comments), str);

@@ -18,7 +18,7 @@
       {
         "id" : "username",
         "type" : "ClutterText",
-        "text" : "username",
+        "text" : "Guest",
 	"x" : 72,
 	"y" : 5,
         "width" : 100,
@@ -30,9 +30,23 @@
         "ellipsize" : "end"
       },
       {
+        "id" : "login",
+        "type" : "GnomeAppButton",
+	"x" : 75,
+	"y" : 40,
+        "width" : 100,
+	"text" : "Login",
+        "text-font-name" : "Sans 16px",
+        "text-color" : "black",
+    	"reactive" : true,
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_account_login_press" }
+        ]
+      },
+      {
         "id" : "company",
         "type" : "ClutterText",
-        "text" : "company",
+	"text" : "company",
 	"x" : 72,
 	"y" : 30,
         "width" : 100,
@@ -46,7 +60,7 @@
       {
         "id" : "homepage",
         "type" : "ClutterText",
-        "text" : "Home Page",
+	"text" : "Home Page",
 	"x" : 72,
 	"y" : 50,
         "width" : 100,

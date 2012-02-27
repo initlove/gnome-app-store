@@ -84,8 +84,8 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 		g_signal_emit (login, login_signals [AUTH], 0);
 */
 		app_stage = gnome_app_stage_get_default ();
-		gnome_app_stage_load (app_stage, 
-				"GnomeAppFrameUI", 
+		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL,
+				"GnomeAppFrame", 
 				NULL);
 	} else {
 		g_debug ("error in auth %s\n", open_results_get_meta (results, "message"));
@@ -102,7 +102,8 @@ on_register_press (ClutterActor *actor,
 	GnomeAppStage *app_stage;
 
 	app_stage = gnome_app_stage_get_default ();
-	gnome_app_stage_load (app_stage, "GnomeAppRegister", NULL);
+	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL,
+			"GnomeAppRegister", NULL);
 
 	return TRUE;
 }
@@ -153,6 +154,24 @@ on_login_press (ClutterActor *actor,
 	}
 
 	return FALSE;
+}
+
+G_MODULE_EXPORT gboolean
+on_guest_login_press (ClutterActor *actor,
+		ClutterEvent *event,
+		gpointer      data)
+{
+	GnomeAppStage *app_stage;
+	GnomeAppStore *store;
+
+	store = gnome_app_store_get_default ();
+	g_object_set (store, "username", NULL, "password", NULL,
+				"save", NULL,
+				NULL);
+	app_stage = gnome_app_stage_get_default ();
+	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_FULL,
+				"GnomeAppFrame", 
+				NULL);
 }
 
 static void

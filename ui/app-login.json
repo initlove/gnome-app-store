@@ -63,7 +63,7 @@
       {
         "id" : "login",
         "type" : "GnomeAppButton",
-	"x" : 110,
+	"x" : 80,
 	"y" : 220,
         "text" : "Login",
         "text-font-name" : "Sans 25px",
@@ -71,6 +71,19 @@
     	"reactive" : true,
         "signals" : [
           { "name" : "button-press-event", "handler" : "on_login_press" }
+        ]
+      },
+      {
+        "id" : "guest-login",
+        "type" : "GnomeAppButton",
+	"x" : 160,
+	"y" : 225,
+        "text" : "Guest",
+        "text-font-name" : "Sans 16px",
+        "text-color" : "blue",
+    	"reactive" : true,
+        "signals" : [
+          { "name" : "button-press-event", "handler" : "on_guest_login_press" }
         ]
       }
     ]

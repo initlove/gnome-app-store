@@ -52,6 +52,11 @@ struct _GnomeAppStageClass
 };
 
 enum {
+	GNOME_APP_STAGE_LOAD_FULL,
+	GNOME_APP_STAGE_LOAD_INSIDE,
+};
+
+enum {
 	GNOME_APP_STAGE_POSITION_CENTER,
 	GNOME_APP_STAGE_POSITION_MOUSE,
 };
@@ -62,7 +67,7 @@ GnomeAppStage *		gnome_app_stage_get_default     (void);
 void			gnome_app_stage_move            (ClutterActor *stage, gint x, gint y);
 void			gnome_app_stage_set_position	(ClutterActor *stage, gint position);
 void			gnome_app_stage_remove_decorate (ClutterActor *stage);
-void			gnome_app_stage_load		(GnomeAppStage *app_stage, const gchar *type_name, ...);
+void			gnome_app_stage_load		(GnomeAppStage *app_stage, gint mode, const gchar *type_name, ...);
 void			gnome_app_stage_close		(GnomeAppStage *app_stage);
 G_MODULE_EXPORT	void	gnome_app_default_stage_close	(void);
 

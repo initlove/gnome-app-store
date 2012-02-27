@@ -19,6 +19,7 @@ Author: David Liang <dliang@novell.com>
 #include "open-app-utils.h"
 #include "open-results.h"
 #include "open-result.h"
+#include "gnome-app-stage.h"
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
 #include "gnome-app-friends.h"
@@ -65,6 +66,7 @@ set_account_callback (gpointer userdata, gpointer func_result)
 	ClutterActor *company;
 	ClutterActor *homepage;
 	ClutterActor *username;
+	ClutterActor *login;
         GList *list;
 	const gchar *val;
 	gchar *name;
@@ -73,10 +75,12 @@ set_account_callback (gpointer userdata, gpointer func_result)
 	result = list->data;
        	clutter_script_get_objects (priv->script, 
 			"avatar", &avatar,
+			"login", &login,
 			"company", &company,
 			"homepage", &homepage,
 			"username", &username,
 			NULL);
+
 	val = open_result_get (result, "avatarpicfound");
 	if (val && (strcmp (val, "1") == 0)) {
 		val = open_result_get (result, "avatarpic");
@@ -103,6 +107,7 @@ set_account_callback (gpointer userdata, gpointer func_result)
 	clutter_text_set_text (CLUTTER_TEXT (username), name);
 	g_free (name);
 
+	clutter_actor_hide (login);
 	return NULL;
 }
 
@@ -111,6 +116,9 @@ gnome_app_account_load (GnomeAppAccount *account)
 {
 	GnomeAppAccountPrivate *priv;
         ClutterActor *main_ui;
+	ClutterActor *login;
+	ClutterActor *company;
+	ClutterActor *homepage;
 	ClutterActor *friends;
         ClutterActor *messages;
 
@@ -128,7 +136,32 @@ gnome_app_account_load (GnomeAppAccount *account)
 		g_free (function);
 	} else {
 		/*TODO: display the not account interface */		
+       		clutter_script_get_objects (priv->script, 
+			"login", &login,
+			"company", &company,
+			"homepage", &homepage,
+			"friends", &friends,
+			"messages", &messages,
+			NULL);
+		clutter_actor_show (login);
+		clutter_actor_hide (company);
+		clutter_actor_hide (homepage);
+		clutter_actor_hide (friends);
+		clutter_actor_hide (messages);
 	}
+}
+
+G_MODULE_EXPORT gboolean
+on_account_login_press (ClutterActor *actor,
+		ClutterEvent *event,
+		gpointer      data)
+{
+	GnomeAppStage *app_stage;
+
+	app_stage = gnome_app_stage_get_default ();
+	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_INSIDE, "GnomeAppLogin", NULL);
+
+	return TRUE;
 }
 
 G_MODULE_EXPORT gboolean
@@ -198,9 +231,9 @@ gnome_app_account_init (GnomeAppAccount *account)
 	username = gnome_app_store_get_username (store);
 	if (username) {
 		priv->person_id = g_strdup (username);
-		gnome_app_account_load (account);
 	} else
 		priv->person_id = NULL;
+	gnome_app_account_load (account);
 }
 
 static void
