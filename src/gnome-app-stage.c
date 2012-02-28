@@ -71,8 +71,8 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 			NULL);
 		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_DEFAULT,
 				"GnomeAppLogin",
-				"username", &username,
-				"password", &password,
+				"username", username,
+				"password", password,
 				NULL);
 	}
 }
