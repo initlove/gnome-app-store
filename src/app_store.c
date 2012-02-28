@@ -45,8 +45,7 @@ main (int argc, char *argv[])
 
 	gnome_app_type_regist_all ();
 
-	stage = CLUTTER_ACTOR (gnome_app_stage_get_default ());
-	clutter_actor_show (stage);
+	gnome_app_stage_get_default ();
 
 	g_main_loop_run (loop);
   	g_main_loop_unref (loop);

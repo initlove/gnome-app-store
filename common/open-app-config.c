@@ -239,6 +239,8 @@ open_app_config_save (OpenAppConfig *config, gchar *username, gchar *password)
 	gint len;
 	gboolean val;
 
+	if (!username)
+		return TRUE;
 	priv = config->priv;
 	g_key_file_set_value (priv->key_file, "Server", "username", username);
 	if (password) {

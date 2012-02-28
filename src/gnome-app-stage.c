@@ -35,7 +35,7 @@ struct _GnomeAppStagePrivate
 	ClutterActor *background;
 	//TODO: learn from nautilus or firefox, make history a list if necessary
 	ClutterActor *history;
-
+	gboolean init;
 	gfloat default_width;
 	gfloat default_height;
 };
@@ -138,6 +138,11 @@ gnome_app_stage_show (GnomeAppStage *app_stage, gint mode, GObject *app_actor)
 		stage_height = priv->default_height;
 	}
 	clutter_actor_set_size (CLUTTER_ACTOR (app_stage), stage_width, stage_height);
+	if (!priv->init) {
+		priv->init = TRUE;
+		clutter_stage_set_title (CLUTTER_STAGE (app_stage), "App Store");
+		clutter_actor_show (CLUTTER_ACTOR (app_stage));
+	}
 	set_position_on_show (CLUTTER_ACTOR (app_stage), GNOME_APP_STAGE_POSITION_CENTER);
 
 	priv->history = CLUTTER_ACTOR (app_actor);
@@ -197,6 +202,37 @@ gnome_app_stage_load (GnomeAppStage *app_stage, gint mode, const gchar *type_nam
 	gnome_app_stage_show (app_stage, mode, app_actor);
 }
 
+static gpointer
+server_ping_callback (gpointer userdata, gpointer func_result)
+{
+	GnomeAppStage *app_stage;
+	GnomeAppStagePrivate *priv;
+	OpenResults *results;
+
+	results = OPEN_RESULTS (func_result);
+	app_stage = GNOME_APP_STAGE (userdata);
+	priv = app_stage->priv;
+
+	if (results && open_results_get_status (results)) {
+		auth_valid (app_stage);
+	} else {
+		g_debug ("Fail to find the service in the connect server . \n");
+		/*TODO: add the error interface */
+	}
+
+	return NULL;
+}
+
+static void
+server_ping (GnomeAppStage *app_stage)
+{
+	GnomeAppTask *task;
+
+	task = gnome_app_task_new (app_stage, "GET", "/v1/config");
+	gnome_app_task_set_callback (task, server_ping_callback);
+	gnome_app_task_push (task);
+}
+
 static void
 gnome_app_stage_init (GnomeAppStage *app_stage)
 {
@@ -211,25 +247,19 @@ gnome_app_stage_init (GnomeAppStage *app_stage)
 	priv->history = NULL;
 	priv->default_width = 1000;
 	priv->default_height = 700;
+	priv->init = FALSE;
 #if 0
         gnome_app_stage_remove_decorate (CLUTTER_ACTOR (app_stage));
 #endif
-	clutter_stage_set_title (CLUTTER_STAGE (app_stage), "App Store");
-	gnome_app_stage_set_position (CLUTTER_ACTOR (app_stage), GNOME_APP_STAGE_POSITION_CENTER);
 	clutter_actor_set_reactive (CLUTTER_ACTOR (app_stage), TRUE);
 
-	priv->background = clutter_texture_new ();
-	clutter_actor_set_opacity (priv->background, 128);
-	clutter_actor_set_position (priv->background, 0, 0);
-	clutter_container_add_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (priv->background));
         g_signal_connect (app_stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
-#if 0
-	//DEBUG
-	gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_DEFAULT, "GnomeAppFrame", NULL);
-#else
+
 	auth_valid (app_stage);
-#endif
-}
+	/*TODO: server ping will be done in the future when we got more than one well-known server 
+	 	server_ping (app_stage);
+	 */
+}	
 
 static void
 gnome_app_stage_dispose (GObject *object)
