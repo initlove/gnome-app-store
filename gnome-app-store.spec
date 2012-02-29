@@ -68,7 +68,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-, root, root)
-%dir %{_datadir}/pixmaps/
 %dir %{_datadir}/pixmaps/gnome-app-store/
 %dir %{_datadir}/gnome-app-store/
 %dir %{_datadir}/gnome-app-store/ui/
