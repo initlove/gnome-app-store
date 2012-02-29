@@ -44,9 +44,9 @@
         "type" : "GnomeAppButton",
         "x" : 900,
         "y" : 280,
-	"width" : 48,
-	"height" : 48,
-	"filename" : "back.png",
+	"text" : "Back", 
+	"text-font-name" : "Sans 18px",
+	"text-color" : "blue",
         "reactive" : true,
         "signals" : [
           { "name" : "button-press-event", "handler" : "on_return_button_press" }
