@@ -154,11 +154,8 @@ ocs_get_results (const gchar *ocs, gint len)
 			g_debug ("Cannot parse the document!\n");
 
 			return NULL;
-		} else {
-			g_debug ("We recover the memory !\n");
 		}
 	}
-
 	results = NULL;
 	meta_node = ocs_find_node (doc_ptr, "meta");
 	if (meta_node) {
