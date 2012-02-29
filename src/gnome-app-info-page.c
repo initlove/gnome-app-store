@@ -42,7 +42,7 @@ struct _GnomeAppInfoPagePrivate
 	ClutterActor *main_ui;
 	gint fan_status;
 	gint fan_count;
-	gboolean fan_lock;
+	gboolean lock;
 	gint pic_count;
 	gint current_pic;
 	ClutterActor *download;
@@ -52,7 +52,8 @@ struct _GnomeAppInfoPagePrivate
 enum
 {
 	PROP_0,
-	PROP_APP_INFO,
+	PROP_APP_DATA,
+	PROP_LOCK_STATUS,
 	PROP_LAST
 };
 
@@ -60,6 +61,33 @@ G_DEFINE_TYPE (GnomeAppInfoPage, gnome_app_info_page, CLUTTER_TYPE_GROUP)
 
 static void	gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info);
 static void	draw_pic (GnomeAppInfoPage *info_page);
+
+static void
+gnome_app_info_page_set_lock (GnomeAppInfoPage *info_page, const gchar *str)
+{
+	GnomeAppInfoPagePrivate *priv;
+	ClutterActor *fan_button;
+	ClutterActor *comment_button;
+	ClutterActor *return_button;
+
+	priv = info_page->priv;
+	clutter_script_get_objects (priv->script, 
+			"fan-button", &fan_button,
+			"comment-button", &comment_button,
+			"return-button", &return_button,
+			NULL);
+	if (strcmp (str, "lock") == 0) {
+		priv->lock = TRUE;
+		clutter_actor_set_reactive (return_button, FALSE);
+		clutter_actor_set_reactive (fan_button, FALSE);
+		clutter_actor_set_reactive (comment_button, FALSE);
+	} else {
+		priv->lock = FALSE;
+		clutter_actor_set_reactive (return_button, TRUE);
+		clutter_actor_set_reactive (fan_button, TRUE);
+		clutter_actor_set_reactive (comment_button, TRUE);
+	}
+}
 
 static void
 on_drag_end (ClutterDragAction   *action,
@@ -110,6 +138,7 @@ gnome_app_info_page_init (GnomeAppInfoPage *info_page)
 							 GNOME_APP_TYPE_INFO_PAGE,
 							 GnomeAppInfoPagePrivate);
 	priv->script = gnome_app_script_new_from_file ("app-info-page");
+	priv->lock = FALSE;
 	if (!priv->script) {
 		return ;
 	}
@@ -122,7 +151,6 @@ gnome_app_info_page_init (GnomeAppInfoPage *info_page)
 			"next", &next_button,
 			"prev", &prev_button,
 			"comment-entry", &comment_entry,
-			"comment-button", &comment_button,
 			"return-button", &return_button,
 			NULL);
 
@@ -144,14 +172,20 @@ gnome_app_info_page_set_property (GObject      *object,
 {
 	GnomeAppInfoPage *info_page;
 	GnomeAppInfoPagePrivate *priv;
+	const gchar *str;
 
 	info_page = GNOME_APP_INFO_PAGE (object);
 	priv = info_page->priv;
-
 	switch (prop_id)
 	{
-		case PROP_APP_INFO:
+		case PROP_APP_DATA:
 			gnome_app_info_page_set_with_data (info_page, g_value_get_object (value));
+			break;
+		case PROP_LOCK_STATUS:
+			str = g_value_get_string (value);
+			if (!str)
+				return;
+			gnome_app_info_page_set_lock (info_page, str);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -173,8 +207,15 @@ gnome_app_info_page_get_property (GObject      *object,
 
 	switch (prop_id)
 	{
-		case PROP_APP_INFO:
+		case PROP_APP_DATA:
 			g_value_set_object (value, priv->info);
+			break;
+		case PROP_LOCK_STATUS:
+			/*TODO: should get the child widget status */
+			if (priv->lock)
+				g_value_set_string (value, "lock");
+			else
+				g_value_set_string (value, "unlock");
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -213,11 +254,19 @@ gnome_app_info_page_class_init (GnomeAppInfoPageClass *klass)
 	object_class->finalize = gnome_app_info_page_finalize;
 
 	g_object_class_install_property (object_class,
-  			PROP_APP_INFO,
-			g_param_spec_object ("info",
+  			PROP_APP_DATA,
+			g_param_spec_object ("data",
 				"app info",
 				"app info",
 				G_TYPE_OBJECT,
+				G_PARAM_READWRITE));
+	        
+	g_object_class_install_property (object_class,
+			PROP_LOCK_STATUS,
+			g_param_spec_string ("lock-status",
+				"Lock Status",
+				"Lock Status",
+				NULL,
 				G_PARAM_READWRITE));
 
 	g_type_class_add_private (object_class, sizeof (GnomeAppInfoPagePrivate));
@@ -387,7 +436,6 @@ add_remove_fan_callback (gpointer userdata, gpointer func_result)
 
 		draw_fan_status (info_page);
 	}
-	priv->fan_lock = FALSE;	
 	return NULL;
 }
 
@@ -403,8 +451,6 @@ on_fan_button_press (ClutterActor *actor,
 
 	page = GNOME_APP_INFO_PAGE (data);
 	priv = page->priv;
-	if (priv->fan_lock)
-		return FALSE;
 	function = g_strdup_printf ("/v1/fan/%s/%s", 
 			priv->fan_status == NOT_FAN ? "add" : "remove", 
 			open_result_get (priv->info, "id"));
@@ -635,7 +681,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 		g_object_unref (priv->info);
 	priv->info = g_object_ref (info);
 	priv->fan_status = FAN_NOT_DEFINED;
-	priv->fan_lock = FALSE;
+	priv->lock = FALSE;
 	clutter_actor_set_y (CLUTTER_ACTOR (info_page), 0.0);
 
 	clutter_script_get_objects (priv->script,

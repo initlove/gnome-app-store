@@ -162,7 +162,7 @@ gnome_app_stage_show (GnomeAppStage *app_stage, gint mode, GObject *app_actor)
 	priv = app_stage->priv;
         
 	if (priv->history) {
-		if (g_object_class_find_property (G_OBJECT_GET_CLASS (priv->history), "data")) {
+		if (g_object_class_find_property (G_OBJECT_GET_CLASS (G_OBJECT (priv->history)), "data")) {
 			g_object_get (G_OBJECT (priv->history), "data", &data, NULL);
 			if (data) {
 				name = G_OBJECT_TYPE_NAME (G_OBJECT (priv->history));
@@ -221,8 +221,23 @@ gnome_app_stage_load (GnomeAppStage *app_stage, gint mode, const gchar *type_nam
 	GObject *app_actor;
 	va_list args;
 	const gchar *first_name;
+	gchar *lock_status;
 
 	priv = app_stage->priv;
+	if (priv->history) {
+		if (g_object_class_find_property (G_OBJECT_GET_CLASS (G_OBJECT (priv->history)), "lock-status")) {
+			/*This is the current way to protect page from load without unlock */
+			/*TODO: should provide the way to cancel the task */
+			g_object_get (G_OBJECT (priv->history), "lock-status", &lock_status, NULL);
+			if (lock_status) {
+				if (strcmp (lock_status, "lock") == 0) {
+printf ("We provent the load\n");
+					return;
+				}
+			}
+		}
+	}
+
 	app_actor = g_object_new (g_type_from_name (type_name), NULL);
 	data = g_hash_table_lookup (priv->table, type_name);
 	if (data) {

@@ -530,6 +530,12 @@ gnome_app_frame_get_property (GObject      *object,
 			if (priv->task)
 				g_value_set_object (value, priv->task);
 			break;
+		case PROP_LOCK_STATUS:
+			if (priv->lock)
+				g_value_set_string (value, "lock");
+			else
+				g_value_set_string (value, "unlock");
+			break;
 	}
 }
 
