@@ -5,6 +5,7 @@ AM_CPPFLAGS =                                                   \
 	-I$(top_srcdir)/widgets					\
 	$(LIBREST_CFLAGS)					\
 	$(GNOME_APP_STORE_CFLAGS)                               \
+	-DPIXMAPSDIR=\""$(datadir)/pixmaps/@PACKAGE@\""		\
 	-DG_LOG_DOMAIN=\"GnomeAppStore\"                        \
 	-DGNOMELOCALEDIR=\""$(prefix)/$(DATADIRNAME)/locale\""  \
 	-DPNP_IDS=\""$(PNP_IDS)"\"                              \

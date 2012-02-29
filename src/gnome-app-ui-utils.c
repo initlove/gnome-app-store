@@ -118,9 +118,9 @@ gnome_app_script_new_from_file (const gchar *script_name)
 	GError *error;
 	gchar *filename;
 	gint i, len;
-	/*TODO */
+
 	const gchar *path [] = {
-		"/home/dliang/gnome-app-store/pixmaps/", 
+		PIXMAPSDIR,
 		NULL};
 
 	filename = open_app_get_ui_uri (script_name);
