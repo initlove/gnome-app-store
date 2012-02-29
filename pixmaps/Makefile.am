@@ -19,7 +19,6 @@ pixmaps_DATA =	\
 	go-down.png \
 	go-first.png \
 	go-home.png \
-	gohome.png \
 	go-jump.png \
 	go-last.png \
 	go-next.png \
