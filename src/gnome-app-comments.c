@@ -83,49 +83,6 @@ gnome_app_comments_set_lock (GnomeAppComments *comments, const gchar *str)
 }
 
 static void
-on_drag_end (ClutterDragAction   *action,
-             ClutterActor        *actor,
-             gfloat               event_x,
-             gfloat               event_y,
-             ClutterModifierType  modifiers,
-	     gpointer		  userdata)
-{
-	GnomeAppComments *comments;
-	GnomeAppCommentsPrivate *priv;
-	gfloat x, y, width, height;
-
-	comments = GNOME_APP_COMMENTS (userdata);
-	priv = comments->priv;
-	x = clutter_actor_get_x (priv->layout_box);
-	y = clutter_actor_get_y (priv->layout_box);
-	width = clutter_actor_get_width (priv->layout_box);
-	height = clutter_actor_get_height (priv->layout_box);
-
-	if (y > 0) {
-  		clutter_actor_animate (priv->layout_box, CLUTTER_EASE_OUT_BOUNCE, 250,
-				"y", 0.0,
-				NULL);
-	}
-       	if (y < (priv->view_height - height)) {
-		clutter_actor_animate (priv->layout_box, CLUTTER_EASE_OUT_BOUNCE, 250,
-				"y", priv->view_height - height,
-				NULL);
-	}
-#if 0
-	if (x > 0) {
-  		clutter_actor_animate (comments->priv->layout_box, CLUTTER_EASE_OUT_BOUNCE, 250,
-				"x", 0.0,
-				NULL);
-	}
-       	if (x < (comments->priv->view_width -width)) {
-		clutter_actor_animate (comments->priv->layout_box, CLUTTER_EASE_OUT_BOUNCE, 250,
-				"x", comments->priv->view_width - width,
-				NULL);
-	}
-#endif
-}
-
-static void
 gnome_app_comments_init (GnomeAppComments *comments)
 {
 	GnomeAppCommentsPrivate *priv;
@@ -138,16 +95,8 @@ gnome_app_comments_init (GnomeAppComments *comments)
 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (priv->layout), TRUE);
 	clutter_box_layout_set_spacing (CLUTTER_BOX_LAYOUT (priv->layout), 10);
 	priv->layout_box = clutter_box_new (priv->layout);
-#if 0
-	priv->action_y = clutter_drag_action_new ();
-    	clutter_actor_add_action (priv->layout_box, priv->action_y);
-      	clutter_actor_set_reactive (priv->layout_box, TRUE);
-   	clutter_drag_action_set_drag_axis (CLUTTER_DRAG_ACTION (priv->action_y),
-					CLUTTER_DRAG_Y_AXIS);
-        g_signal_connect (priv->action_y, "drag-end", G_CALLBACK (on_drag_end), comments);
-#endif
   
-	clutter_container_add_actor (CLUTTER_CONTAINER (comments), priv->layout_box);
+	clutter_container_add_actor (CLUTTER_CONTAINER (comments), CLUTTER_ACTOR (priv->layout_box));
 
 	priv->view_width = 350.0;
 	priv->view_height = 600.0;
@@ -158,7 +107,7 @@ gnome_app_comments_init (GnomeAppComments *comments)
 	priv->spin = CLUTTER_ACTOR (gnome_app_texture_new ());
 	g_object_set (G_OBJECT (priv->spin), "texture-type", "spin", NULL);
 	clutter_container_add_actor (CLUTTER_CONTAINER (comments), CLUTTER_ACTOR (priv->spin));
-	clutter_actor_set_position (priv->spin, priv->view_width/2, 50);
+	clutter_actor_set_position (priv->spin, 60, 50);
 }
 
 static void
@@ -357,7 +306,7 @@ add_child_comments (GnomeAppComments *comments,
 					     CLUTTER_BOX_ALIGNMENT_START,
 					     CLUTTER_BOX_ALIGNMENT_START);
 
-		clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout), child_box,
+		clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout), CLUTTER_ACTOR (child_box),
 					     FALSE,  /* expand */
 		                             FALSE, /* x-fill */
 				    	     FALSE, /* y-fill */

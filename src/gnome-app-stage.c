@@ -13,6 +13,7 @@ Author: David Liang <dliang@novell.com>
 
 */
 #include <string.h>
+#include <stdlib.h>
 #include <glib/gi18n.h>
 #include <clutter/clutter.h>
 #include <clutter/x11/clutter-x11.h>
@@ -38,6 +39,7 @@ struct _GnomeAppStagePrivate
 	gboolean init;
 	gfloat default_width;
 	gfloat default_height;
+	gfloat balance;
 };
 
 enum {
@@ -48,6 +50,44 @@ enum {
 G_DEFINE_TYPE (GnomeAppStage, gnome_app_stage, CLUTTER_TYPE_STAGE)
 
 static void	set_position_on_show (ClutterActor *stage, gint position);
+
+static gpointer
+get_balance_callback (gpointer userdata, gpointer func_result)
+{
+	GnomeAppStage *app_stage;
+	GnomeAppStagePrivate *priv;
+	OpenResults *results;
+	OpenResult *result;
+	GList *list;
+	const gchar *val;
+
+	results = OPEN_RESULTS (func_result);
+	app_stage = GNOME_APP_STAGE (userdata);
+	priv = app_stage->priv;
+	if (results && open_results_get_status (results)) {
+		list = open_results_get_data (results);
+		result = OPEN_RESULT (list->data);
+		val = open_result_get (result, "balance");
+		if (val)
+			priv->balance = atof (val);
+	}
+	return NULL;
+}
+
+gfloat 
+gnome_app_stage_get_balance (GnomeAppStage *app_stage)
+{
+	GnomeAppStagePrivate *priv;
+	GnomeAppTask *task;
+
+	priv = app_stage->priv;
+	if (priv->balance == -1) {
+		task = gnome_app_task_new (app_stage, "GET", "/v1/person/balance");
+		gnome_app_task_set_callback (task, get_balance_callback);
+		gnome_app_task_push (task);
+	}
+	return priv->balance;
+}
 
 static gpointer
 auth_valid_callback (gpointer userdata, gpointer func_result)
@@ -61,6 +101,7 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 	priv = app_stage->priv;
 	if (results && open_results_get_status (results)) {
 		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_NEW, "GnomeAppFrame", NULL);
+		gnome_app_stage_get_balance (app_stage);
 	} else {
 		gchar *username;
 		gchar *password;
@@ -137,12 +178,13 @@ gnome_app_stage_show (GnomeAppStage *app_stage, gint mode, GObject *app_actor)
 		stage_width = priv->default_width;
 		stage_height = priv->default_height;
 	}
-	clutter_actor_set_size (CLUTTER_ACTOR (app_stage), stage_width, stage_height);
 	if (!priv->init) {
 		priv->init = TRUE;
 		clutter_stage_set_title (CLUTTER_STAGE (app_stage), "App Store");
+		clutter_stage_set_user_resizable (CLUTTER_STAGE (app_stage), TRUE);
 		clutter_actor_show (CLUTTER_ACTOR (app_stage));
 	}
+	clutter_actor_set_size (CLUTTER_ACTOR (app_stage), stage_width, stage_height);
 	set_position_on_show (CLUTTER_ACTOR (app_stage), GNOME_APP_STAGE_POSITION_CENTER);
 
 	priv->history = CLUTTER_ACTOR (app_actor);

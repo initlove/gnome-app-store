@@ -29,6 +29,18 @@ fi
 AC_SUBST(DEBUG_CFLAGS)
 
 #
+# Enable Devel Mode
+# 
+AC_ARG_ENABLE(devel_mode,
+              AS_HELP_STRING([--enable-devel-mode],
+                             [turn on devel mode]),,
+              enable_devel_mode=yes)
+
+if test "$enable_devel_mode" = "yes"; then
+    AC_DEFINE(DEVEL_MODE,1,[enable devel mode])
+fi
+
+#
 # Enable Profiling
 #
 AC_ARG_ENABLE(profiling,

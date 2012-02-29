@@ -12,6 +12,7 @@ Boston, MA 02111-1307, USA.
 Author: David Liang <dliang@novell.com>
 
 */
+#include <config.h>
 #include <stdio.h>
 #include <string.h>
 #include <rest/rest-proxy.h>
@@ -25,10 +26,6 @@ Author: David Liang <dliang@novell.com>
 #include "common/open-app-config.h"
 #include "common/open-result.h"
 #include "common/open-results.h"
-
-#ifdef DEVEL_MODE
-#undef DEVEL_MODE
-#endif
 
 struct _GnomeAppTaskPrivate
 {

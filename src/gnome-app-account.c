@@ -22,6 +22,7 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-stage.h"
 #include "gnome-app-task.h"
 #include "gnome-app-store.h"
+#include "gnome-app-widgets.h"
 #include "gnome-app-friends.h"
 #include "gnome-app-message.h"
 #include "gnome-app-account.h"
@@ -98,7 +99,7 @@ set_account_callback (gpointer userdata, gpointer func_result)
 
 	/*TODO: should add result to priv, when click on homepage, open this homepage */
 	val = open_result_get (result, "homepage");
-	clutter_text_set_text (CLUTTER_TEXT (homepage), val);
+	gnome_app_button_set_text (GNOME_APP_BUTTON (homepage), (gchar *)val);
 
 	/*TODO there should have 'space' between name, this is to make my account name looks better */
 	name = g_strdup_printf ("%s%s", 
@@ -117,6 +118,7 @@ gnome_app_account_load (GnomeAppAccount *account)
 	GnomeAppAccountPrivate *priv;
         ClutterActor *main_ui;
 	ClutterActor *login;
+	ClutterActor *username;
 	ClutterActor *company;
 	ClutterActor *homepage;
 	ClutterActor *friends;
@@ -142,11 +144,13 @@ gnome_app_account_load (GnomeAppAccount *account)
 		/*TODO: display the not account interface */		
        		clutter_script_get_objects (priv->script, 
 			"login", &login,
+			"username", &username,
 			"company", &company,
 			"homepage", &homepage,
 			"friends", &friends,
 			"messages", &messages,
 			NULL);
+		clutter_text_set_text (CLUTTER_TEXT (username), _("Guest"));
 		clutter_actor_show (login);
 		clutter_actor_hide (company);
 		clutter_actor_hide (homepage);

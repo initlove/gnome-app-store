@@ -87,6 +87,7 @@ auth_valid_callback (gpointer userdata, gpointer func_result)
 		gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_NEW,
 				"GnomeAppFrame", 
 				NULL);
+		gnome_app_stage_get_balance (app_stage);
 	} else {
 		g_debug ("error in auth %s\n", open_results_get_meta (results, "message"));
 /*TODO: add warning here */

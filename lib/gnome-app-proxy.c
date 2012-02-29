@@ -165,11 +165,7 @@ refresh_by_function (gpointer key,
 	data = (ProxyData *) value;
 	refresh_function = (gchar *) user_data;
 	function = gnome_app_task_get_function (data->task);
-printf ("refresh function is %s,  in cache %s\n", refresh_function, function);
 	if (strcmp (function, refresh_function) == 0) {
-#ifndef DEVEL_MODE
-#define DEVEL_MODE
-#endif
 #ifdef DEVEL_MODE
 		gchar *str;
 		gchar *md5;

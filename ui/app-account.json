@@ -18,7 +18,6 @@
       {
         "id" : "username",
         "type" : "ClutterText",
-        "text" : "Guest",
 	"x" : 72,
 	"y" : 5,
         "width" : 100,
@@ -46,7 +45,6 @@
       {
         "id" : "company",
         "type" : "ClutterText",
-	"text" : "company",
 	"x" : 72,
 	"y" : 30,
         "width" : 100,
@@ -59,17 +57,14 @@
       },
       {
         "id" : "homepage",
-        "type" : "ClutterText",
-	"text" : "Home Page",
+        "type" : "GnomeAppButton",
+	"button-mode" : "link",
 	"x" : 72,
 	"y" : 50,
         "width" : 100,
-        "font-name" : "Sans 12px",
-        "color" : "black",
-        "line-alignment" : "start",
-        "line-wrap" : false,
-    	"reactive" : true,
-        "ellipsize" : "end"
+        "text-font-name" : "Sans 12px",
+        "text-color" : "blue",
+    	"reactive" : true
       },
       {
         "id" : "friends",

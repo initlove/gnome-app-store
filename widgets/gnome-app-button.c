@@ -27,6 +27,7 @@ Author: David Liang <dliang@novell.com>
 enum {
 	BUTTON_NORMAL,
 	BUTTON_SELECT,
+	BUTTON_LINK,
 	BUTTON_NONE,
 	BUTTON_TEXT,
 	BUTTON_TEXTURE,
@@ -48,6 +49,7 @@ struct _GnomeAppButtonPrivate
 enum
 {
 	PROP_0,
+	PROP_WIDTH,
 	PROP_BUTTON_MODE,
 	PROP_TEXT,
 	PROP_FONT_NAME,
@@ -80,24 +82,28 @@ gnome_app_button_paint (ClutterActor *self)
 	clutter_actor_box_get_size (&allocation, &width, &height);
 /*TODO: the draw in texture did not work well... */
 	/*TODO: the button select is not done */
-	if (priv->mode == BUTTON_NORMAL) {
-		if (gnome_app_widget_get_entered (GNOME_APP_WIDGET (button))) {
-			if (priv->type != BUTTON_TEXTURE) {
-				cogl_set_source_color4ub (128, 128, 128, 255);
-				cogl_path_rectangle (-5.0, -5.0, width+5.0, height+5.0);
-				cogl_path_stroke ();
+	switch (priv->mode) {
+		case BUTTON_NORMAL:
+		case BUTTON_LINK:
+			if (gnome_app_widget_get_entered (GNOME_APP_WIDGET (button))) {
+				if (priv->type != BUTTON_TEXTURE) {
+					cogl_set_source_color4ub (128, 128, 128, 255);
+					cogl_path_rectangle (-5.0, -5.0, width+5.0, height+5.0);
+					cogl_path_stroke ();
+				}
+				cogl_set_source_color4ub (180, 180, 180, 64);
+				cogl_rectangle (-4.0, -4.0, width + 4.0, height + 4.0);
 			}
-			cogl_set_source_color4ub (180, 180, 180, 64);
-			cogl_rectangle (-4.0, -4.0, width + 4.0, height + 4.0);
-		}
-	} else if (priv->mode == BUTTON_SELECT) {
-		if (gnome_app_widget_get_entered (GNOME_APP_WIDGET (button))) {
-			cogl_set_source_color4ub (180, 180, 180, 64);
-			cogl_rectangle (-4.0, -4.0, width + 4.0, height + 4.0);
-		} else if (priv->selected) {
-			cogl_set_source_color4ub (128, 128, 180, 64);
-			cogl_rectangle (-4.0, -4.0, width + 4.0, height + 4.0);
-		}
+			break;
+		case BUTTON_SELECT:
+			if (gnome_app_widget_get_entered (GNOME_APP_WIDGET (button))) {
+				cogl_set_source_color4ub (180, 180, 180, 64);
+				cogl_rectangle (-4.0, -4.0, width + 4.0, height + 4.0);
+			} else if (priv->selected) {
+				cogl_set_source_color4ub (128, 128, 180, 64);
+				cogl_rectangle (-4.0, -4.0, width + 4.0, height + 4.0);
+			}
+			break;
 	}
 	
       	/* this will take care of painting every child */
@@ -110,12 +116,31 @@ gnome_app_button_button_press (ClutterActor         *actor,
 {
 	GnomeAppButton *button;
 	GnomeAppButtonPrivate *priv;
+	const gchar *uri;
+	GError *error;
+	gchar *cmd;
 
 	button = GNOME_APP_BUTTON (actor);
 	priv = button->priv;
 	
-	if (priv->mode == BUTTON_SELECT)
-		gnome_app_button_set_selected (button, TRUE);
+	switch (priv->mode) {
+		case BUTTON_SELECT:
+			gnome_app_button_set_selected (button, TRUE);
+			break;
+		case BUTTON_LINK:
+			uri = clutter_text_get_text (CLUTTER_TEXT (priv->text));
+			if (uri && uri [0]) {
+				cmd = g_strdup_printf ("gnome-open \"%s\" ", uri);
+				error = NULL;
+		  		if (!g_spawn_command_line_async (cmd, &error)) {
+					g_debug ("Error in run cmd %s: %s\n", cmd, error->message);
+					g_error_free (error);
+				}
+				g_free (cmd);
+			}
+			break;
+	}
+
 	clutter_state_set_state (priv->state, "scaled-up");
 
 	return FALSE;
@@ -141,6 +166,7 @@ gnome_app_button_init (GnomeAppButton *button)
 	priv->mode = BUTTON_NORMAL;
 	clutter_actor_set_reactive (CLUTTER_ACTOR (button), TRUE);
 	priv->text = clutter_text_new ();
+	clutter_text_set_ellipsize (CLUTTER_TEXT (priv->text), PANGO_ELLIPSIZE_END);
 	clutter_text_set_single_line_mode (CLUTTER_TEXT (priv->text), TRUE);
         clutter_text_set_editable (CLUTTER_TEXT (priv->text), FALSE);
 	clutter_text_set_selectable (CLUTTER_TEXT (priv->text), FALSE);
@@ -175,6 +201,7 @@ gnome_app_button_set_property (GObject *object,
 	GnomeAppButtonPrivate *priv;
 	ClutterColor color;
 	const gchar *str;
+	gchar *markup;
 	gchar *filename;
 	gfloat width, height;
 
@@ -182,20 +209,30 @@ gnome_app_button_set_property (GObject *object,
 	priv = button->priv;
 	switch (prop_id)
 	{
+		case PROP_WIDTH:
+			width = g_value_get_float (value);
+			clutter_actor_set_width (CLUTTER_ACTOR (button), width);
+			clutter_actor_set_width (CLUTTER_ACTOR (priv->text), width);
+			clutter_actor_set_width (CLUTTER_ACTOR (priv->texture), width);
+			break;
 		case PROP_BUTTON_MODE:
 			str = g_value_get_string (value);
 			if (strcmp (str, "select") == 0)
 				priv->mode = BUTTON_SELECT;
+			else if (strcmp (str, "link") == 0)
+				priv->mode = BUTTON_LINK;
 			else
 				priv->mode = BUTTON_NORMAL;
 			break;
 		case PROP_TEXT:
 			priv->type = BUTTON_TEXT;
 			str = g_value_get_string (value);
-			clutter_text_set_text (CLUTTER_TEXT (priv->text), _(str));
-			/*make the texture a background */
-			/*TODO: or useless as gnome-app-widget already have the background */
-			clutter_actor_set_opacity (priv->texture, 128);
+			if (priv->mode == BUTTON_LINK) {
+				markup = g_strdup_printf ("<u>%s</u>", _(str));
+				clutter_text_set_markup (CLUTTER_TEXT (priv->text), markup);
+				g_free (markup);
+			} else
+				clutter_text_set_text (CLUTTER_TEXT (priv->text), _(str));
 			break;
 		case PROP_FONT_NAME:
 			clutter_text_set_font_name (CLUTTER_TEXT (priv->text), g_value_get_string (value));
@@ -290,6 +327,15 @@ gnome_app_button_class_init (GnomeAppButtonClass *klass)
 
 	actor_class->button_press_event = gnome_app_button_button_press;
 	actor_class->paint = gnome_app_button_paint;
+        
+	g_object_class_install_property (object_class,
+			PROP_WIDTH,
+			g_param_spec_float ("width",
+				"width of the text",
+				"width of the text",
+				-G_MAXFLOAT, G_MAXFLOAT,
+				0.0,
+				G_PARAM_WRITABLE));
 
 	g_object_class_install_property (object_class,
 			PROP_BUTTON_MODE,
@@ -374,7 +420,13 @@ void
 gnome_app_button_set_text (GnomeAppButton *button, gchar *text)
 {
 	GnomeAppButtonPrivate *priv;
+	gchar *markup;
 
 	priv = button->priv;
-	clutter_text_set_text (CLUTTER_TEXT (priv->text), text);
+	if (priv->mode == BUTTON_LINK) {
+		markup = g_strdup_printf ("<span underline = \"single\">%s</span>", text);
+		clutter_text_set_markup (CLUTTER_TEXT (priv->text), markup);
+		g_free (markup);
+	} else
+		clutter_text_set_text (CLUTTER_TEXT (priv->text), text);
 }

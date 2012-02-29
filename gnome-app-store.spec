@@ -35,6 +35,7 @@ BuildRequires:  librest-devel
 BuildRequires:  clutter-devel
 BuildRequires:  intltool
 Requires:       %{name}-lang = %{version}
+Requires:	libgnome
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 %description

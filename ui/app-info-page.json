@@ -8,16 +8,16 @@
       {
         "id" : "big-pic",
         "type" : "ClutterTexture",
-        "x" : 60,
+        "x" : 550,
         "y" : 40,
-        "width" : 320,
+        "width" : 300,
         "height" : 280,
         "opacity" : 255
       },
       {
         "id" : "prev",
         "type" : "GnomeAppButton",
-        "x" : 10,
+        "x" : 510,
         "y" : 150,
         "width" : 32,
         "height" : 32,
@@ -29,7 +29,7 @@
       {
         "id" : "next",
         "type" : "GnomeAppButton",
-        "x" : 450,
+        "x" : 860,
         "y" : 150,
         "width" : 32,
         "height" : 32,
@@ -39,44 +39,12 @@
         ]
       },
       {
-        "id" : "name",
-        "type" : "ClutterText",
-        "x" : 650,
-        "y" : 50,
-        "font-name" : "Sans 18px",
-        "color" : "black",
-        "line-alignment" : "center",
-        "line-wrap" : false,
-        "ellipsize" : "none"
-      },
-      {
-	"id" : "personicon",
-	"type" : "ClutterTexture",
-	"x" : 670,
-	"y" : 80,
-	"width" : 48,
-	"height" : 48,
-        "opacity" : 255
-      },
-      {
-        "id" : "personid",
-        "type" : "ClutterText",
-        "x" : 700,
-        "y" : 80,
-        "text" : "Author name",
-        "font-name" : "Sans 15px",
-        "color" : "black",
-        "line-alignment" : "center",
-        "line-wrap" : false,
-        "ellipsize" : "none"
-      },
-      {
         "id" : "return-button",
         "type" : "GnomeAppButton",
         "x" : 900,
-        "y" : 300,
-	"width" : 64,
-	"height" : 64,
+        "y" : 280,
+	"width" : 48,
+	"height" : 48,
 	"filename" : "back.png",
         "reactive" : true,
         "signals" : [
@@ -85,22 +53,80 @@
       },
       {
         "id" : "description",
-	"type" : "ClutterGroup",
-        "x" : 50,
+	"type" : "ClutterText",
+        "x" : 550,
         "y" : 340,
+	"line-wrap" : true,
+	"line-wrap-mode" : "word",
 	"width" : 350
       },
       {
         "id" : "data-box",
         "type" : "ClutterBox",
-	"x" : 480,
-	"y" : 100,
+	"x" : 50,
+	"y" : 50,
         "layout-manager" : {
                 "type" : "ClutterBoxLayout" ,
 		"vertical" : true,
-                "spacing" : 20
+                "spacing" : 10
         },
         "children" : [
+	      {
+		"id" : "nameinfo",
+		"type" : "ClutterBox",
+		"layout::x-align" : "start",
+        	"layout-manager" : {
+                	"type" : "ClutterBoxLayout" ,
+			"vertical" : false
+	        },
+		"children" : [
+		      { "id" : "namespace",
+			"type" : "ClutterGroup",
+			"width" : 150
+		      },
+	      	      {
+		        "id" : "name",
+		        "type" : "ClutterText",
+			"text" : "app name",
+		        "font-name" : "Sans 18px",
+	        	"color" : "black",
+        		"line-wrap" : false,
+	        	"ellipsize" : "none"
+		      }
+		]
+	      },
+	      {
+		"id" : "personinfo",
+		"type" : "ClutterBox",
+		"layout::x-align" : "start",
+        	"layout-manager" : {
+                	"type" : "ClutterBoxLayout" ,
+			"vertical" : false,
+		        "spacing" : 20
+	        },
+		"children" : [
+		      { "id" : "personspace",
+			"type" : "ClutterGroup",
+			"width" : 200
+		      },
+      		      {
+			"id" : "personicon",
+			"type" : "ClutterTexture",
+			"width" : 48,
+			"height" : 48
+		      },
+		      {
+		        "id" : "personid",
+		        "type" : "ClutterText",
+        		"text" : "Author name",
+		        "font-name" : "Sans 15px",
+		        "color" : "black",
+		        "line-alignment" : "center",
+		        "line-wrap" : false,
+		        "ellipsize" : "none"
+		      }
+		]
+	      },
       	      {
 		"id" : "score",
 		"type" : "GnomeAppScore",
@@ -180,6 +206,7 @@
 	      {
 		"id" : "comment-entry",
 		"type" : "GnomeAppText",
+		"layout::x-align" : "start",
         	"text-font-name" : "Sans 20px",
 		"text-color" : "black",
 		"width" : 350,
@@ -198,8 +225,7 @@
 	      },
 	      {
         	"id" : "comments-details",
-		"type" : "ClutterGroup",
-		"width" : 400
+		"type" : "ClutterGroup"
 	      }
 	]
       }

@@ -10,7 +10,7 @@
         "type" : "ClutterText",
         "x" : 60,
 	"y" : 16,
-        "width" : 200,
+        "width" : 100,
         "font-name" : "Sans 14px",
         "color" : "gray",
 	"activatable" : true,
@@ -21,7 +21,7 @@
       {
         "id" : "status",
         "type" : "ClutterText",
-        "x" : 260,
+        "x" : 200,
 	"y" : 14,
         "width" : 150,
         "font-name" : "Sans 16px",
@@ -91,14 +91,14 @@
       {
 	"id" : "spin", 
 	"type" : "GnomeAppTexture",
-	"x" : 340,
+	"x" : 350,
 	"y" : 300,
 	"texture-type" : "spin"
       },
       {
         "id" : "categories",
         "type" : "ClutterGroup",
-        "x" : 760,
+        "x" : 780,
         "y" : 180
       },
       {
