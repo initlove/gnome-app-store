@@ -175,18 +175,6 @@
 		      }
 		 ]
 	      },
-      	      {
-		"id" : "download-count",
-	        "type" : "GnomeAppButton",
-		"layout::x-align" : "start",
-		"button-mode" : "select",
-		"text" : "Download",
-		"text-font-name" : "Sans 17px",
-		"text-color" : "blue",
-		"signals" : [
-		          { "name" : "button-press-event", "handler" : "on_downloads_button_press" }
-		]
-	      },
 	      {
 	        "id" : "download-group",
 	        "type" : "ClutterGroup",

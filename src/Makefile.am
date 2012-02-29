@@ -22,6 +22,7 @@ noinst_PROGRAMS =      \
 	$(NULL)
 
 SOURCE_FILES =	\
+	gnome-app-download.c gnome-app-download.h \
 	gnome-app-stage.c gnome-app-stage.h \
 	gnome-app-info-icon.c gnome-app-info-icon.h  \
 	gnome-app-score.c gnome-app-score.h \

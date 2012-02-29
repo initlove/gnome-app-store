@@ -26,6 +26,7 @@ Author:  Lance Wang <lzwang@suse.com>
 #include "gnome-app-stage.h"
 #include "gnome-app-info-page.h"
 #include "gnome-app-ui-utils.h"
+#include "gnome-app-download.h"
 
 typedef enum {
 	FAN_NOT_DEFINED,
@@ -42,13 +43,9 @@ struct _GnomeAppInfoPagePrivate
 	gint fan_status;
 	gint fan_count;
 	gboolean fan_lock;
-	gint download_count;
-	gint download_links;
 	gint pic_count;
 	gint current_pic;
-
-	ClutterActor *layout_box;
-	gboolean download_expand;
+	ClutterActor *download;
 };
 
 /* Properties */
@@ -61,133 +58,8 @@ enum
 
 G_DEFINE_TYPE (GnomeAppInfoPage, gnome_app_info_page, CLUTTER_TYPE_GROUP)
 
-static gboolean	on_download_item_press (ClutterActor *actor,
-					ClutterEvent *event,
-			                gpointer      data);
 static void	gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info);
 static void	draw_pic (GnomeAppInfoPage *info_page);
-
-static void
-draw_download_buttons (GnomeAppInfoPage *info_page)
-{
-	GnomeAppInfoPagePrivate *priv;
-	ClutterActor *download_price;
-	ClutterActor *download_name;
-	ClutterLayoutManager *layout;
-	ClutterActor *layout_box;
-	ClutterActor *download_count;
-	ClutterActor *download_group;
-	GList *list;
-	gint i;
-	gfloat balance, price;
-	gboolean balance_display;
-	const gchar *val;
-	gchar *str;
-
-	priv = info_page->priv;
-
-	g_return_if_fail (priv->info);
-
-	clutter_script_get_objects (priv->script, 
-				"download-count", &download_count,
-				"download-group", &download_group,
-				NULL);
-
-	layout = clutter_table_layout_new ();
-	clutter_table_layout_set_row_spacing (CLUTTER_TABLE_LAYOUT (layout), 10);
-	clutter_table_layout_set_column_spacing (CLUTTER_TABLE_LAYOUT (layout), 10);
-	layout_box = clutter_box_new (layout);
-
-	balance = gnome_app_stage_get_balance (gnome_app_stage_get_default ());
-	balance_display = FALSE;
-	/*OCS standard, type begin with 1 .*/
-	for (i = 1; ; i++) {
-		str = g_strdup_printf ("downloadlink%d", i);
-		val = open_result_get (priv->info, str);
-		g_free (str);
-		if (val) {
-			download_name = clutter_text_new ();
-			download_price = CLUTTER_ACTOR (gnome_app_button_new ());
-			str = g_strdup_printf ("downloadname%d", i);
-			val = open_result_get (priv->info, str);
-			g_free (str);
-			if (val && val [0]) {
-				clutter_text_set_text (CLUTTER_TEXT (download_name), (gchar *)val);
-			} else {
-				clutter_text_set_text (CLUTTER_TEXT (download_name), _("Download Link"));
-			}
-			str = g_strdup_printf ("downloadprice%d", i);
-			val = open_result_get (priv->info, str);
-			g_free (str);
-			price = atof (val);
-			if (price == 0) {
-				gnome_app_button_set_text (GNOME_APP_BUTTON (download_price), _("Free"));
-				g_object_set (G_OBJECT (download_price), "text-color", "green", NULL);
-			} else {
-				if (!balance_display)
-					balance_display = TRUE;
-				gnome_app_button_set_text (GNOME_APP_BUTTON (download_price), (gchar *)val);
-				if (price > balance)
-					g_object_set (G_OBJECT (download_price), "text-color", "red", NULL);
-				else
-					g_object_set (G_OBJECT (download_price), "text-color", "yellow", NULL);
-			}
-			clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (download_price), 0, i);
-			clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (download_name), 1, i);
-			g_object_set_data (G_OBJECT (download_price), "itemid", (gpointer) i);
-			g_signal_connect (download_price, "button-press-event", G_CALLBACK (on_download_item_press), info_page);
-		} else {
-			break;
-		}
-	}
-	if (balance_display) {
-		ClutterActor *actor;
-
-		actor = clutter_text_new ();
-		clutter_text_set_text (CLUTTER_TEXT (actor), _("Your balance is: "));
-		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), 0, 0);
-
-		str = g_strdup_printf ("%f", balance);
-		actor = clutter_text_new ();
-		clutter_text_set_text (CLUTTER_TEXT (actor), str);
-		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (layout), CLUTTER_ACTOR (actor), 1, 0);
-		g_free (str);
-	}
-	priv->download_links = i - 1;
-	/*TODO: the download count may not good, should check with the server*/
-	str = g_strdup_printf (_("%d downloads  (%d link)"), priv->download_count, priv->download_links);
-	gnome_app_button_set_text (GNOME_APP_BUTTON (download_count), str);
-	g_free (str);
-	if (priv->layout_box)
-		g_object_unref (priv->layout_box);
-	priv->layout_box = layout_box;
-}
-
-static void
-set_download_expand (GnomeAppInfoPage *info_page)
-{
-	GnomeAppInfoPagePrivate *priv;
-	ClutterActor *download_group;
-	ClutterActor *download_count;
-	GList *list;
-
-	priv = info_page->priv;
-	clutter_script_get_objects (priv->script, 
-			"download-group", &download_group,
-			"download-count", &download_count,
-			NULL);
-	if (priv->download_expand) {
-		gnome_app_button_set_selected (GNOME_APP_BUTTON (download_count), TRUE);
-		clutter_container_add_actor (CLUTTER_CONTAINER (download_group), priv->layout_box);
-	} else {
-		/*remove_actor will destroy the widget, I should ref it, this is by the clutter doc*/
-		/*doing this becase 'hide' did not work well ... */
-		gnome_app_button_set_selected (GNOME_APP_BUTTON (download_count), FALSE);
-		g_object_ref (priv->layout_box);
-		for (list = clutter_container_get_children (CLUTTER_CONTAINER (download_group)); list; list = list->next)
-			clutter_container_remove_actor (CLUTTER_CONTAINER (download_group), CLUTTER_ACTOR (list->data));
-	}
-}
 
 static void
 on_drag_end (ClutterDragAction   *action,
@@ -326,8 +198,6 @@ gnome_app_info_page_finalize (GObject *object)
 		g_object_unref (priv->info);
 	if (priv->script)
 		g_object_unref (priv->script);
-	if (priv->layout_box)
-		g_object_unref (priv->layout_box);
 
 	G_OBJECT_CLASS (gnome_app_info_page_parent_class)->finalize (object);
 }
@@ -351,52 +221,6 @@ gnome_app_info_page_class_init (GnomeAppInfoPageClass *klass)
 				G_PARAM_READWRITE));
 
 	g_type_class_add_private (object_class, sizeof (GnomeAppInfoPagePrivate));
-}
-
-static gpointer
-download_callback (gpointer userdata, gpointer func_result)
-{
-	GnomeAppInfoPage *page;
-	GnomeAppInfoPagePrivate *priv;
-	OpenResults *results;
-
-	page = GNOME_APP_INFO_PAGE (userdata);
-	priv = page->priv;
-	results = OPEN_RESULTS (func_result);
-        if (!open_results_get_status (results)) {
-		g_debug ("Fail to get the download info: %s\n", open_results_get_meta (results, "message"));
-		return NULL;
-	} else {
-		GList *list;
-		OpenResult *result;
-		gchar *str;
-		ClutterActor *download_count;
-		const gchar *uri;
-		GError *error;
-		gchar *cmd;
-
-		list = open_results_get_data (results);
-		result = OPEN_RESULT (list->data);
-	/*TODO: check mimetype, download it */
-		uri = open_result_get (result, "downloadlink");
-		if (uri) {
-			cmd = g_strdup_printf ("gnome-open \"%s\" ", uri);
-			error = NULL;
-			if (!g_spawn_command_line_async (cmd, &error)) {
-				g_debug ("Error in run cmd %s: %s\n", cmd, error->message);
-				g_error_free (error);
-			}
-			g_free (cmd);
-		}
-
-		priv->download_count ++;
-		download_count = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "download-count"));
-		str = g_strdup_printf (_("%d downloads  (%d link)"), priv->download_count, priv->download_links);
-		gnome_app_button_set_text (GNOME_APP_BUTTON (download_count), str);
-		g_free (str);
-	}
-
-	return NULL;
 }
 
 G_MODULE_EXPORT gboolean
@@ -498,34 +322,6 @@ on_comment_button_press (ClutterActor *actor,
 	gnome_app_task_push (task);
 }
 
-static gboolean
-on_download_item_press (ClutterActor *actor,
-                ClutterEvent *event,
-                gpointer      data)
-{
-	GnomeAppInfoPage *page;
-	GnomeAppInfoPagePrivate *priv;
-	GnomeAppTask *task;
- 	gchar *function;
-	const gchar *content_id;
-	gint item_id;
-
-	page = GNOME_APP_INFO_PAGE (data);
-	priv = page->priv;
-
-	content_id = open_result_get (priv->info, "id");
-	item_id = (gint) g_object_get_data (G_OBJECT (actor), "itemid");
-
-	function = g_strdup_printf ("/v1/content/download/%s/%d", content_id, item_id);
-	task = gnome_app_task_new (page, "GET", function);
-	gnome_app_task_set_callback (task, download_callback);
-	gnome_app_task_push (task);
-		
-	g_free (function);
-
-        return TRUE;
-}
-
 static void
 draw_fan_status (GnomeAppInfoPage *page)
 {
@@ -586,26 +382,6 @@ add_remove_fan_callback (gpointer userdata, gpointer func_result)
 	}
 	priv->fan_lock = FALSE;	
 	return NULL;
-}
-
-G_MODULE_EXPORT gboolean
-on_downloads_button_press (ClutterActor *actor,
-                ClutterEvent *event,
-                gpointer      data)
-{
-	GnomeAppInfoPage *info_page;
-	GnomeAppInfoPagePrivate *priv;
-	GnomeAppTask *task;
-	gchar *function;
-
-	info_page = GNOME_APP_INFO_PAGE (data);
-	priv = info_page->priv;
-
-	priv->download_expand = !priv->download_expand;
-
-	set_download_expand (info_page);
-
-	return TRUE;
 }
 
 G_MODULE_EXPORT gboolean
@@ -779,8 +555,7 @@ load_details_info_callback (gpointer userdata, gpointer func_result)
 		g_debug ("Fail to get the details info: %s\n", open_results_get_meta (results, "message"));
 		return NULL;
 	} else {
-		ClutterActor *fans, *download_count;
-		ClutterActor *comments_details, *comments_details_actor;
+		ClutterActor *fans;
 		GList *list;
 		OpenResult *result;
 		const gchar *val;
@@ -796,13 +571,6 @@ load_details_info_callback (gpointer userdata, gpointer func_result)
 		clutter_text_set_text (CLUTTER_TEXT (fans), str);
 		g_free (str);
 
-		/*the download count will change, the download link will not */
-		download_count = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "download-count"));
-		val = open_result_get (result, "downloads");
-		priv->download_count = atoi (val);
-		str = g_strdup_printf (_("%d downloads  (%d link)"), priv->download_count, priv->download_links);
-		gnome_app_button_set_text (GNOME_APP_BUTTON (download_count), str);
-		g_free (str);
 		load_comments (info_page);
 	}
 }
@@ -840,7 +608,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 	ClutterActor *score;
 	ClutterActor *license;
 	ClutterActor *fans;
-	ClutterActor *download_count;
+	ClutterActor *download_group;
 	ClutterActor *comment_count, *comment_entry;
 	ClutterActor *name;
 	ClutterActor *personid, *personicon;
@@ -858,10 +626,6 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 		g_object_unref (priv->info);
 	priv->info = g_object_ref (info);
 	priv->fan_status = FAN_NOT_DEFINED;
-	priv->download_expand = FALSE;
-	priv->download_count = 0;
-	priv->download_links = 0;
-	priv->layout_box = NULL;
 	priv->fan_lock = FALSE;
 	clutter_actor_set_y (CLUTTER_ACTOR (info_page), 0.0);
 
@@ -872,7 +636,7 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 			"fans", &fans,
 			"next", &next,
 			"prev", &prev,
-			"download-count", &download_count,
+			"download-group", &download_group,
 			"comment-count", &comment_count,
 			"comment-entry", &comment_entry,
 			"personid", &personid,
@@ -881,9 +645,6 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 			"comments-details", &comments_details,
 			"return-button", &return_button,
 			NULL);
-	clutter_text_set_text (CLUTTER_TEXT (name), open_result_get (info, "name"));
-	clutter_text_set_text (CLUTTER_TEXT (personid), open_result_get (info, "personid"));
-	gnome_app_button_set_selected (GNOME_APP_BUTTON (download_count), FALSE);
 
 	for (count = 0; ; count ++) {
 		str = g_strdup_printf ("smallpreviewpic%d", count + 1);
@@ -896,18 +657,22 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 	priv->pic_count = count;
 	priv->current_pic = 1;
 
+	clutter_text_set_text (CLUTTER_TEXT (name), open_result_get (info, "name"));
+	clutter_text_set_text (CLUTTER_TEXT (personid), open_result_get (info, "personid"));
 	g_object_set (G_OBJECT (score), "score", open_result_get (info, "score"), NULL);
 
 	clutter_text_set_text (CLUTTER_TEXT (license), open_result_get (info, "license"));
-
-	val = open_result_get (info, "downloads");
-	priv->download_count = atoi (val);
 
 	val = open_result_get (info, "fans");
 	priv->fan_count = atoi (val);
 	str = g_strdup_printf (_("%d fans"), priv->fan_count);
 	clutter_text_set_text (CLUTTER_TEXT (fans), str);
 	g_free (str);
+
+	if (priv->download)
+		clutter_container_remove_actor (CLUTTER_CONTAINER (download_group), CLUTTER_ACTOR (priv->download));
+	priv->download = CLUTTER_ACTOR (gnome_app_download_new_with_info (priv->info));
+	clutter_container_add_actor (CLUTTER_CONTAINER (download_group), CLUTTER_ACTOR (priv->download));
 
 	gnome_app_text_set_text (GNOME_APP_TEXT (comment_entry), NULL);
 
@@ -923,8 +688,6 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 
 	draw_pic (info_page);
 	set_fan_status (info_page);
-	draw_download_buttons (info_page);
-	set_download_expand (info_page);	
 	load_comments (info_page);
 
 /* TODO: this make our info page with higher quality, but will make one more request
