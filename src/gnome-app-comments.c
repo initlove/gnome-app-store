@@ -128,6 +128,9 @@ gnome_app_comments_finalize (GObject *object)
 		g_free (priv->content);
 	if (priv->content2)
 		g_free (priv->content2);
+	/*TODO: this is just hack, as thread problem not totally solved */
+	if (priv->lock)
+		gnome_app_texture_stop (GNOME_APP_TEXTURE (priv->spin));
 
 	G_OBJECT_CLASS (gnome_app_comments_parent_class)->finalize (object);
 }
@@ -203,7 +206,8 @@ set_comments_callback (gpointer userdata, gpointer func_result)
 
 	results = OPEN_RESULTS (func_result);
 	app_comments = GNOME_APP_COMMENTS (userdata);
-	gnome_app_comments_load (app_comments, results);
+	if (app_comments && GNOME_APP_IS_COMMENTS (app_comments))
+		gnome_app_comments_load (app_comments, results);
 
 	return NULL;
 }

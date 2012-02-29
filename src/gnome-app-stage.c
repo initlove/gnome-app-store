@@ -149,26 +149,28 @@ auth_valid (GnomeAppStage *app_stage)
 }
 
 static void
-app_actor_hide (gpointer key,
-		GObject *actor,
-		GObject *app_actor)
-{
-/*TODO To make frame ui faster, we hide it donnot destroy it */
-	if (actor != app_actor)
-		clutter_actor_hide (CLUTTER_ACTOR (actor));
-}
-
-static void
 gnome_app_stage_show (GnomeAppStage *app_stage, gint mode, GObject *app_actor)
 {
 	GnomeAppStagePrivate *priv;
 	gfloat width, height;
 	gfloat stage_width, stage_height;
+	GList *list;
+	GObject *data;
 	gchar *filename;
+	const gchar *name;
 
 	priv = app_stage->priv;
-	g_hash_table_foreach (priv->table, (GHFunc) app_actor_hide, app_actor);
-		
+        
+	if (priv->history) {
+		if (g_object_class_find_property (G_OBJECT_GET_CLASS (priv->history), "data")) {
+			g_object_get (G_OBJECT (priv->history), "data", &data, NULL);
+			if (data) {
+				name = G_OBJECT_TYPE_NAME (G_OBJECT (priv->history));
+				g_hash_table_insert (priv->table, g_strdup (name), g_object_ref (data));
+			}
+		}
+		clutter_container_remove_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (priv->history));
+	}
 	clutter_actor_get_size (CLUTTER_ACTOR (app_actor), &width, &height);
 	//TODO: this should improve
 	if ((width < priv->default_width) && (height < priv->default_height)) {
@@ -189,6 +191,7 @@ gnome_app_stage_show (GnomeAppStage *app_stage, gint mode, GObject *app_actor)
 
 	priv->history = CLUTTER_ACTOR (app_actor);
 	clutter_actor_show (CLUTTER_ACTOR (app_actor));
+	clutter_container_add_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (app_actor));
 #if 0
 	/*TODO: should get from theme, for example */
 	if (GNOME_APP_IS_LOGIN (app_actor)) {
@@ -214,24 +217,20 @@ void
 gnome_app_stage_load (GnomeAppStage *app_stage, gint mode, const gchar *type_name, ...)
 {
 	GnomeAppStagePrivate *priv;
+	GObject *data;
 	GObject *app_actor;
 	va_list args;
 	const gchar *first_name;
 
 	priv = app_stage->priv;
-	app_actor = g_hash_table_lookup (priv->table, type_name);
-	if (app_actor) {
+	app_actor = g_object_new (g_type_from_name (type_name), NULL);
+	data = g_hash_table_lookup (priv->table, type_name);
+	if (data) {
 		if (mode == GNOME_APP_STAGE_LOAD_NEW) {
-			clutter_container_remove_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (app_actor));
 			g_hash_table_remove (priv->table, type_name);
-			app_actor = g_object_new (g_type_from_name (type_name), NULL);
-			clutter_container_add_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (app_actor));
-			g_hash_table_insert (priv->table, g_strdup (type_name), app_actor);
+		} else {
+			g_object_set (app_actor, "data", data, NULL);
 		}
-	} else {
-		app_actor = g_object_new (g_type_from_name (type_name), NULL);
-		clutter_container_add_actor (CLUTTER_CONTAINER (app_stage), CLUTTER_ACTOR (app_actor));
-		g_hash_table_insert (priv->table, g_strdup (type_name), app_actor);
 	}
 
 	va_start (args, type_name);

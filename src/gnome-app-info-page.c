@@ -323,14 +323,21 @@ on_comment_button_press (ClutterActor *actor,
 }
 
 static void
-draw_fan_status (GnomeAppInfoPage *page)
+draw_fan_status (GnomeAppInfoPage *info_page)
 {
+	/* TODO: we need to do lots of this,
+	 * in fact we need to have stop or cancel all the task when we finalize the info page
+	 */
+	g_return_if_fail (info_page && GNOME_APP_IS_INFO_PAGE (info_page));
+
 	GnomeAppInfoPagePrivate *priv;
 	ClutterActor *actor;
 
-	priv = page->priv;
+	priv = info_page->priv;
 
 	actor = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "fan-button"));
+	if (!actor)
+		return;
 	switch (priv->fan_status) {
 		case IS_FAN:
 			clutter_actor_set_opacity (actor, 255);
@@ -351,12 +358,12 @@ draw_fan_status (GnomeAppInfoPage *page)
 static gpointer
 add_remove_fan_callback (gpointer userdata, gpointer func_result)
 {
-	GnomeAppInfoPage *page;
+	GnomeAppInfoPage *info_page;
 	GnomeAppInfoPagePrivate *priv;
 	OpenResults *results;
 
-	page = GNOME_APP_INFO_PAGE (userdata);
-	priv = page->priv;
+	info_page = GNOME_APP_INFO_PAGE (userdata);
+	priv = info_page->priv;
 	results = OPEN_RESULTS (func_result);
         if (!open_results_get_status (results)) {
 		g_debug ("Fail to add fan %s\n", open_results_get_meta (results, "message"));
@@ -378,7 +385,7 @@ add_remove_fan_callback (gpointer userdata, gpointer func_result)
 		clutter_text_set_text (CLUTTER_TEXT (fans), str);
 		g_free (str);
 
-		draw_fan_status (page);
+		draw_fan_status (info_page);
 	}
 	priv->fan_lock = FALSE;	
 	return NULL;
@@ -413,12 +420,12 @@ static gpointer
 fan_status_callback (gpointer userdata, gpointer func_result)
 {
 	OpenResults *results;
-	GnomeAppInfoPage *page;
+	GnomeAppInfoPage *info_page;
 	GnomeAppInfoPagePrivate*priv;
 
 	results = OPEN_RESULTS (func_result);
-	page = GNOME_APP_INFO_PAGE (userdata);
-	priv = page->priv;
+	info_page = GNOME_APP_INFO_PAGE (userdata);
+	priv = info_page->priv;
         if (!open_results_get_status (results)) {
 		g_debug ("Fail to get the fan status info: %s\n", open_results_get_meta (results, "message"));
 		priv->fan_status = FAN_ERROR;
@@ -436,7 +443,7 @@ fan_status_callback (gpointer userdata, gpointer func_result)
 			priv->fan_status = NOT_FAN;
 	}
 
-	draw_fan_status (page);
+	draw_fan_status (info_page);
 
 	return NULL;
 }
@@ -497,7 +504,8 @@ draw_pic (GnomeAppInfoPage *page)
 	g_free (str);
 
 	if (priv->current_pic > priv->pic_count) {
-		g_critical ("current pic is over pic count !");
+		/* This happens when no smallpreviewpic */
+		clutter_actor_hide (next);
 	} else if (priv->current_pic == priv->pic_count) {
 		clutter_actor_hide (next);
 	} else {
@@ -505,6 +513,7 @@ draw_pic (GnomeAppInfoPage *page)
 	}
 	if (priv->current_pic < 1) {
 		g_critical ("current pic is less than zero ? ");
+		clutter_actor_hide (prev);
 	} else if (priv->current_pic == 1) {
 		clutter_actor_hide (prev);
 	} else if (priv->current_pic > 1) {

@@ -46,6 +46,7 @@ struct _GnomeAppFramePrivate
 enum
 {
 	PROP_0,
+	PROP_DATA,
 	PROP_LOCK_STATUS,
 	PROP_LAST
 };
@@ -490,12 +491,19 @@ gnome_app_frame_set_property (GObject      *object,
 		GParamSpec   *pspec)
 {
 	GnomeAppFrame *frame;
+	GnomeAppFramePrivate *priv;
 	const gchar *str;
 
 	frame = GNOME_APP_FRAME (object);
-			        
+	priv = frame->priv;        
 	switch (prop_id)
 	{
+		case PROP_DATA:
+			priv->task = GNOME_APP_TASK (g_object_ref (g_value_get_object (value)));
+			gnome_app_task_set_userdata (priv->task, frame);
+			gnome_app_task_set_callback (priv->task, task_callback);
+			gnome_app_task_push (priv->task);
+			break;
 		case PROP_LOCK_STATUS:
 			str = g_value_get_string (value);
 			if (!str)
@@ -512,11 +520,16 @@ gnome_app_frame_get_property (GObject      *object,
 		GParamSpec   *pspec)
 {
 	GnomeAppFrame *frame;        
+	GnomeAppFramePrivate *priv;
 
 	frame = GNOME_APP_FRAME (object);
-
+	priv = frame->priv;
 	switch (prop_id)
 	{
+		case PROP_DATA:
+			if (priv->task)
+				g_value_set_object (value, priv->task);
+			break;
 	}
 }
 
@@ -549,6 +562,14 @@ gnome_app_frame_class_init (GnomeAppFrameClass *klass)
 	object_class->get_property = gnome_app_frame_get_property;
 	object_class->dispose = gnome_app_frame_dispose;
 	object_class->finalize = gnome_app_frame_finalize;
+
+	g_object_class_install_property (object_class,
+			PROP_DATA,		
+			g_param_spec_object ("data",
+			"The task describe the whole frame",
+			"The task describe the whole frame",
+			G_TYPE_OBJECT,
+			G_PARAM_READWRITE));
 
 	g_object_class_install_property (object_class,
 			PROP_LOCK_STATUS,		

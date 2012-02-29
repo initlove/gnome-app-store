@@ -8,6 +8,7 @@
       {
         "id" : "big-pic",
         "type" : "ClutterTexture",
+	"filename" : "gnome.png", 
         "x" : 550,
         "y" : 40,
         "width" : 300,
