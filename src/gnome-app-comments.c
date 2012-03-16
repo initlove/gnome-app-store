@@ -86,6 +86,7 @@ static void
 gnome_app_comments_init (GnomeAppComments *comments)
 {
 	GnomeAppCommentsPrivate *priv;
+	gchar *dir;
 
 	comments->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (comments,
 	                                                 GNOME_APP_TYPE_COMMENTS,
@@ -105,7 +106,9 @@ gnome_app_comments_init (GnomeAppComments *comments)
 	priv->task = NULL;
 	priv->lock = FALSE;
 	priv->spin = CLUTTER_ACTOR (gnome_app_texture_new ());
-	g_object_set (G_OBJECT (priv->spin), "texture-type", "spin", NULL);
+	dir = open_app_get_spin_dir ();
+	g_object_set (G_OBJECT (priv->spin), "texture-type", "spin", "url", dir, NULL);
+	g_free (dir);
 	clutter_container_add_actor (CLUTTER_CONTAINER (comments), CLUTTER_ACTOR (priv->spin));
 	clutter_actor_set_position (priv->spin, 60, 50);
 }

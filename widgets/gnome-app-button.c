@@ -18,7 +18,6 @@ Author: David Liang <dliang@novell.com>
 #include <cogl/cogl.h>
 #include <cogl-pango/cogl-pango.h>
 #include <clutter/clutter.h>
-#include "open-app-utils.h"
 #include "gnome-app-widget.h"
 #include "gnome-app-button.h"
 
@@ -202,7 +201,6 @@ gnome_app_button_set_property (GObject *object,
 	ClutterColor color;
 	const gchar *str;
 	gchar *markup;
-	gchar *filename;
 	gfloat width, height;
 
 	button = GNOME_APP_BUTTON (object);
@@ -247,15 +245,9 @@ gnome_app_button_set_property (GObject *object,
 		case PROP_FILENAME:
 			priv->type = BUTTON_TEXTURE;
 			str = g_value_get_string (value);
-			filename = open_app_get_pixmap_uri (str);
-			/*TODO: if 'filename' comes before width and height
-			 * signal connect to size change .. */
-			if (filename) {
-				clutter_actor_get_size (CLUTTER_ACTOR (button), &width, &height);
-				clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->texture), filename, NULL);
-				clutter_actor_set_size (priv->texture, width, height);
-				g_free (filename);
-			}
+			clutter_actor_get_size (CLUTTER_ACTOR (button), &width, &height);
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->texture), str, NULL);
+			clutter_actor_set_size (priv->texture, width, height);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -383,11 +375,7 @@ gnome_app_button_class_init (GnomeAppButtonClass *klass)
 GnomeAppButton *
 gnome_app_button_new ()
 {
-	GnomeAppButton *button;
-
-	button = g_object_new (GNOME_APP_TYPE_BUTTON, NULL);
-
-	return button;
+	return g_object_new (GNOME_APP_TYPE_BUTTON, NULL);
 }
 
 gboolean

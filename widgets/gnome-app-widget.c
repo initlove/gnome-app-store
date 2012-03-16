@@ -14,7 +14,6 @@ Author: David Liang <dliang@novell.com>
 */
 #include <config.h>
 #include <clutter/clutter.h>
-#include "open-app-utils.h"
 #include "gnome-app-widget.h"
 
 struct _GnomeAppWidgetPrivate
@@ -84,7 +83,6 @@ gnome_app_widget_set_property (GObject *object,
 	GnomeAppWidget *widget;
 	GnomeAppWidgetPrivate *priv;
 	const gchar *str;
-	gchar *filename;
 
 	widget = GNOME_APP_WIDGET (object);
 	priv = widget->priv;
@@ -102,11 +100,7 @@ gnome_app_widget_set_property (GObject *object,
 				// TODO:
 				// set the size of something... 
 			}
-			filename = open_app_get_pixmap_uri (str);
-			if (filename) {
-				clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->background), filename, NULL);
-				g_free (filename);
-			}
+			clutter_texture_set_from_file (CLUTTER_TEXTURE (priv->background), str, NULL);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -50,8 +50,6 @@ struct _GnomeAppTextureClass
 
 GType			gnome_app_texture_get_type              (void);
 GnomeAppTexture *	gnome_app_texture_new			(void);
-GnomeAppTexture *	gnome_app_dtexture_new_from_file	(gchar *dir);
-GnomeAppTexture *	gnome_app_mtexture_new_from_file	(gchar *filename, gint col, gint row);
 
 G_END_DECLS
 

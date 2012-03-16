@@ -85,10 +85,6 @@ main (int argc, gchar **argv)
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Scrolling");
   clutter_actor_set_size (stage, 800, 600);
   g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
-  scroll = CLUTTER_ACTOR (gnome_app_dtexture_new_from_dir (filename));
-  clutter_container_add_actor (CLUTTER_CONTAINER (stage), scroll);
-  clutter_actor_show (scroll);
-  gnome_app_texture_start (scroll);
 
 //
 //clutter_actor_set_clip (pixmap, 0, 0, width/2, height/2);

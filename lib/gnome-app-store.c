@@ -178,7 +178,7 @@ category_task_callback (gpointer userdata, gpointer func_result)
         store = GNOME_APP_STORE (userdata);
 
         results = OPEN_RESULTS (func_result);
-	if (ocs_results_get_status (results)) {
+	if (open_results_get_status (results)) {
 		list = open_results_get_data (results);
 		setup_category (store, list);
 	}

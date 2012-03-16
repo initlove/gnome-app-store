@@ -277,7 +277,7 @@ gnome_app_proxy_add (GnomeAppProxy *proxy, GnomeAppTask *task, OpenResults *resu
 
 //	g_debug ("gnome_app_proxy_add!");
 
-        if (ocs_results_get_status (results)) {
+        if (open_results_get_status (results)) {
 		if (!should_be_proxy (proxy, task))
 			return;
 
@@ -320,9 +320,6 @@ printf ("proxy task callback\n");
 
 	proxy = GNOME_APP_PROXY (userdata);
 	results = OPEN_RESULTS (func_result);
-
-        if (ocs_results_get_status (results)) {
-	}
 
 	return NULL;
 }

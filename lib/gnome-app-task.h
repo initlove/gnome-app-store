@@ -59,7 +59,7 @@ struct _GnomeAppTaskClass
         GObjectClass parent_class;
 };
 
-typedef enum {
+enum {
 	TASK_PRIORITY_INVALID = 0,
 	TASK_PRIORITY_LOW = 10,
 	TASK_PRIORITY_PREDICT = 20,
@@ -67,7 +67,7 @@ typedef enum {
 	TASK_PRIORITY_NORMAL = 40,
 	TASK_PRIORITY_HIGH = 80,
 	TASK_PRIORITY_INSANE = 200,
-} TaskPriority;
+};
 
 GType			gnome_app_task_get_type			(void);
 GnomeAppTask *		gnome_app_task_new 			(gpointer userdata, const gchar *method, const gchar *function);
@@ -79,7 +79,7 @@ void			gnome_app_task_add_param 		(GnomeAppTask *task, const gchar *param, const
 void			gnome_app_task_add_params 		(GnomeAppTask *task, ...);
 void			gnome_app_task_set_userdata		(GnomeAppTask *task, gpointer userdata);
 void			gnome_app_task_set_callback		(GnomeAppTask *task, GnomeAppTaskFunc callback);
-void			gnome_app_task_set_priority		(GnomeAppTask *task, TaskPriority priority);
+void			gnome_app_task_set_priority		(GnomeAppTask *task, gint priority);
 void			gnome_app_task_preload			(GnomeAppTask *task);
 void			gnome_app_task_push			(GnomeAppTask *task);
 
@@ -87,7 +87,7 @@ gchar *			gnome_app_task_to_str			(GnomeAppTask *task);
 const gchar *		gnome_app_task_get_param_value		(GnomeAppTask *task, const gchar *param);
 const gchar *		gnome_app_task_get_method		(GnomeAppTask *task);
 const gchar *		gnome_app_task_get_function		(GnomeAppTask *task);
-TaskPriority		gnome_app_task_get_priority		(GnomeAppTask *task);
+gint			gnome_app_task_get_priority		(GnomeAppTask *task);
 OAsyncWorkerTask *	gnome_app_task_get_task			(GnomeAppTask *task);
 RestProxyCall *		gnome_app_task_get_call			(GnomeAppTask *task);
 

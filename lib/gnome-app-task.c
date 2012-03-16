@@ -135,7 +135,7 @@ gnome_app_sync_task_push (GnomeAppTask *task)
 
         payload = rest_proxy_call_get_payload (priv->call);
         len = rest_proxy_call_get_payload_length (priv->call);
-        results = (OpenResults *) ocs_get_results (payload, len);
+        results = (OpenResults *) open_ocs_get_results (payload, len);
 	if (!results) {
 		gchar *str;
 
@@ -216,7 +216,7 @@ async_func (OAsyncWorkerTask *oasync_task, gpointer arguments)
 
         payload = rest_proxy_call_get_payload (app_task->priv->call);
         len = rest_proxy_call_get_payload_length (app_task->priv->call);
-        results = (OpenResults *) ocs_get_results (payload, len);
+        results = (OpenResults *) open_ocs_get_results (payload, len);
 	if (!results) {
 		gchar *str;
 
@@ -234,7 +234,7 @@ async_func (OAsyncWorkerTask *oasync_task, gpointer arguments)
 	gnome_app_proxy_add (proxy, app_task, results);
 
 #ifdef DEVEL_MODE
-	if (ocs_results_get_status (results)) {
+	if (open_results_get_status (results)) {
 		gchar *filename;
 		gchar *str;
 		gchar *md5;
@@ -396,7 +396,7 @@ gnome_app_task_set_callback (GnomeAppTask *task, GnomeAppTaskFunc callback)
 }
 
 void
-gnome_app_task_set_priority (GnomeAppTask *task, TaskPriority priority)
+gnome_app_task_set_priority (GnomeAppTask *task, gint priority)
 {
         o_async_worker_task_set_priority (task->priv->async, priority);
 }
@@ -445,7 +445,7 @@ gnome_app_task_push (GnomeAppTask *task)
 				md5 = open_app_get_md5 (str);
 				filename = g_build_filename (g_get_user_cache_dir (), "gnome-app-store", "xml", md5, NULL);
 				if (g_file_get_contents (filename, &content, &len, NULL)) {
-					results = OPEN_RESULTS (ocs_get_results (content, len));
+					results = OPEN_RESULTS (open_ocs_get_results (content, len));
 //					g_debug ("Load from cached file %s %s\n", str, md5);
 					g_free (content);
 				}
@@ -549,7 +549,7 @@ gnome_app_task_get_function (GnomeAppTask *task)
 #endif
 }
 
-TaskPriority
+gint
 gnome_app_task_get_priority (GnomeAppTask *task)
 {
 	g_return_val_if_fail (task && task->priv->async, TASK_PRIORITY_INVALID);

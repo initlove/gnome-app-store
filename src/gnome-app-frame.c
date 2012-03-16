@@ -28,18 +28,20 @@ Author: David Liang <dliang@novell.com>
 
 struct _GnomeAppFramePrivate
 {
-        ClutterScript	*script;
+    ClutterScript	*script;
 	ClutterActor	*categories;
 	ClutterActor 	*spin;
 	ClutterActor    *selected_button;
-        GnomeAppIconView *icon_view;
+    GnomeAppIconView *icon_view;
 	GnomeAppStore *store;
 
 	gboolean	lock;
 	gboolean	is_search_enabled;
 	gboolean	is_search_hint_enabled;
 	gint		pagesize;
-	GnomeAppTask	*task;
+            
+    RestProxy *proxy;
+    RestProxyCall *call;
 };
 
 /* Properties */
@@ -52,6 +54,25 @@ enum
 };
 
 G_DEFINE_TYPE (GnomeAppFrame, gnome_app_frame, CLUTTER_TYPE_GROUP)
+
+static gint
+get_current_page (GnomeAppFrame *frame)
+{
+	GnomeAppFramePrivate *priv;
+    RestParam *param;
+    const gchar *content;
+    gint page;
+
+    priv = frame->priv;
+    param = rest_proxy_call_lookup_param (priv->call, "page");
+    if (param) {
+        content = rest_param_get_content (param);
+        page = atoi (content);
+    } else 
+        page = -1;
+
+    return page;
+}
 
 static gboolean
 is_frame_locked (GnomeAppFrame *frame)
@@ -104,7 +125,7 @@ frame_load_results (GnomeAppFrame *frame, OpenResults *results)
 	gchar *message;
 
 	if (!results) {
-		g_debug ("Error in getting results !\n");
+		g_debug ("Error in getting results in frame load!\n");
 		return;
 	}
 	priv = frame->priv;
@@ -137,11 +158,12 @@ frame_load_results (GnomeAppFrame *frame, OpenResults *results)
 		total_items_text = g_strdup_printf (_("%d apps"), total);
 		clutter_text_set_text (CLUTTER_TEXT (total_items), total_items_text);
 		g_free (total_items_text);
-        
-		val = gnome_app_task_get_param_value (priv->task, "page");
-		if (val) {
-			cur_page = atoi (val);
-		} else {
+
+		g_object_set (G_OBJECT (priv->icon_view), "results", results, NULL);
+		clutter_actor_show (CLUTTER_ACTOR (priv->icon_view));
+
+		cur_page = get_current_page (frame);
+        if (cur_page < 0) {
 			g_debug ("Cannot find 'page' in task!\n");
 			return;
 		}
@@ -179,6 +201,28 @@ task_callback (gpointer userdata, gpointer func_result)
 }
 
 static void
+proxy_call_async_cb (RestProxyCall *call,
+                             const GError  *error,
+                                                  GObject       *weak_object,
+                                                                       gpointer       userdata)
+{
+	GnomeAppFrame *frame;
+	OpenResults *results;
+
+    const gchar *payload;
+    goffset len;
+ 
+    payload = rest_proxy_call_get_payload (call);
+    len = rest_proxy_call_get_payload_length (call);
+    results = (OpenResults *) open_ocs_get_results (payload, len);
+	frame = GNOME_APP_FRAME (userdata);
+    clutter_threads_enter ();
+	frame_load_results (frame, results);
+    clutter_threads_leave();
+
+}
+
+static void
 frame_set_default_data (GnomeAppFrame *frame)
 {
 	GnomeAppFramePrivate *priv;
@@ -188,17 +232,20 @@ frame_set_default_data (GnomeAppFrame *frame)
 	priv = frame->priv;
 	pagesize = g_strdup_printf ("%d", priv->pagesize);
 
-        task = gnome_app_task_new (frame, "GET", "/v1/content/data");
-	priv->task = g_object_ref (task);
-	gnome_app_task_add_params (task,
+    rest_proxy_call_add_params (priv->call,
 				"sortmode", "new",
 				"pagesize", pagesize,
 				"page", "0",
 				NULL);
-	gnome_app_task_set_callback (task, task_callback);
-	gnome_app_task_push (task);
 
-	g_free (pagesize);
+    rest_proxy_call_async (priv->call,
+          proxy_call_async_cb,
+          NULL,
+          frame,
+          NULL);
+
+    g_free (pagesize);
+    return;
 }
 
 G_MODULE_EXPORT void
@@ -249,26 +296,25 @@ on_search_entry_activate (ClutterActor *actor,
 		return;
 
 	GnomeAppFramePrivate *priv;
-	GnomeAppTask *task;
 	gchar *pagesize;
 
 	priv = frame->priv;
 	pagesize = g_strdup_printf ("%d", priv->pagesize);
 
-	if (priv->task)
-		g_object_unref (priv->task);
-
-        task = gnome_app_task_new (frame, "GET", "/v1/content/data");
-	/*We need to ref it right after task_new, as some task may finished fast cause of proxy */
-	priv->task = g_object_ref (priv->task);
-	gnome_app_task_add_params (task,
+    g_object_unref (priv->call);
+    priv->call = rest_proxy_new_call (priv->proxy);
+    rest_proxy_call_add_params (priv->call,
 				"sortmode", "new",
-				"search", search,
+                "search", search,
 				"pagesize", pagesize,
 				"page", "0",
 				NULL);
-	gnome_app_task_set_callback (task, task_callback);
-	gnome_app_task_push (task);
+
+    rest_proxy_call_async (priv->call,
+          proxy_call_async_cb,
+          NULL,
+          frame,
+          NULL);
 
 	g_free (pagesize);
 }
@@ -327,21 +373,29 @@ on_category_button_press (ClutterActor *actor,
 	}
 	pagesize = g_strdup_printf ("%d", priv->pagesize);
 	name = (gchar *) g_object_get_data (G_OBJECT (actor), "category_name");
+#if 0
 	cids = gnome_app_store_get_cids_by_name (priv->store, name);
+#else
+    cids = name;
+    //TODO: system way? more cids? 
 printf ("click on %s cids %s\n", name, cids);
-/*TODO where to final the task */
-	if (priv->task)
-		g_object_unref (priv->task);
-        task = gnome_app_task_new (frame, "GET", "/v1/content/data");
-	priv->task = g_object_ref (task);
-	gnome_app_task_add_params (task,
-			"sortmode", "new",
-			"categories", cids,
-			"pagesize", pagesize,
-			"page", "0",
-			NULL);
-	gnome_app_task_set_callback (task, task_callback);
-	gnome_app_task_push (task);
+#endif
+
+    g_object_unref (priv->call);
+    priv->call = rest_proxy_new_call (priv->proxy);
+    rest_proxy_call_add_params (priv->call,
+				"sortmode", "new",
+			    "categories", cids,
+				"pagesize", pagesize,
+				"page", "0",
+				NULL);
+
+    rest_proxy_call_async (priv->call,
+          proxy_call_async_cb,
+          NULL,
+          frame,
+          NULL);
+
 	g_free (pagesize);
 
 	return FALSE;
@@ -366,8 +420,6 @@ on_icon_press (ClutterActor *actor,
 	 * it means we should make the task priority higher 
 	 * 
 	 */
-	if (is_frame_locked (frame))
-		return FALSE;
 
 	clutter_script_get_objects (priv->script,
 			"prev-icon", &prev,
@@ -378,31 +430,26 @@ on_icon_press (ClutterActor *actor,
 	if (actor == search_icon) {
 		on_search_entry_activate (search_entry, frame);
 	} else {
-		GnomeAppTask *task;
-		const gchar *val;
-		gchar *page;
-		int cur_page;
+        RestParam *param;
+        gchar *content;
+        gint page;
 
-		val = gnome_app_task_get_param_value (priv->task, "page");
-		if (val) {
-			cur_page = atoi (val);
-		} else {
-			g_debug ("Cannot get 'page' in the task \n");
-			return FALSE;
-		}
-		
-		if (actor == prev) {
-			cur_page --;
-		} else if (actor == next) {
-			cur_page ++;
-		}
-		task = gnome_app_task_copy (priv->task);
-		g_object_unref (priv->task);
-		priv->task = g_object_ref (task);
-		page = g_strdup_printf ("%d", cur_page);
-        	gnome_app_task_add_param (task, "page", page);
-		gnome_app_task_push (task);
-		g_free (page);
+        page = get_current_page (frame);
+        if (page >= 0) {
+            if (actor == next)
+                page ++;
+            else
+                page --;
+            content = g_strdup_printf ("%d", page);
+            rest_proxy_call_remove_param (priv->call, "page");
+            rest_proxy_call_add_param (priv->call, "page", content);
+            g_free (content);
+            rest_proxy_call_async (priv->call,
+                    proxy_call_async_cb,
+                    NULL,
+                    frame,
+                    NULL);
+        }
 	}
 
 	return TRUE;
@@ -448,21 +495,23 @@ gnome_app_frame_init (GnomeAppFrame *frame)
 	ClutterActor *categories_group;
 	ClutterActor *prev;
 	ClutterActor *next;
+    gchar *prev_icon;
+    gchar *next_icon;
+	gchar *dir;
 
 	frame->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (frame,
 	                                                 GNOME_APP_TYPE_FRAME,
 	                                                 GnomeAppFramePrivate);
 	priv->is_search_enabled = FALSE;
 	priv->is_search_hint_enabled = TRUE;
-	priv->task = NULL;
 	priv->lock = FALSE;
 	priv->selected_button = NULL;
 
-        priv->script = gnome_app_script_new_from_file ("app-frame");
-        if (!priv->script) {
+    priv->script = gnome_app_script_new_from_file ("app-frame");
+    if (!priv->script) {
 		return ;
-        }
-        clutter_script_connect_signals (priv->script, frame);
+    }
+    clutter_script_connect_signals (priv->script, frame);
 	clutter_script_get_objects (priv->script, 
 			"frame", &main_ui,
 			"categories", &categories_group,
@@ -471,15 +520,29 @@ gnome_app_frame_init (GnomeAppFrame *frame)
 			"prev-icon", &prev,
 			"next-icon", &next,
 			NULL);
+    prev_icon = open_app_get_pixmap_uri ("go-previous");
+    next_icon = open_app_get_pixmap_uri ("go-next");
+    g_object_set (prev, "filename", prev_icon, NULL);
+    g_object_set (next, "filename", next_icon, NULL);
+    g_free (prev_icon);
+    g_free (next_icon);
+	dir = open_app_get_spin_dir ();
+	g_object_set (G_OBJECT (priv->spin), "url", dir, NULL);
+	g_free (dir);
 	clutter_container_add_actor (CLUTTER_CONTAINER (frame), CLUTTER_ACTOR (main_ui));
 
 	priv->store = gnome_app_store_get_default ();
-	gnome_app_store_init_category (GNOME_APP_STORE (priv->store));
+    //TODO: json
+//	gnome_app_store_init_category (GNOME_APP_STORE (priv->store));
 
 	priv->categories = create_category_list (frame);
 	clutter_container_add_actor (CLUTTER_CONTAINER (categories_group), priv->categories);
 
 	priv->pagesize = gnome_app_icon_view_get_pagesize (priv->icon_view);
+
+    const gchar *server = "http://localhost:3000/content/data";
+    priv->proxy = rest_proxy_new (server, FALSE);
+    priv->call = rest_proxy_new_call (priv->proxy);
 
 	frame_set_default_data (frame);
 }
@@ -499,10 +562,6 @@ gnome_app_frame_set_property (GObject      *object,
 	switch (prop_id)
 	{
 		case PROP_DATA:
-			priv->task = GNOME_APP_TASK (g_object_ref (g_value_get_object (value)));
-			gnome_app_task_set_userdata (priv->task, frame);
-			gnome_app_task_set_callback (priv->task, task_callback);
-			gnome_app_task_push (priv->task);
 			break;
 		case PROP_LOCK_STATUS:
 			str = g_value_get_string (value);
@@ -527,8 +586,6 @@ gnome_app_frame_get_property (GObject      *object,
 	switch (prop_id)
 	{
 		case PROP_DATA:
-			if (priv->task)
-				g_value_set_object (value, priv->task);
 			break;
 		case PROP_LOCK_STATUS:
 			if (priv->lock)
@@ -553,8 +610,9 @@ gnome_app_frame_finalize (GObject *object)
 
 	if (priv->icon_view)
 		g_object_unref (priv->icon_view);
-	if (priv->task)
-		g_object_unref (priv->task);
+		
+    g_object_unref (priv->proxy);
+    g_object_unref (priv->call);
 
 	G_OBJECT_CLASS (gnome_app_frame_parent_class)->finalize (object);
 }

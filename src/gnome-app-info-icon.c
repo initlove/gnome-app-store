@@ -125,7 +125,22 @@ gnome_app_info_icon_new_with_info (OpenResult *info)
 			NULL);
 
 	clutter_text_set_text (CLUTTER_TEXT (name), open_result_get (info, "name"));
+#if 1
+    gchar *suffix [] = {".png", ".svg", ".xpm", ".icon", NULL};
+    gchar *icon_uri;
+    gint i;
+    for (i = 0; suffix [i]; i++) {
+        icon_uri = g_strdup_printf ("/home/dliang/work/icons/%s%s", open_result_get (info, "icon"), suffix [i]);
+        if (g_file_test (icon_uri, G_FILE_TEST_EXISTS)) {
+            g_object_set (G_OBJECT (pic), "filename", icon_uri, NULL);
+            g_free (icon_uri);
+            break;
+        } else
+            g_free (icon_uri);
+    }
+#else
 	gnome_app_set_icon (pic, open_result_get (info, "smallpreviewpic1"));
+#endif
 
 	return info_icon;
 }

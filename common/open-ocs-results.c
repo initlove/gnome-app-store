@@ -26,20 +26,20 @@
 #include <string.h>
 #include <time.h>
 
-#include "ocs-result.h"
-#include "ocs-results.h"
+#include "open-ocs-result.h"
+#include "open-ocs-results.h"
 
-struct _OcsResultsPrivate
+struct _OpenOcsResultsPrivate
 {
 	xmlNodePtr meta;
 	GList *data;
 	time_t timestamps;
 };
 
-G_DEFINE_TYPE (OcsResults, ocs_results, TYPE_OPEN_RESULTS)
+G_DEFINE_TYPE (OpenOcsResults, open_ocs_results, TYPE_OPEN_RESULTS)
 
 static xmlNodePtr
-ocs_find_node (xmlDocPtr doc_ptr, gchar *node_name)
+open_ocs_find_node (xmlDocPtr doc_ptr, gchar *node_name)
 {
         xmlNodePtr root_node, data_node;
 
@@ -58,77 +58,77 @@ ocs_find_node (xmlDocPtr doc_ptr, gchar *node_name)
 }
 
 static void
-ocs_results_init (OcsResults *info)
+open_ocs_results_init (OpenOcsResults *info)
 {
-	OcsResultsPrivate *priv;
+	OpenOcsResultsPrivate *priv;
 
         
 	info->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (info,
-						TYPE_OCS_RESULTS,
-						OcsResultsPrivate);
+						TYPE_OPEN_OCS_RESULTS,
+						OpenOcsResultsPrivate);
 	priv->meta = NULL;
 	priv->data = NULL;
 	priv->timestamps = 0;
 }
 
 static void
-ocs_results_dispose (GObject *object)
+open_ocs_results_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (ocs_results_parent_class)->dispose (object);
+	G_OBJECT_CLASS (open_ocs_results_parent_class)->dispose (object);
 }
 
 static void
-ocs_results_finalize (GObject *object)
+open_ocs_results_finalize (GObject *object)
 {
-	OcsResults *results = OCS_RESULTS (object);
-	OcsResultsPrivate *priv = results->priv;
+	OpenOcsResults *results = OPEN_OCS_RESULTS (object);
+	OpenOcsResultsPrivate *priv = results->priv;
 
 	if (priv->meta)
 		xmlFreeNode (priv->meta);
 	if (priv->data)
 		g_list_free (priv->data);
 
-	G_OBJECT_CLASS (ocs_results_parent_class)->finalize (object);
+	G_OBJECT_CLASS (open_ocs_results_parent_class)->finalize (object);
 }
 
 static void
-ocs_results_class_init (OcsResultsClass *klass)
+open_ocs_results_class_init (OpenOcsResultsClass *klass)
 {
 	OpenResultsClass *parent_class;
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = ocs_results_dispose;
-	object_class->finalize = ocs_results_finalize;
+	object_class->dispose = open_ocs_results_dispose;
+	object_class->finalize = open_ocs_results_finalize;
 
 	parent_class = OPEN_RESULTS_CLASS (klass);
 
-	parent_class->get_meta = ocs_results_get_meta;
-	parent_class->get_data = ocs_results_get_data;
-	parent_class->get_timestamps = ocs_results_get_timestamps;
-	parent_class->get_status = ocs_results_get_status;
-	parent_class->get_total_items = ocs_results_get_total_items;
+	parent_class->get_meta = open_ocs_results_get_meta;
+	parent_class->get_data = open_ocs_results_get_data;
+	parent_class->get_timestamps = open_ocs_results_get_timestamps;
+	parent_class->get_status = open_ocs_results_get_status;
+	parent_class->get_total_items = open_ocs_results_get_total_items;
 
-	g_type_class_add_private (object_class, sizeof (OcsResultsPrivate));
+	g_type_class_add_private (object_class, sizeof (OpenOcsResultsPrivate));
 }
 
-OcsResults *
-ocs_results_new ()
+OpenOcsResults *
+open_ocs_results_new ()
 {
-	return g_object_new (TYPE_OCS_RESULTS, NULL);
+	return g_object_new (TYPE_OPEN_OCS_RESULTS, NULL);
 }
 
 xmlDocPtr
-ocs_results_get_default_doc ()
+open_ocs_results_get_default_doc ()
 {
         static xmlDocPtr doc_ptr = NULL;
         gchar *doc_file;
 
         if (!doc_ptr) {
 /*TODO other dir */
-                doc_file = "/home/novell/gnome-app-store/backend/ocs-spec/ocs-services-results.xml";
+                doc_file = "/home/novell/gnome-app-store/backend/open_ocs-spec/open_ocs-services-results.xml";
                 doc_ptr = xmlParseFile (doc_file);
                 if (!doc_ptr) {
-                        g_critical ("Cannot find ocs-results doc in %s\n", doc_file);
+                        g_critical ("Cannot find open_ocs-results doc in %s\n", doc_file);
                         exit (1);
                 }
         }
@@ -137,19 +137,25 @@ ocs_results_get_default_doc ()
 }
 
 OpenResults *
-ocs_get_results (const gchar *ocs, gint len)
+open_ocs_get_results (const gchar *open_ocs_json, gint len_json)
 {
-	g_return_val_if_fail (ocs, NULL);
+	g_return_val_if_fail (open_ocs_json, NULL);
 
 	xmlDocPtr doc_ptr;
-	OcsResults *results;
+	OpenOcsResults *results;
 	GList *list;
 	const gchar *list_node_name;
 	xmlNodePtr meta_node, data_node;
 
-	doc_ptr = xmlParseMemory (ocs, len);
+    gchar *open_ocs;
+    gint len;
+//TODO: HOTFIX
+    open_ocs = json_to_xml (open_ocs_json, &len);
+
+	doc_ptr = xmlParseMemory (open_ocs, len);
+    g_free (open_ocs);//HOTFIX
 	if (!doc_ptr) {
-		doc_ptr = xmlRecoverMemory (ocs, len);
+		doc_ptr = xmlRecoverMemory (open_ocs, len);
 		if (!doc_ptr) {
 			g_debug ("Cannot parse the document!\n");
 
@@ -157,10 +163,10 @@ ocs_get_results (const gchar *ocs, gint len)
 		}
 	}
 	results = NULL;
-	meta_node = ocs_find_node (doc_ptr, "meta");
+	meta_node = open_ocs_find_node (doc_ptr, "meta");
 	if (meta_node) {
-		results = ocs_results_new ();
-		ocs_results_set_meta (OPEN_RESULTS (results), meta_node);
+		results = open_ocs_results_new ();
+		open_ocs_results_set_meta (OPEN_RESULTS (results), meta_node);
 	} else {
 		g_debug ("Error in get meta node!\n");
 		xmlFreeDoc (doc_ptr);
@@ -168,10 +174,10 @@ ocs_get_results (const gchar *ocs, gint len)
 		return NULL;
 	}
 
-	data_node = ocs_find_node (doc_ptr, "data");
+	data_node = open_ocs_find_node (doc_ptr, "data");
 	if (data_node) {
-		list = ocs_result_list_new_with_node (data_node);
-		ocs_results_set_data (OPEN_RESULTS (results), list);
+		list = open_ocs_result_list_new_with_node (data_node);
+		open_ocs_results_set_data (OPEN_RESULTS (results), list);
 	}
 
 	results->priv->timestamps = time (NULL);
@@ -182,12 +188,12 @@ ocs_get_results (const gchar *ocs, gint len)
 }
 
 void
-ocs_results_set_meta (OpenResults *open_results, xmlNodePtr meta_node)
+open_ocs_results_set_meta (OpenResults *open_results, xmlNodePtr meta_node)
 {
-	OcsResults *results;
-	OcsResultsPrivate *priv;
+	OpenOcsResults *results;
+	OpenOcsResultsPrivate *priv;
 
-	results = OCS_RESULTS (open_results);
+	results = OPEN_OCS_RESULTS (open_results);
 	priv = results->priv;
 	if (priv->meta)
 		xmlFreeNode (priv->meta);
@@ -195,12 +201,12 @@ ocs_results_set_meta (OpenResults *open_results, xmlNodePtr meta_node)
 }
 
 void
-ocs_results_set_data (OpenResults *open_results, GList *list)
+open_ocs_results_set_data (OpenResults *open_results, GList *list)
 {
-	OcsResults *results;
-	OcsResultsPrivate *priv;
+	OpenOcsResults *results;
+	OpenOcsResultsPrivate *priv;
 
-	results = OCS_RESULTS (open_results);
+	results = OPEN_OCS_RESULTS (open_results);
 	priv = results->priv;
 	if (priv->data)
 		g_list_free (priv->data);
@@ -208,13 +214,13 @@ ocs_results_set_data (OpenResults *open_results, GList *list)
 }
 
 const gchar *
-ocs_results_get_meta (OpenResults *open_results, const gchar *prop)
+open_ocs_results_get_meta (OpenResults *open_results, const gchar *prop)
 {
-	OcsResults *results;
+	OpenOcsResults *results;
 	xmlNodePtr node;
 	gchar *content;
 
-	results = OCS_RESULTS (open_results);
+	results = OPEN_OCS_RESULTS (open_results);
 	for (node = results->priv->meta->xmlChildrenNode; node; node = node->next) {
 		if (strcmp (node->name, prop) == 0) {
 			content = xmlNodeGetContent (node);
@@ -227,34 +233,34 @@ ocs_results_get_meta (OpenResults *open_results, const gchar *prop)
 }
 
 GList *
-ocs_results_get_data (OpenResults *open_results)
+open_ocs_results_get_data (OpenResults *open_results)
 {
-	OcsResults *results;
+	OpenOcsResults *results;
 
-	results = OCS_RESULTS (open_results);
+	results = OPEN_OCS_RESULTS (open_results);
 
 	return results->priv->data;
 }
 
 time_t
-ocs_results_get_timestamps (OpenResults *open_results)
+open_ocs_results_get_timestamps (OpenResults *open_results)
 {
-	OcsResults *results;
+	OpenOcsResults *results;
 
-	results = OCS_RESULTS (open_results);
+	results = OPEN_OCS_RESULTS (open_results);
 
 	return results->priv->timestamps;
 }
 
 gboolean
-ocs_results_get_status (OpenResults *open_results)
+open_ocs_results_get_status (OpenResults *open_results)
 {
 	g_return_val_if_fail (open_results, FALSE);
 
 	gboolean val;
 	const gchar *value;
 	
-	value = ocs_results_get_meta (open_results, "statuscode");
+	value = open_ocs_results_get_meta (open_results, "statuscode");
 	if (value && (strcmp (value, "100") == 0))
 		return TRUE;
 
@@ -262,12 +268,12 @@ ocs_results_get_status (OpenResults *open_results)
 }
 
 gint
-ocs_results_get_total_items (OpenResults *open_results)
+open_ocs_results_get_total_items (OpenResults *open_results)
 {
 	gboolean val;
 	const gchar *value;
 	
-	value = ocs_results_get_meta (open_results, "totalitems");
+	value = open_ocs_results_get_meta (open_results, "totalitems");
 	if (value)
 		return atoi (value);
 

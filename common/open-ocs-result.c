@@ -17,53 +17,53 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  *
- * Author: Liang chenye <liangchenye@gmail.com>
+ * Author: David Liang <dliang@novell.com>
  */
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "ocs-result.h"
+#include "open-ocs-result.h"
 
-struct _OcsResultPrivate
+struct _OpenOcsResultPrivate
 {
 	xmlNodePtr data;
 };
 
-G_DEFINE_TYPE (OcsResult, ocs_result, TYPE_OPEN_RESULT)
+G_DEFINE_TYPE (OpenOcsResult, open_ocs_result, TYPE_OPEN_RESULT)
 
 static void
-ocs_result_init (OcsResult *info)
+open_ocs_result_init (OpenOcsResult *info)
 {
-	OcsResultPrivate *priv;
+	OpenOcsResultPrivate *priv;
 
         
 	info->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (info,
-						TYPE_OCS_RESULT,
-						OcsResultPrivate);
+						TYPE_OPEN_OCS_RESULT,
+						OpenOcsResultPrivate);
 	priv->data = NULL;
 }
 
 static const gchar *
 get_backend_type (OpenResult *result)
 {
-	return "ocs";
+	return "open_ocs";
 }
 
 gchar **
 get_props (OpenResult *result)
 {
-	OcsResult *ocs_result;
+	OpenOcsResult *open_ocs_result;
         GPtrArray  *props;
 	xmlNodePtr node;
 	gchar *name;
 
         props = g_ptr_array_new ();
 
-	ocs_result = OCS_RESULT (result);
+	open_ocs_result = OPEN_OCS_RESULT (result);
 
-	node = ocs_result->priv->data;
+	node = open_ocs_result->priv->data;
 	name = (gchar *) node->name;
 	if (name && name [0])
 		g_ptr_array_add (props, g_strdup (name));
@@ -82,14 +82,14 @@ get_props (OpenResult *result)
 static const gchar *
 get (OpenResult *result, const gchar *prop)
 {
-	OcsResult *ocs_result;
+	OpenOcsResult *open_ocs_result;
 	xmlNodePtr node;
 	const char *val;
 
-	ocs_result = OCS_RESULT (result);
+	open_ocs_result = OPEN_OCS_RESULT (result);
 	val = NULL;
 
-	node = ocs_result->priv->data;
+	node = open_ocs_result->priv->data;
 	//FIXME: will it be TEXT_NODE?
 	if (node->type != XML_TEXT_NODE) {
 		if (strcmp (node->name, prop) == 0) {
@@ -113,16 +113,16 @@ get (OpenResult *result, const gchar *prop)
 static GList *
 get_child (OpenResult *result)
 {
-	OcsResult *ocs_result;
+	OpenOcsResult *open_ocs_result;
 	xmlNodePtr node;	
 	const gchar *val;
 	const gchar *content;
 	GList *list;
 
 	val = NULL;
-	ocs_result = OCS_RESULT (result);
+	open_ocs_result = OPEN_OCS_RESULT (result);
 
-	for (node = ocs_result->priv->data->xmlChildrenNode; node; node = node->next) {
+	for (node = open_ocs_result->priv->data->xmlChildrenNode; node; node = node->next) {
 		if (node->type == XML_TEXT_NODE)
 			continue;
 		/*TODO: lazy hack, assume 'childcount' comes before 'children' */
@@ -133,7 +133,7 @@ get_child (OpenResult *result)
 			}
 		}
 		if (strcmp (node->name, "children") == 0) {
-			list = ocs_result_list_new_with_node (node);
+			list = open_ocs_result_list_new_with_node (node);
 
 			return list;
 		}
@@ -143,31 +143,31 @@ get_child (OpenResult *result)
 }
 
 static void
-ocs_result_dispose (GObject *object)
+open_ocs_result_dispose (GObject *object)
 {
-	G_OBJECT_CLASS (ocs_result_parent_class)->dispose (object);
+	G_OBJECT_CLASS (open_ocs_result_parent_class)->dispose (object);
 }
 
 static void
-ocs_result_finalize (GObject *object)
+open_ocs_result_finalize (GObject *object)
 {
-	OcsResult *result = OCS_RESULT (object);
-	OcsResultPrivate *priv = result->priv;
+	OpenOcsResult *result = OPEN_OCS_RESULT (object);
+	OpenOcsResultPrivate *priv = result->priv;
 
 	if (priv->data)
 		xmlFreeNode (priv->data);
 
-	G_OBJECT_CLASS (ocs_result_parent_class)->finalize (object);
+	G_OBJECT_CLASS (open_ocs_result_parent_class)->finalize (object);
 }
 
 static void
-ocs_result_class_init (OcsResultClass *klass)
+open_ocs_result_class_init (OpenOcsResultClass *klass)
 {
 	OpenResultClass *parent_class;
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = ocs_result_dispose;
-	object_class->finalize = ocs_result_finalize;
+	object_class->dispose = open_ocs_result_dispose;
+	object_class->finalize = open_ocs_result_finalize;
 
 	parent_class = OPEN_RESULT_CLASS (klass);
 
@@ -176,18 +176,18 @@ ocs_result_class_init (OcsResultClass *klass)
 	parent_class->get_props = get_props;
 	parent_class->get_child = get_child;
 
-	g_type_class_add_private (object_class, sizeof (OcsResultPrivate));
+	g_type_class_add_private (object_class, sizeof (OpenOcsResultPrivate));
 }
 
-OcsResult *
-ocs_result_new_with_node (xmlNodePtr node)
+OpenOcsResult *
+open_ocs_result_new_with_node (xmlNodePtr node)
 {
 	g_return_val_if_fail (node, NULL);
 
-	OcsResult *result;
-	OcsResultPrivate *priv;
+	OpenOcsResult *result;
+	OpenOcsResultPrivate *priv;
 
-	result = g_object_new (TYPE_OCS_RESULT, NULL);
+	result = g_object_new (TYPE_OPEN_OCS_RESULT, NULL);
 	priv = result->priv;
 	priv->data = xmlCopyNode (node, 1);
 
@@ -195,10 +195,10 @@ ocs_result_new_with_node (xmlNodePtr node)
 }
 
 GList *
-ocs_result_list_new_with_node (xmlNodePtr data_node)
+open_ocs_result_list_new_with_node (xmlNodePtr data_node)
 {
         xmlNodePtr node;
-        OcsResult *result;
+        OpenOcsResult *result;
         GList *list = NULL;
         gchar *name;
 
@@ -206,7 +206,7 @@ ocs_result_list_new_with_node (xmlNodePtr data_node)
                 if (node->type == XML_TEXT_NODE)
 	                continue;
 	        name = (gchar *)node->name;
-	        result = ocs_result_new_with_node (node);
+	        result = open_ocs_result_new_with_node (node);
 	        list = g_list_prepend (list, result);
 	}
 	if (list)

@@ -86,7 +86,9 @@ AC_SUBST(GLIB_REQUIRED)
 AC_SUBST(CLUTTER_REQUIRED)
 
 dnl pkg-config dependency checks
+PKG_CHECK_MODULES(GIR, gjs-internals-1.0 gobject-introspection-1.0)
 PKG_CHECK_MODULES(COMMON, dbus-glib-1 gobject-2.0 gio-2.0)
+PKG_CHECK_MODULES(LIBJSON, json-glib-1.0)
 PKG_CHECK_MODULES(LIBXML, libxml-2.0 >= $LIBXML_REQUIRED)
 PKG_CHECK_MODULES(LIBSOUP, libsoup-2.4)
 PKG_CHECK_MODULES(LIBREST, rest-0.7)

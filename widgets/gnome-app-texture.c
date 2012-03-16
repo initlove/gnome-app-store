@@ -19,7 +19,6 @@ Author: David Liang <dliang@novell.com>
 #include <cogl-pango/cogl-pango.h>
 
 #include <clutter/clutter.h>
-#include "open-app-utils.h"
 #include "gnome-app-texture.h"
 
 struct _GnomeAppTexturePrivate
@@ -98,9 +97,7 @@ gnome_app_texture_set_property (GObject *object,
 			if (strcmp (str, "spin") == 0) {
 				priv->type = DIR_TEXTURE;
 				priv->pos = 1;
-				if (priv->url)
-					g_free (priv->url);
-				priv->url = open_app_get_spin_dir ();
+				/*TODO: merge to dir type? */
 			} else if (strcmp (str, "dir") == 0) {
 				priv->type = DIR_TEXTURE;
 				priv->pos = 1;
@@ -190,46 +187,6 @@ gnome_app_texture_new ()
 	GnomeAppTexture *texture;
 
 	texture = g_object_new (GNOME_APP_TYPE_TEXTURE, NULL);
-
-	return texture;
-}
-
-GnomeAppTexture *
-gnome_app_dtexture_new_from_dir (gchar *dir)
-{
-	g_return_if_fail (dir);
-
-	GnomeAppTexture *texture;
-	GnomeAppTexturePrivate *priv;
-
-        if (!g_file_test (dir, G_FILE_TEST_EXISTS)) {
-		g_error ("Cannot find the spin dir %s\n", dir);
-		return NULL;
-	}
-
-	texture = g_object_new (GNOME_APP_TYPE_TEXTURE, NULL);
-	priv = texture->priv;
-	priv->type = DIR_TEXTURE;
-	priv->url = g_strdup (dir);
-
-	return texture;
-}
-
-GnomeAppTexture *
-gnome_app_mtexture_new_from_file (gchar *url, gint col, gint row)
-{
-	g_return_if_fail (url);
-
-	GnomeAppTexture *texture;
-	GnomeAppTexturePrivate *priv;
-	GError *error;
-
-	texture = g_object_new (GNOME_APP_TYPE_TEXTURE, NULL);
-	priv = texture->priv;
-	priv->type = MULT_TEXTURE;
-	priv->col = col;
-	priv->row = row;
-	priv->url = g_strdup (url);
 
 	return texture;
 }

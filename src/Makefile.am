@@ -45,9 +45,9 @@ gnome_app_store_SOURCES =        \
 	app_store.c
 
 gnome_app_store_LDADD =          \
-	$(top_srcdir)/common/libopen-app-common.la \
+	$(top_srcdir)/common/libcommon.la \
 	$(top_srcdir)/widgets/libwidgets.la \
-	$(top_srcdir)/lib/libgnome-app-store.la \
+	$(top_srcdir)/lib/libstore.la \
 	$(LIBREST_LIBS)	\
 	$(GNOME_APP_STORE_LIBS)
 
@@ -57,8 +57,8 @@ test_comments_SOURCES = \
 
 test_comments_LDADD =          \
 	$(top_srcdir)/widgets/libwidgets.la \
-	$(top_srcdir)/common/libopen-app-common.la \
-	$(top_srcdir)/lib/libgnome-app-store.la \
+	$(top_srcdir)/common/libcommon.la \
+	$(top_srcdir)/lib/libstore.la \
 	$(GNOME_APP_STORE_LIBS)
 
 test_account_SOURCES = \
@@ -67,8 +67,8 @@ test_account_SOURCES = \
 
 test_account_LDADD =          \
 	$(top_srcdir)/widgets/libwidgets.la \
-	$(top_srcdir)/common/libopen-app-common.la \
-	$(top_srcdir)/lib/libgnome-app-store.la \
+	$(top_srcdir)/common/libcommon.la \
+	$(top_srcdir)/lib/libstore.la \
 	$(GNOME_APP_STORE_LIBS)
 
 test_friends_SOURCES = \
@@ -77,8 +77,8 @@ test_friends_SOURCES = \
 
 test_friends_LDADD =          \
 	$(top_srcdir)/widgets/libwidgets.la \
-	$(top_srcdir)/common/libopen-app-common.la \
-	$(top_srcdir)/lib/libgnome-app-store.la \
+	$(top_srcdir)/common/libcommon.la \
+	$(top_srcdir)/lib/libstore.la \
 	$(GNOME_APP_STORE_LIBS)
 
 test_message_SOURCES = \
@@ -87,8 +87,8 @@ test_message_SOURCES = \
 
 test_message_LDADD =          \
 	$(top_srcdir)/widgets/libwidgets.la \
-	$(top_srcdir)/common/libopen-app-common.la \
-	$(top_srcdir)/lib/libgnome-app-store.la \
+	$(top_srcdir)/common/libcommon.la \
+	$(top_srcdir)/lib/libstore.la \
 	$(GNOME_APP_STORE_LIBS)
 
 test_scroll_SOURCES = \
