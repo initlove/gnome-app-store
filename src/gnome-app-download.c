@@ -99,6 +99,7 @@ gnome_app_download_init (GnomeAppDownload *download)
 							 GnomeAppDownloadPrivate);
 	priv->info = NULL;
 	priv->download_expand = FALSE;
+    priv->download_count = 0;
 	priv->balance = gnome_app_stage_get_balance (gnome_app_stage_get_default ());
 	priv->layout = clutter_box_layout_new ();
 	clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (priv->layout), TRUE);
@@ -328,7 +329,8 @@ gnome_app_download_set_with_data (GnomeAppDownload *download, OpenResult *info)
 	priv->info = g_object_ref (info);
 	balance_display = FALSE;
 	val = open_result_get (info, "downloads");
-	priv->download_count = atoi (val);
+    if (val)
+    	priv->download_count = atoi (val);
 	/*OCS standard, type begin with 1 .*/
 	for (i = 1; ; i++) {
 		str = g_strdup_printf ("downloadlink%d", i);

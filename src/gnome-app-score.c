@@ -109,7 +109,9 @@ gnome_app_score_set_property (GObject *object,
 	switch (prop_id)
 	{
 		case PROP_SCORE:
-			priv->score = atoi (g_value_get_string (value));
+            str = g_value_get_string (value);
+            if (str)
+			    priv->score = atoi (str);
 			score_load (score);
 			break;
 		default:

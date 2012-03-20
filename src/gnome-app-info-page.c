@@ -143,6 +143,7 @@ gnome_app_info_page_init (GnomeAppInfoPage *info_page)
 		return ;
 	}
 	priv->info = NULL;
+    priv->fan_count = 0;
 	priv->fan_status = FAN_NOT_DEFINED;
 	clutter_script_connect_signals (priv->script, info_page);
 	clutter_script_get_objects (priv->script,
@@ -621,7 +622,8 @@ load_details_info_callback (gpointer userdata, gpointer func_result)
 
 		fans = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "fans"));
 		val = open_result_get (result, "fans");
-		priv->fan_count = atoi (val);
+        if (val)
+    		priv->fan_count = atoi (val);
 		str = g_strdup_printf (_("%d fans"), priv->fan_count);
 		clutter_text_set_text (CLUTTER_TEXT (fans), str);
 		g_free (str);
@@ -719,7 +721,8 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 	clutter_text_set_text (CLUTTER_TEXT (license), open_result_get (info, "license"));
 
 	val = open_result_get (info, "fans");
-	priv->fan_count = atoi (val);
+    if (val)
+    	priv->fan_count = atoi (val);
 	str = g_strdup_printf (_("%d fans"), priv->fan_count);
 	clutter_text_set_text (CLUTTER_TEXT (fans), str);
 	g_free (str);
@@ -731,7 +734,11 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 
 	gnome_app_text_set_text (GNOME_APP_TEXT (comment_entry), NULL);
 
-	str = g_strdup_printf (_("%s comments"), open_result_get (info, "comments"));
+    val = open_result_get (info, "comments");
+    if (val)
+    	str = g_strdup_printf (_("%s comments"), val);
+    else
+        str = g_strdup_printf ("No comment yet");
 	clutter_text_set_text (CLUTTER_TEXT (comment_count), str);
 	g_free (str);
 	
