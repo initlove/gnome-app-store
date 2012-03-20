@@ -309,9 +309,13 @@ gnome_app_stage_init (GnomeAppStage *app_stage)
 #endif
 	clutter_actor_set_reactive (CLUTTER_ACTOR (app_stage), TRUE);
 
-        g_signal_connect (app_stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+    g_signal_connect (app_stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
 
+#if 0
 	auth_valid (app_stage);
+#else
+    gnome_app_stage_load (app_stage, GNOME_APP_STAGE_LOAD_NEW, "GnomeAppFrame", NULL);
+#endif
 	/*TODO: server ping will be done in the future when we got more than one well-known server 
 	 	server_ping (app_stage);
 	 */
@@ -520,5 +524,18 @@ gnome_app_default_stage_close (void)
 
 	app_stage = gnome_app_stage_get_default ();
 	gnome_app_stage_close (app_stage);
+}
+
+RestProxy *
+gnome_app_get_proxy ()
+{
+    static RestProxy *proxy = NULL;
+    gchar *server;
+    if (!proxy) {
+        server = "http://localhost:3000";
+        proxy = rest_proxy_new (server, FALSE);
+    }
+
+    return proxy;
 }
 

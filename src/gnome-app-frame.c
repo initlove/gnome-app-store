@@ -39,8 +39,8 @@ struct _GnomeAppFramePrivate
 	gboolean	is_search_enabled;
 	gboolean	is_search_hint_enabled;
 	gint		pagesize;
-            
-    RestProxy *proxy;
+     
+    const RestProxy *proxy;    
     RestProxyCall *call;
 };
 
@@ -202,9 +202,9 @@ task_callback (gpointer userdata, gpointer func_result)
 
 static void
 proxy_call_async_cb (RestProxyCall *call,
-                             const GError  *error,
-                                                  GObject       *weak_object,
-                                                                       gpointer       userdata)
+        const GError  *error,
+        GObject       *weak_object,
+        gpointer       userdata)
 {
 	GnomeAppFrame *frame;
 	OpenResults *results;
@@ -303,6 +303,7 @@ on_search_entry_activate (ClutterActor *actor,
 
     g_object_unref (priv->call);
     priv->call = rest_proxy_new_call (priv->proxy);
+    rest_proxy_call_set_function (priv->call, "/content/data");
     rest_proxy_call_add_params (priv->call,
 				"sortmode", "new",
                 "search", search,
@@ -383,6 +384,7 @@ printf ("click on %s cids %s\n", name, cids);
 
     g_object_unref (priv->call);
     priv->call = rest_proxy_new_call (priv->proxy);
+    rest_proxy_call_set_function (priv->call, "/content/data");
     rest_proxy_call_add_params (priv->call,
 				"sortmode", "new",
 			    "categories", cids,
@@ -540,9 +542,10 @@ gnome_app_frame_init (GnomeAppFrame *frame)
 
 	priv->pagesize = gnome_app_icon_view_get_pagesize (priv->icon_view);
 
-    const gchar *server = "http://localhost:3000/content/data";
-    priv->proxy = rest_proxy_new (server, FALSE);
+    priv->proxy = gnome_app_get_proxy ();
     priv->call = rest_proxy_new_call (priv->proxy);
+    rest_proxy_call_set_function (priv->call, "content/data");
+    rest_proxy_call_set_method (priv->call, "GET");
 
 	frame_set_default_data (frame);
 }
@@ -611,7 +614,6 @@ gnome_app_frame_finalize (GObject *object)
 	if (priv->icon_view)
 		g_object_unref (priv->icon_view);
 		
-    g_object_unref (priv->proxy);
     g_object_unref (priv->call);
 
 	G_OBJECT_CLASS (gnome_app_frame_parent_class)->finalize (object);

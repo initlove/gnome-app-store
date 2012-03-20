@@ -307,32 +307,40 @@ on_prev_button_press (ClutterActor *actor,
 	return TRUE;
 }
 
-static gpointer
-comment_callback (gpointer userdata, gpointer func_result)
+static void
+proxy_call_async_cb (RestProxyCall *call,
+                const GError  *error,
+                        GObject       *weak_object,
+                                gpointer       userdata)
 {
 	GnomeAppInfoPage *info_page;
 	GnomeAppInfoPagePrivate *priv;
 	OpenResults *results;
+    const gchar *payload;
+    goffset len;
 
 	info_page = GNOME_APP_INFO_PAGE (userdata);
 	priv = info_page->priv;
-	results = OPEN_RESULTS (func_result);
-        if (!open_results_get_status (results)) {
+    payload = rest_proxy_call_get_payload (call);
+    len = rest_proxy_call_get_payload_length (call);
+    results = (OpenResults *) open_ocs_get_results (payload, len);
+    if (!open_results_get_status (results)) {
 		g_debug ("Fail to comment: %s\n", open_results_get_meta (results, "message"));
-		return NULL;
-	} else {
+    } else {
 		printf ("commented!\n");
 		//TODO: we need to refresh it , force comment entry to reload ..
 		ClutterActor *comments_details;
-	        ClutterActor *comments_details_actor;
+        ClutterActor *comments_details_actor;
 		GList *list;
 
+        clutter_threads_enter ();
 		comments_details = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "comments-details"));
 		comments_details_actor = CLUTTER_ACTOR (gnome_app_comments_new_with_content (open_result_get (priv->info, "id"), NULL));
 		for (list = clutter_container_get_children (CLUTTER_CONTAINER (comments_details)); list; list = list->next)
 			clutter_container_remove_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (list->data));
 		clutter_container_add_actor (CLUTTER_CONTAINER (comments_details), CLUTTER_ACTOR (comments_details_actor));
-	}
+        clutter_threads_leave();
+    } 
 }
 
 G_MODULE_EXPORT gboolean
@@ -349,7 +357,7 @@ on_comment_button_press (ClutterActor *actor,
 	page = GNOME_APP_INFO_PAGE (data);
 	priv = page->priv;
 	comment_entry = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "comment-entry"));
-	//TODO: subject needed? make it simple?
+	/*subject needed? make it simple */
 	subject = "thanks!";
 	message = gnome_app_text_get_text (GNOME_APP_TEXT (comment_entry));
 	if (open_app_pattern_match ("blank", message, NULL)) {
@@ -357,19 +365,28 @@ on_comment_button_press (ClutterActor *actor,
 		return FALSE;
 	}
 
-	GnomeAppTask *task;
-	gchar *function;
-
-	task = gnome_app_task_new (page, "POST", "/v1/comments/add");
-	gnome_app_task_add_params (task,
+/*TODO: final the call ..*/
+    RestProxy *proxy;
+    RestProxyCall *call;
+    proxy = gnome_app_get_proxy ();
+    call = rest_proxy_new_call (proxy);
+    rest_proxy_call_set_method (call, "POST");
+    rest_proxy_call_set_function (call, "/comments/add");
+    rest_proxy_call_add_params (call,
 				"type", "1",
 				"content", open_result_get (priv->info, "id"),
 				"content2", "0",
 				"subject", subject,
 				"message", message,
 				NULL);
-	gnome_app_task_set_callback (task, comment_callback);
-	gnome_app_task_push (task);
+
+    rest_proxy_call_async (call,
+            proxy_call_async_cb,
+            NULL,
+            page,
+            NULL);
+
+    return;
 }
 
 static void

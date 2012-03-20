@@ -24,6 +24,8 @@
 
 #include <glib.h>
 #include <clutter/clutter.h>
+#include <rest/rest-proxy.h>
+#include <rest/rest-proxy-call.h>
 
 #include "open-result.h"
 
@@ -74,6 +76,8 @@ void			gnome_app_stage_load		(GnomeAppStage *app_stage, gint mode, const gchar *
 void			gnome_app_stage_close		(GnomeAppStage *app_stage);
 gfloat			gnome_app_stage_get_balance 	(GnomeAppStage *app_stage);
 G_MODULE_EXPORT	void	gnome_app_default_stage_close	(void);
+
+RestProxy *     gnome_app_get_proxy ();
 
 G_END_DECLS
 
