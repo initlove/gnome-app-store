@@ -309,9 +309,9 @@ on_prev_button_press (ClutterActor *actor,
 
 static void
 proxy_call_async_cb (RestProxyCall *call,
-                const GError  *error,
-                        GObject       *weak_object,
-                                gpointer       userdata)
+        const GError  *error,
+        GObject       *weak_object,
+        gpointer       userdata)
 {
 	GnomeAppInfoPage *info_page;
 	GnomeAppInfoPagePrivate *priv;
@@ -322,6 +322,7 @@ proxy_call_async_cb (RestProxyCall *call,
 	info_page = GNOME_APP_INFO_PAGE (userdata);
 	priv = info_page->priv;
     payload = rest_proxy_call_get_payload (call);
+
     len = rest_proxy_call_get_payload_length (call);
     results = (OpenResults *) open_ocs_get_results (payload, len);
     if (!open_results_get_status (results)) {
@@ -358,7 +359,7 @@ on_comment_button_press (ClutterActor *actor,
 	priv = page->priv;
 	comment_entry = CLUTTER_ACTOR (clutter_script_get_object (priv->script, "comment-entry"));
 	/*subject needed? make it simple */
-	subject = "thanks!";
+	subject = " ";
 	message = gnome_app_text_get_text (GNOME_APP_TEXT (comment_entry));
 	if (open_app_pattern_match ("blank", message, NULL)) {
 		//TODO: doing sth
@@ -371,13 +372,16 @@ on_comment_button_press (ClutterActor *actor,
     proxy = gnome_app_get_proxy ();
     call = rest_proxy_new_call (proxy);
     rest_proxy_call_set_method (call, "POST");
-    rest_proxy_call_set_function (call, "/comments/add");
+    rest_proxy_call_set_function (call, "comments/add");
     rest_proxy_call_add_params (call,
 				"type", "1",
 				"content", open_result_get (priv->info, "id"),
 				"content2", "0",
 				"subject", subject,
 				"message", message,
+                /*TODO: rest cannot parse user/password? */
+                "guestname", "first guest",
+                "guestemail", "guest@guest.com",
 				NULL);
 
     rest_proxy_call_async (call,
@@ -561,7 +565,23 @@ draw_pic (GnomeAppInfoPage *page)
 			"prev", &prev,
 			NULL);
 	/*Use the small icon first, as it was already cached*/
+#if 1
+    gchar *suffix [] = {".png", ".svg", ".xpm", ".icon", NULL};
+    gchar *icon_uri;
+    gint i;
+     
+    for (i = 0; suffix [i]; i++) {
+        icon_uri = g_strdup_printf ("/home/dliang/work/icons/%s%s", open_result_get (priv->info, "icon"), suffix [i]);
+        if (g_file_test (icon_uri, G_FILE_TEST_EXISTS)) {
+            g_object_set (G_OBJECT (big_pic), "filename", icon_uri, NULL);
+            g_free (icon_uri);
+            break;
+        } else
+            g_free (icon_uri);
+    }
+#else
 	gnome_app_set_icon (big_pic, open_result_get (priv->info, "smallpreviewpic1"));
+#endif
 
 	str = g_strdup_printf ("previewpic%d", priv->current_pic);
 	gnome_app_set_icon (big_pic, open_result_get (priv->info, str));
@@ -750,7 +770,6 @@ gnome_app_info_page_set_with_data (GnomeAppInfoPage *info_page, OpenResult *info
 	clutter_container_add_actor (CLUTTER_CONTAINER (download_group), CLUTTER_ACTOR (priv->download));
 
 	gnome_app_text_set_text (GNOME_APP_TEXT (comment_entry), NULL);
-
     val = open_result_get (info, "comments");
     if (val)
     	str = g_strdup_printf (_("%s comments"), val);

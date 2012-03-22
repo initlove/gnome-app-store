@@ -532,7 +532,7 @@ gnome_app_get_proxy ()
     static RestProxy *proxy = NULL;
     gchar *server;
     if (!proxy) {
-        server = "http://localhost:3000";
+        server = "http://dliang:novell@localhost:3000";
         proxy = rest_proxy_new (server, FALSE);
     }
 

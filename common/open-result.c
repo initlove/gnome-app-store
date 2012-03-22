@@ -54,11 +54,11 @@ open_result_get_props (OpenResult *result)
 }
 
 GList *
-open_result_get_child (OpenResult *result)
+open_result_get_child (OpenResult *result, const gchar *prop)
 {
 	g_return_val_if_fail (result && IS_OPEN_RESULT (result), NULL);
 
-	return OPEN_RESULT_GET_CLASS (result)->get_child (result);
+	return OPEN_RESULT_GET_CLASS (result)->get_child (result, prop);
 }
 
 void

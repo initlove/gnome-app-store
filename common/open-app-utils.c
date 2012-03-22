@@ -416,7 +416,7 @@ open_app_pattern_match (const gchar *pattern_name, const gchar *content, GError 
 }
 
 static void
-add_info (JsonObject  *object,
+add_info (JsonObject  *jobject,
         const gchar *member_name,
         JsonNode    *member_node,
         xmlNodePtr  parent_node)
@@ -424,17 +424,40 @@ add_info (JsonObject  *object,
     xmlNodePtr node;
     gchar *content;
     gchar *name;
+    JsonObject *object, *array;
+    gint i;
+
     name = json_node_type_name (member_node);
     if (strcmp (name, "gint64") == 0) {
         content = g_strdup_printf ("%d", json_node_get_int (member_node));
+        node = xmlNewNode (NULL, member_name);
+        xmlNodeAddContent (node, content);
+        xmlAddChild(parent_node, node);
+        g_free (content);
     } else if (strcmp (name, "gchararray") == 0) {
         content = g_strdup_printf ("%s", json_node_get_string (member_node));
-    } else 
+        node = xmlNewNode (NULL, member_name);
+        xmlNodeAddContent (node, content);
+        xmlAddChild(parent_node, node);
+        g_free (content);
+    } else if (strcmp (name, "JsonArray") == 0) {
+        array = json_node_get_array (member_node);
+        if (array) {
+            node = xmlNewNode(NULL, member_name);
+            for (i = 0; i < json_array_get_length (array); i++) {
+                JsonNode *json_node;
+                json_node = json_array_get_element (array, i);
+                add_info (NULL, "child", json_node, node);
+            }
+           xmlAddChild(parent_node, node);
+         }
+    } else if (strcmp (name, "JsonObject") == 0) {
+        object = json_node_get_object (member_node);
+        node = xmlNewNode (NULL, member_name);
+        json_object_foreach_member (object, add_info, node);
+        xmlAddChild(parent_node, node);
+    } else
         return;
-    node = xmlNewNode (NULL, member_name);
-    xmlNodeAddContent (node, content);
-    xmlAddChild(parent_node, node);
-    g_free (content);
 }
 
 gchar *     
@@ -455,35 +478,18 @@ json_to_xml (const gchar *json_data, gint *len)
     xmlDocSetRootElement(doc,root_node);
     xmlNodePtr meta_node, data_node, app_node;
 
-    meta_node = xmlNewNode(NULL, "meta");
-    data_node = xmlNewNode(NULL, "data");
-
-
     parser = json_parser_new ();
     error = NULL;
     res = json_parser_load_from_data (parser, json_data, -1, &error);
     root = json_parser_get_root (parser);
     object = json_node_get_object (root);
-    meta_object = json_object_get_object_member (object, "meta");
-    json_object_foreach_member (meta_object, add_info, meta_node);
-    xmlAddChild(root_node,meta_node);
 
-    data_array = json_object_get_array_member (object, "data");
-    if (data_array) {
-        for (i = 0; i < json_array_get_length (data_array); i++) {
-            object = json_array_get_object_element (data_array, i);
-            app_node = xmlNewNode (NULL, "content");
-            xmlAddChild(data_node,app_node);
-            json_object_foreach_member (object, add_info, app_node);
-        }
-        xmlAddChild(root_node,data_node);
-    }
+    json_object_foreach_member (object, add_info, root_node);
 
     g_object_unref (parser);
 
     gchar *mem = NULL;
     xmlDocDumpMemory (doc, &mem, len);
-
     xmlFreeDoc (doc);
     return mem;
 }

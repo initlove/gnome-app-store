@@ -331,45 +331,41 @@ gnome_app_download_set_with_data (GnomeAppDownload *download, OpenResult *info)
 	val = open_result_get (info, "downloads");
     if (val)
     	priv->download_count = atoi (val);
+    GList *list, *l;
+    list = open_result_get_child (info, "downloadinfos");
+    i = 1;
 	/*OCS standard, type begin with 1 .*/
-	for (i = 1; ; i++) {
-		str = g_strdup_printf ("downloadlink%d", i);
-		val = open_result_get (priv->info, str);
-		g_free (str);
-		if (val) {
-			download_name = clutter_text_new ();
-			download_price = CLUTTER_ACTOR (gnome_app_button_new ());
-			str = g_strdup_printf ("downloadname%d", i);
-			val = open_result_get (priv->info, str);
-			g_free (str);
-			if (val && val [0]) {
-				clutter_text_set_text (CLUTTER_TEXT (download_name), (gchar *)val);
-			} else {
-				clutter_text_set_text (CLUTTER_TEXT (download_name), _("Download Link"));
-			}
-			str = g_strdup_printf ("downloadprice%d", i);
-			val = open_result_get (priv->info, str);
-			g_free (str);
-			price = atof (val);
-			if (price == 0) {
-				gnome_app_button_set_text (GNOME_APP_BUTTON (download_price), _("Free"));
-				g_object_set (G_OBJECT (download_price), "text-color", "green", NULL);
-			} else {
-				if (!balance_display)
-					balance_display = TRUE;
-				gnome_app_button_set_text (GNOME_APP_BUTTON (download_price), (gchar *)val);
-				if (price > priv->balance)
-					g_object_set (G_OBJECT (download_price), "text-color", "red", NULL);
-				else
-					g_object_set (G_OBJECT (download_price), "text-color", "yellow", NULL);
-			}
-			clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->table_layout), CLUTTER_ACTOR (download_price), 0, i);
-			clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->table_layout), CLUTTER_ACTOR (download_name), 1, i);
-			g_object_set_data (G_OBJECT (download_price), "itemid", (gpointer) i);
-			g_signal_connect (download_price, "button-press-event", G_CALLBACK (on_download_item_press), download);
+	for (l = list; l; l=l->next) {
+        OpenResult *d_info;
+        d_info = (OpenResult *) l->data;        
+		download_name = clutter_text_new ();
+        download_price = CLUTTER_ACTOR (gnome_app_button_new ());
+        val = open_result_get (d_info, "name");
+		if (val && val [0]) {
+			clutter_text_set_text (CLUTTER_TEXT (download_name), (gchar *)val);
 		} else {
-			break;
+			clutter_text_set_text (CLUTTER_TEXT (download_name), _("Download Link"));
 		}
+		
+        val = open_result_get (d_info, "price");
+        price = atof (val);
+		if (price == 0) {
+			gnome_app_button_set_text (GNOME_APP_BUTTON (download_price), _("Free"));
+			g_object_set (G_OBJECT (download_price), "text-color", "green", NULL);
+		} else {
+			if (!balance_display)
+				balance_display = TRUE;
+			gnome_app_button_set_text (GNOME_APP_BUTTON (download_price), (gchar *)val);
+			if (price > priv->balance)
+				g_object_set (G_OBJECT (download_price), "text-color", "red", NULL);
+			else
+				g_object_set (G_OBJECT (download_price), "text-color", "yellow", NULL);
+		}
+		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->table_layout), CLUTTER_ACTOR (download_price), 0, i);
+		clutter_table_layout_pack (CLUTTER_TABLE_LAYOUT (priv->table_layout), CLUTTER_ACTOR (download_name), 1, i);
+	    g_object_set_data (G_OBJECT (download_price), "itemid", (gpointer) (open_result_get (d_info, "way")));
+		g_signal_connect (download_price, "button-press-event", G_CALLBACK (on_download_item_press), download);
+        i++;
 	}
 	priv->download_links = i - 1;
 	str = g_strdup_printf (_("%d downloads  (%d link)"), priv->download_count, priv->download_links);

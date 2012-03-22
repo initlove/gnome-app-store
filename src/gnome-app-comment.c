@@ -334,7 +334,7 @@ gnome_app_comment_new_with_comment (OpenResult *comment)
 		g_free (str);
 	}
 
-	clutter_text_set_text (CLUTTER_TEXT (message), open_result_get (comment, "text"));
+	clutter_text_set_text (CLUTTER_TEXT (message), open_result_get (comment, "message"));
 	set_user_icon (usericon, open_result_get (comment, "user"));
 
 	return app_comment;

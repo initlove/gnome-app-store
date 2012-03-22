@@ -201,18 +201,30 @@ gnome_app_comments_new (void)
 	return g_object_new (GNOME_APP_TYPE_COMMENTS, NULL);
 }
 
-static gpointer
-set_comments_callback (gpointer userdata, gpointer func_result)
+
+static void
+proxy_call_async_cb (RestProxyCall *call,
+        const GError  *error,
+        GObject       *weak_object,
+        gpointer       userdata)
 {
 	GnomeAppComments *app_comments;
 	OpenResults *results;
+    const gchar *payload;
+    goffset len;
 
-	results = OPEN_RESULTS (func_result);
 	app_comments = GNOME_APP_COMMENTS (userdata);
-	if (app_comments && GNOME_APP_IS_COMMENTS (app_comments))
-		gnome_app_comments_load (app_comments, results);
+    payload = rest_proxy_call_get_payload (call);
+    len = rest_proxy_call_get_payload_length (call);
 
-	return NULL;
+    results = (OpenResults *) open_ocs_get_results (payload, len);
+    if (!open_results_get_status (results)) {
+        g_debug ("Fail get comments: %s\n", open_results_get_meta (results, "message"));
+    } else {
+        clutter_threads_enter ();
+	    gnome_app_comments_load (app_comments, results);
+        clutter_threads_leave ();
+    }
 }
 
 GnomeAppComments *
@@ -230,15 +242,23 @@ gnome_app_comments_new_with_content (const gchar *content, const gchar *content2
 	if (content2)
 		priv->content2 = g_strdup (content2);
 	
-	function = g_strdup_printf ("/v1/comments/data/1/%s/0", content);
-	task = gnome_app_task_new (comments, "GET", function);
-	priv->task = g_object_ref (task);
-	gnome_app_task_add_params (task,
-			"pagesize", "10",
-			"page", "0",
-			NULL);
-	gnome_app_task_set_callback (task, set_comments_callback);
-	gnome_app_task_push (task);
+    RestProxy *proxy;
+    RestProxyCall *call;
+    proxy = gnome_app_get_proxy ();
+    call = rest_proxy_new_call (proxy);
+     
+    rest_proxy_call_add_params (call,
+            "type", "1",
+            "content", content,
+            "pagesize", "10",
+            "page", "0",
+            NULL);
+    rest_proxy_call_set_function (call, "comments/get");
+    rest_proxy_call_async (call,
+            proxy_call_async_cb,
+            NULL,
+            comments,
+            NULL);            
 
 	g_free (function);
 
@@ -291,7 +311,7 @@ add_child_comments (GnomeAppComments *comments,
 
 	priv = comments->priv;
 	layout = priv->layout;
-	for (l = open_result_get_child (comment); l; l = l->next) {
+	for (l = open_result_get_child (comment, "children"); l; l = l->next) {
 		child_comment = l->data;
 		app_comment = gnome_app_comment_new_with_comment (child_comment);
 		gnome_app_comment_set_content (app_comment, priv->content, priv->content2);

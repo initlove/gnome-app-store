@@ -83,13 +83,15 @@ static const gchar *
 get (OpenResult *result, const gchar *prop)
 {
 	OpenOcsResult *open_ocs_result;
+	OpenOcsResultPrivate *priv;
 	xmlNodePtr node;
 	const char *val;
 
 	open_ocs_result = OPEN_OCS_RESULT (result);
+    priv = open_ocs_result->priv;
 	val = NULL;
 
-	node = open_ocs_result->priv->data;
+	node = priv->data;
 	//FIXME: will it be TEXT_NODE?
 	if (node->type != XML_TEXT_NODE) {
 		if (strcmp (node->name, prop) == 0) {
@@ -111,9 +113,10 @@ get (OpenResult *result, const gchar *prop)
 }
 
 static GList *
-get_child (OpenResult *result)
+get_child (OpenResult *result, const gchar *prop)
 {
 	OpenOcsResult *open_ocs_result;
+	OpenOcsResultPrivate *priv;
 	xmlNodePtr node;	
 	const gchar *val;
 	const gchar *content;
@@ -121,18 +124,13 @@ get_child (OpenResult *result)
 
 	val = NULL;
 	open_ocs_result = OPEN_OCS_RESULT (result);
+    priv = open_ocs_result->priv;
 
-	for (node = open_ocs_result->priv->data->xmlChildrenNode; node; node = node->next) {
+	for (node = priv->data->xmlChildrenNode; node; node = node->next) {
 		if (node->type == XML_TEXT_NODE)
 			continue;
-		/*TODO: lazy hack, assume 'childcount' comes before 'children' */
-		if (strcmp (node->name, "childcount") == 0) {
-		        content = xmlNodeGetContent (node);
-			if (strcmp (content, "0") == 0) {
-				return NULL;
-			}
-		}
-		if (strcmp (node->name, "children") == 0) {
+
+		if (strcmp (node->name, prop) == 0) {
 			list = open_ocs_result_list_new_with_node (node);
 
 			return list;
@@ -197,20 +195,19 @@ open_ocs_result_new_with_node (xmlNodePtr node)
 GList *
 open_ocs_result_list_new_with_node (xmlNodePtr data_node)
 {
-        xmlNodePtr node;
-        OpenOcsResult *result;
-        GList *list = NULL;
-        gchar *name;
+    xmlNodePtr node, child_node;
+    OpenOcsResult *result;
+    GList *list = NULL;
+    gchar *name;
 
-        for (node = data_node->xmlChildrenNode; node; node = node->next) {
-                if (node->type == XML_TEXT_NODE)
-	                continue;
-	        name = (gchar *)node->name;
-	        result = open_ocs_result_new_with_node (node);
-	        list = g_list_prepend (list, result);
+    for (node = data_node->xmlChildrenNode; node; node = node->next) {
+        if (node->type == XML_TEXT_NODE)
+            continue;
+        result = open_ocs_result_new_with_node (node);
+        list = g_list_prepend (list, result);
 	}
 	if (list)
-	        list = g_list_reverse (list);
+	    list = g_list_reverse (list);
 
 	return list;
 }

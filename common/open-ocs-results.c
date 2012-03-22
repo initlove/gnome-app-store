@@ -151,7 +151,6 @@ open_ocs_get_results (const gchar *open_ocs_json, gint len_json)
     gint len;
 //TODO: HOTFIX
     open_ocs = json_to_xml (open_ocs_json, &len);
-
 	doc_ptr = xmlParseMemory (open_ocs, len);
     g_free (open_ocs);//HOTFIX
 	if (!doc_ptr) {

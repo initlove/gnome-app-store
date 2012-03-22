@@ -234,7 +234,8 @@ frame_set_default_data (GnomeAppFrame *frame)
 
     rest_proxy_call_add_params (priv->call,
 				"sortmode", "new",
-				"pagesize", pagesize,
+                "pagesize", "1",
+//				"pagesize", pagesize,
 				"page", "0",
 				NULL);
 
