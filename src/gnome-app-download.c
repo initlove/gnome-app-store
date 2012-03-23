@@ -1,4 +1,4 @@
-/* -*- Mode: C; indent-tabs-mode: t; c-basic-offset: 8; tab-width: 8 -*-
+/*
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -216,32 +216,42 @@ gnome_app_download_class_init (GnomeAppDownloadClass *klass)
 	g_type_class_add_private (object_class, sizeof (GnomeAppDownloadPrivate));
 }
 
-static gpointer
-download_callback (gpointer userdata, gpointer func_result)
+static void
+proxy_call_async_cb (RestProxyCall *call,
+                const GError  *error,
+                        GObject       *weak_object,
+                                gpointer       userdata)
 {
 	GnomeAppDownload *page;
 	GnomeAppDownloadPrivate *priv;
+    const gchar *payload;
+    goffset len;
 	OpenResults *results;
 
 	page = GNOME_APP_DOWNLOAD (userdata);
 	priv = page->priv;
-	results = OPEN_RESULTS (func_result);
-        if (!open_results_get_status (results)) {
+
+    payload = rest_proxy_call_get_payload (call);
+    len = rest_proxy_call_get_payload_length (call);
+    results = (OpenResults *) open_ocs_get_results (payload, len);
+    if (!open_results_get_status (results)) {
 		g_debug ("Fail to get the download info: %s\n", open_results_get_meta (results, "message"));
-		return NULL;
 	} else {
 		GList *list;
 		OpenResult *result;
 		gchar *str;
 		ClutterActor *download_count;
-		const gchar *uri;
+		const gchar *repo, *pkgname;
 		GError *error;
 		gchar *cmd;
 
 		list = open_results_get_data (results);
 		result = OPEN_RESULT (list->data);
-	/*TODO: check mimetype, download it */
-		uri = open_result_get (result, "downloadlink");
+		repo = open_result_get (result, "repo");
+        pkgname = open_result_get (result, "pkgname");
+
+printf ("repo %s, pkgname %s\n", repo, pkgname);
+#if 0
 		if (uri) {
 			cmd = g_strdup_printf ("gnome-open \"%s\" ", uri);
 			error = NULL;
@@ -251,16 +261,13 @@ download_callback (gpointer userdata, gpointer func_result)
 			}
 			g_free (cmd);
 		}
-
+#endif
 		priv->download_count ++;
 		str = g_strdup_printf (_("%d downloads  (%d link)"), priv->download_count, priv->download_links);
 		gnome_app_button_set_text (GNOME_APP_BUTTON (priv->button), str);
 		g_free (str);
 	}
-
-	return NULL;
 }
-
 
 static gboolean
 on_download_item_press (ClutterActor *actor,
@@ -269,25 +276,31 @@ on_download_item_press (ClutterActor *actor,
 {
 	GnomeAppDownload *page;
 	GnomeAppDownloadPrivate *priv;
-	GnomeAppTask *task;
+    const RestProxy *proxy;
+    RestProxyCall *call;
  	gchar *function;
 	const gchar *content_id;
-	gint item_id;
+	const gchar *item_id;
 
 	page = GNOME_APP_DOWNLOAD (data);
 	priv = page->priv;
 
 	content_id = open_result_get (priv->info, "id");
-	item_id = (gint) g_object_get_data (G_OBJECT (actor), "itemid");
+	item_id = (gchar *) g_object_get_data (G_OBJECT (actor), "itemid");
+	function = g_strdup_printf ("content/download/%s/%s", content_id, item_id);
 
-	function = g_strdup_printf ("/v1/content/download/%s/%d", content_id, item_id);
-	task = gnome_app_task_new (page, "GET", function);
-	gnome_app_task_set_callback (task, download_callback);
-	gnome_app_task_push (task);
+    proxy = gnome_app_get_proxy ();
+    call = rest_proxy_new_call (proxy);
+    rest_proxy_call_set_function (call, function);
+    rest_proxy_call_async (call,
+            proxy_call_async_cb,
+            NULL,
+            page,
+            NULL);
 		
 	g_free (function);
 
-        return TRUE;
+    return TRUE;
 }
 
 GnomeAppDownload *

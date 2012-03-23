@@ -166,7 +166,7 @@ open_app_get_data_by_request (SoupSession *session, const gchar *request)
 	return buf;
 }
 
-static gboolean
+gboolean
 download_file (const gchar *source, const gchar *dest)
 {
 	g_return_val_if_fail (source && dest, FALSE);
@@ -208,7 +208,7 @@ download_file (const gchar *source, const gchar *dest)
 }
 
 gchar *
-open_app_get_local_icon (const gchar *uri, gboolean download)
+open_app_get_local_icon (const gchar *uri)
 {
 	g_return_val_if_fail (uri != NULL, NULL);
 
@@ -221,21 +221,6 @@ open_app_get_local_icon (const gchar *uri, gboolean download)
 	md5 = open_app_get_md5 (uri);
 	img_dir = g_build_filename (g_get_user_cache_dir (), PACKAGE_NAME, "img", NULL);
 	local_uri = g_build_filename (img_dir, md5, NULL);
-
-	if (!g_file_test (img_dir, G_FILE_TEST_EXISTS))
-		g_mkdir_with_parents (img_dir, 0755);
-
-	if (!g_file_test (local_uri, G_FILE_TEST_EXISTS)) {
-		if (download) {
-			if (!download_file (uri, (const gchar *)local_uri)) {
-				g_free (local_uri);
-				local_uri = NULL;
-			}
-		} else {
-			g_free (local_uri);
-			local_uri = NULL;
-		}
-	}
 
 	g_object_unref (config);
 	g_free (md5);

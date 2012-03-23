@@ -384,5 +384,6 @@ next_page_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 void
 gnome_app_proxy_predict (GnomeAppProxy *proxy, GnomeAppTask *task)
 {
+    return;
 	next_page_predict (proxy, task);
 }

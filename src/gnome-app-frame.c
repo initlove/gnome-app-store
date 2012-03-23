@@ -234,9 +234,8 @@ frame_set_default_data (GnomeAppFrame *frame)
 
     rest_proxy_call_add_params (priv->call,
 				"sortmode", "new",
-                "pagesize", "1",
-//				"pagesize", pagesize,
-				"page", "0",
+                "page", "0",
+				"pagesize", pagesize,
 				NULL);
 
     rest_proxy_call_async (priv->call,
@@ -546,7 +545,6 @@ gnome_app_frame_init (GnomeAppFrame *frame)
     priv->proxy = gnome_app_get_proxy ();
     priv->call = rest_proxy_new_call (priv->proxy);
     rest_proxy_call_set_function (priv->call, "content/data");
-    rest_proxy_call_set_method (priv->call, "GET");
 
 	frame_set_default_data (frame);
 }

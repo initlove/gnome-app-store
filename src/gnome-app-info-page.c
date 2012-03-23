@@ -564,24 +564,9 @@ draw_pic (GnomeAppInfoPage *page)
 			"next", &next,
 			"prev", &prev,
 			NULL);
+
 	/*Use the small icon first, as it was already cached*/
-#if 1
-    gchar *suffix [] = {".png", ".svg", ".xpm", ".icon", NULL};
-    gchar *icon_uri;
-    gint i;
-     
-    for (i = 0; suffix [i]; i++) {
-        icon_uri = g_strdup_printf ("/home/dliang/work/icons/%s%s", open_result_get (priv->info, "icon"), suffix [i]);
-        if (g_file_test (icon_uri, G_FILE_TEST_EXISTS)) {
-            g_object_set (G_OBJECT (big_pic), "filename", icon_uri, NULL);
-            g_free (icon_uri);
-            break;
-        } else
-            g_free (icon_uri);
-    }
-#else
-	gnome_app_set_icon (big_pic, open_result_get (priv->info, "smallpreviewpic1"));
-#endif
+	gnome_app_set_icon (big_pic, open_result_get (priv->info, "icon"));
 
 	str = g_strdup_printf ("previewpic%d", priv->current_pic);
 	gnome_app_set_icon (big_pic, open_result_get (priv->info, str));

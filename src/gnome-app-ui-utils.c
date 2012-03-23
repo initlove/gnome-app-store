@@ -20,17 +20,60 @@ Author: David Liang <dliang@novell.com>
 #include "gnome-app-task.h"
 #include "gnome-app-ui-utils.h"
 
-static gpointer
-set_pic_callback (gpointer userdata, gpointer func_re)
+static void
+proxy_call_async_cb (RestProxyCall *call,
+        const GError  *error,
+        GObject       *weak_object,
+        gpointer       userdata)
 {
-	ClutterActor *actor;
-	gchar *dest_url;
+    const gchar *payload;
+    gint len;
+    gchar *local_uri;
+    gchar *uri;
+    ClutterActor *actor;
+    FILE *fp;
 
 	actor = CLUTTER_ACTOR (userdata);
-	dest_url = (gchar *) func_re;
-	g_object_set (G_OBJECT (actor), "filename", dest_url, NULL);
+    uri = (gchar *) g_object_get_data (actor, "uri");
+    local_uri = open_app_get_local_icon (uri);
+    payload = rest_proxy_call_get_payload (call);
+    len = rest_proxy_call_get_payload_length (call);
 
-	return NULL;
+    fp = fopen (local_uri, "w");
+    if (fp) {
+        fwrite (payload, 1, len, fp);
+        fclose (fp);
+    }
+
+    clutter_threads_enter ();
+    g_object_set (G_OBJECT (actor), "filename", local_uri, NULL);
+    clutter_threads_leave ();
+
+    g_free (uri);
+    g_free (local_uri);
+}
+
+static void
+get_icon (ClutterActor *actor, gchar *source, gchar *dest)
+{
+    static SoupSession *session = NULL;
+    if (!session) {
+        session = open_app_soup_session_new (TRUE, NULL);
+    }
+    SoupBuffer *buf;
+    FILE *fp;
+    buf = open_app_get_data_by_request (session, source);
+    if (!buf)
+        return;
+
+    fp = fopen (dest, "w");
+    if (fp) {
+        fwrite (buf->data, 1, buf->length, fp);
+        fclose (fp);
+    }
+                        
+    soup_buffer_free (buf);
+    g_object_set (G_OBJECT (actor), "filename", dest, NULL);
 }
 
 void
@@ -38,12 +81,34 @@ gnome_app_set_icon (ClutterActor *actor, const gchar *uri)
 {
 	if (!uri)
 		return;
+    //TODO: HACK */
+    if (strncmp (uri, "http", 4) != 0)
+        return;
 
-	GnomeAppTask *task;
-		
-	task = gnome_download_task_new (actor, uri);
-	gnome_app_task_set_callback (task, set_pic_callback);
-	gnome_app_task_push (task);
+    gchar *local_uri;
+    local_uri = open_app_get_local_icon (uri);
+    if (g_file_test (local_uri, G_FILE_TEST_EXISTS)) {
+	    g_object_set (G_OBJECT (actor), "filename", local_uri, NULL);
+        g_free (local_uri);
+    } else {
+        RestProxy *proxy;
+        RestProxyCall *call;
+
+        proxy = rest_proxy_new (uri, FALSE);
+        call = rest_proxy_new_call (proxy);
+
+        g_object_set_data (actor, "uri", uri);
+        rest_proxy_call_async (call,
+                proxy_call_async_cb,
+                NULL,
+                actor,
+                NULL);
+#if 0
+        get_icon (actor, uri, local_uri);
+#endif
+    }
+
+    return;
 }
 
 void
