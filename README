@@ -1,3 +1,5 @@
 libtoolize -if
 autoreconf -if
 ./configure
+
+test
