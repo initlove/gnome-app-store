@@ -1,3 +1,5 @@
+## gnome app store
+
 libtoolize -if
 autoreconf -if
 ./configure
